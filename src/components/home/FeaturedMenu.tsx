@@ -270,7 +270,7 @@ export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
                 <MenuDescription>{item.description}</MenuDescription>
                 <PriceRow>
                   <Price>{formatPrice(item.price)}원</Price>
-                  <ViewMoreButton href={`/menu/${item.id}`}>자세히 보기</ViewMoreButton>
+                  <ViewMoreButton href={`/represent/${item.id}`}>자세히 보기</ViewMoreButton>
                 </PriceRow>
               </CardContent>
             </MenuCard>
@@ -278,7 +278,7 @@ export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
         </MenuGrid>
 
         <ViewAllWrapper>
-          <ViewAllButton href="/menu">
+          <ViewAllButton href="/represent">
             전체 메뉴 보기
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path

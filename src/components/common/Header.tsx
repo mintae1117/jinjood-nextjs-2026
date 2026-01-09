@@ -1,20 +1,35 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import styled from 'styled-components';
-import { FiPhone, FiMail, FiMenu, FiX, FiSearch } from 'react-icons/fi';
-import { FaInstagram } from 'react-icons/fa';
-import { RiKakaoTalkFill } from 'react-icons/ri';
-import { SiNaver } from 'react-icons/si';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import styled from "styled-components";
+import { FiPhone, FiMail, FiMenu, FiX, FiSearch } from "react-icons/fi";
+import { FaInstagram } from "react-icons/fa";
+import { RiKakaoTalkFill } from "react-icons/ri";
+import { SiNaver } from "react-icons/si";
 
-const SubHeader = styled.div`
-  background-color: #1e1e1e;
-  color: #ffffff;
-  padding: 0.5rem 0;
-  font-size: 0.875rem;
+const HeaderWrapper = styled.header<{ $scrolled: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: #ffffff;
+  box-shadow: ${({ $scrolled }) =>
+    $scrolled ? "0 2px 10px rgba(0, 0, 0, 0.1)" : "none"};
+  transition: box-shadow 0.3s ease;
+`;
+
+const SubHeader = styled.div<{ $scrolled: boolean }>`
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #eeeeee;
+  padding: ${({ $scrolled }) => ($scrolled ? "0" : "0.5rem 0")};
+  font-size: 0.8125rem;
+  max-height: ${({ $scrolled }) => ($scrolled ? "0" : "40px")};
+  opacity: ${({ $scrolled }) => ($scrolled ? "0" : "1")};
+  overflow: hidden;
+  transition: all 0.3s ease;
 
   @media (max-width: 768px) {
     display: none;
@@ -39,7 +54,7 @@ const ContactInfo = styled.div`
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #ffffff;
+    color: #666666;
 
     &:hover {
       color: #f35525;
@@ -53,8 +68,8 @@ const SocialLinks = styled.div`
   gap: 1rem;
 
   a {
-    color: #ffffff;
-    font-size: 1.125rem;
+    color: #666666;
+    font-size: 1rem;
 
     &:hover {
       color: #f35525;
@@ -62,27 +77,14 @@ const SocialLinks = styled.div`
   }
 `;
 
-const MainHeader = styled.header<{ $scrolled: boolean }>`
-  position: fixed;
-  top: ${({ $scrolled }) => ($scrolled ? '0' : '40px')};
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background-color: ${({ $scrolled }) => ($scrolled ? '#ffffff' : 'transparent')};
-  box-shadow: ${({ $scrolled }) => ($scrolled ? '0 2px 10px rgba(0, 0, 0, 0.1)' : 'none')};
-  transition: all 0.3s ease;
-
-  @media (max-width: 768px) {
-    top: 0;
-    background-color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
+const MainHeader = styled.div`
+  background-color: #ffffff;
 `;
 
 const HeaderContainer = styled.div`
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -109,7 +111,7 @@ const Nav = styled.nav<{ $isOpen: boolean }>`
   @media (max-width: 1024px) {
     position: fixed;
     top: 0;
-    right: ${({ $isOpen }) => ($isOpen ? '0' : '-100%')};
+    right: ${({ $isOpen }) => ($isOpen ? "0" : "-100%")};
     width: 80%;
     max-width: 400px;
     height: 100vh;
@@ -127,16 +129,16 @@ const Nav = styled.nav<{ $isOpen: boolean }>`
 const NavLink = styled(Link)<{ $active?: boolean }>`
   font-size: 1rem;
   font-weight: 500;
-  color: ${({ $active }) => ($active ? '#f35525' : '#1e1e1e')};
+  color: ${({ $active }) => ($active ? "#f35525" : "#1e1e1e")};
   position: relative;
   padding: 0.5rem 0;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 0;
-    width: ${({ $active }) => ($active ? '100%' : '0')};
+    width: ${({ $active }) => ($active ? "100%" : "0")};
     height: 2px;
     background-color: #f35525;
     transition: width 0.3s ease;
@@ -190,7 +192,7 @@ const Overlay = styled.div<{ $isOpen: boolean }>`
   display: none;
 
   @media (max-width: 1024px) {
-    display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};
+    display: ${({ $isOpen }) => ($isOpen ? "block" : "none")};
     position: fixed;
     top: 0;
     left: 0;
@@ -214,12 +216,21 @@ const CloseButton = styled.button`
   }
 `;
 
+const HeaderSpacer = styled.div<{ $scrolled: boolean }>`
+  height: ${({ $scrolled }) => ($scrolled ? "70px" : "110px")};
+  transition: height 0.3s ease;
+
+  @media (max-width: 768px) {
+    height: 70px;
+  }
+`;
+
 const navItems = [
-  { href: '/', label: '홈' },
-  { href: '/menu', label: '대표 메뉴' },
-  { href: '/gifts', label: '선물 & 세트' },
-  { href: '/reciprocate', label: '이바지 & 답례' },
-  { href: '/contact', label: '오시는 길' },
+  { href: "/", label: "홈" },
+  { href: "/represent", label: "대표 메뉴" },
+  { href: "/gifts", label: "선물 & 세트" },
+  { href: "/reciprocate", label: "이바지 & 답례" },
+  { href: "/contact", label: "오시는 길" },
 ];
 
 export default function Header() {
@@ -232,15 +243,15 @@ export default function Header() {
       setIsScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
   }, [isMobileMenuOpen]);
 
@@ -248,64 +259,84 @@ export default function Header() {
 
   return (
     <>
-      <SubHeader>
-        <SubHeaderContainer>
-          <ContactInfo>
-            <a href="tel:051-621-5108">
-              <FiPhone />
-              <span>051-621-5108</span>
-            </a>
-            <a href="mailto:jea6922@naver.com">
-              <FiMail />
-              <span>jea6922@naver.com</span>
-            </a>
-          </ContactInfo>
-          <SocialLinks>
-            <a href="https://www.instagram.com/busan_jinjoods_rice_cake" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <FaInstagram />
-            </a>
-            <a href="https://pf.kakao.com/_zsKlb" target="_blank" rel="noopener noreferrer" aria-label="Kakao Channel">
-              <RiKakaoTalkFill />
-            </a>
-            <a href="https://band.us/band/77842984" target="_blank" rel="noopener noreferrer" aria-label="Naver Band">
-              <SiNaver />
-            </a>
-          </SocialLinks>
-        </SubHeaderContainer>
-      </SubHeader>
-
-      <MainHeader $scrolled={isScrolled}>
-        <HeaderContainer>
-          <Logo href="/">
-            진주떡집
-          </Logo>
-
-          <Nav $isOpen={isMobileMenuOpen}>
-            <CloseButton onClick={closeMobileMenu} aria-label="Close menu">
-              <FiX />
-            </CloseButton>
-            {navItems.map((item) => (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                $active={pathname === item.href}
-                onClick={closeMobileMenu}
+      <HeaderWrapper $scrolled={isScrolled}>
+        <SubHeader $scrolled={isScrolled}>
+          <SubHeaderContainer>
+            <ContactInfo>
+              <a href="tel:051-621-5108">
+                <FiPhone />
+                <span>051-621-5108</span>
+              </a>
+              <a href="mailto:jea6922@naver.com">
+                <FiMail />
+                <span>jea6922@naver.com</span>
+              </a>
+            </ContactInfo>
+            <SocialLinks>
+              <a
+                href="https://www.instagram.com/busan_jinjoods_rice_cake"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
               >
-                {item.label}
-              </NavLink>
-            ))}
-          </Nav>
+                <FaInstagram />
+              </a>
+              <a
+                href="https://pf.kakao.com/_zsKlb"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Kakao Channel"
+              >
+                <RiKakaoTalkFill />
+              </a>
+              <a
+                href="https://band.us/band/77842984"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Naver Band"
+              >
+                <SiNaver />
+              </a>
+            </SocialLinks>
+          </SubHeaderContainer>
+        </SubHeader>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <SearchButton aria-label="Search">
-              <FiSearch />
-            </SearchButton>
-            <MenuButton onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu">
-              <FiMenu />
-            </MenuButton>
-          </div>
-        </HeaderContainer>
-      </MainHeader>
+        <MainHeader>
+          <HeaderContainer>
+            <Logo href="/">진주떡집</Logo>
+
+            <Nav $isOpen={isMobileMenuOpen}>
+              <CloseButton onClick={closeMobileMenu} aria-label="Close menu">
+                <FiX />
+              </CloseButton>
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.href}
+                  href={item.href}
+                  $active={pathname === item.href}
+                  onClick={closeMobileMenu}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </Nav>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <SearchButton aria-label="Search">
+                <FiSearch />
+              </SearchButton>
+              <MenuButton
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Open menu"
+              >
+                <FiMenu />
+              </MenuButton>
+            </div>
+          </HeaderContainer>
+        </MainHeader>
+      </HeaderWrapper>
+
+      <HeaderSpacer $scrolled={isScrolled} />
 
       <Overlay $isOpen={isMobileMenuOpen} onClick={closeMobileMenu} />
     </>

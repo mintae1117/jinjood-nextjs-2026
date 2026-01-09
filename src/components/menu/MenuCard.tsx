@@ -172,7 +172,7 @@ export default function MenuCard({ item, index = 0 }: MenuCardProps) {
         <MenuDescription>{item.description}</MenuDescription>
         <PriceRow>
           <Price>{formatPrice(item.price)}원</Price>
-          <ViewMoreButton href={`/menu/${item.id}`}>자세히 보기</ViewMoreButton>
+          <ViewMoreButton href={`/represent/${item.id}`}>자세히 보기</ViewMoreButton>
         </PriceRow>
       </CardContent>
     </Card>

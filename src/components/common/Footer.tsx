@@ -203,7 +203,7 @@ export default function Footer() {
             <h3>바로가기</h3>
             <FooterLinks>
               <li><Link href="/">홈</Link></li>
-              <li><Link href="/menu">대표 메뉴</Link></li>
+              <li><Link href="/represent">대표 메뉴</Link></li>
               <li><Link href="/gifts">선물 & 세트</Link></li>
               <li><Link href="/reciprocate">이바지 & 답례</Link></li>
               <li><Link href="/contact">오시는 길</Link></li>

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import styled from 'styled-components';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import PageHeader from '@/components/common/PageHeader';
-import MenuFilter from '@/components/menu/MenuFilter';
-import { sampleGiftSets } from '@/data/sampleData';
-import { GiftCategory } from '@/types';
+import { useState, useMemo } from "react";
+import styled from "styled-components";
+import Link from "next/link";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import PageHeader from "@/components/common/PageHeader";
+import MenuFilter from "@/components/menu/MenuFilter";
+import { sampleGiftSets } from "@/data/sampleData";
+import { GiftCategory } from "@/types";
 
 const Section = styled.section`
   padding: 4rem 0;
@@ -172,30 +172,30 @@ const EmptyState = styled.div`
 `;
 
 const filterOptions = [
-  { value: 'all', label: '모든 메뉴' },
-  { value: 'gift_set', label: '선물 세트' },
-  { value: 'songpyeon_set', label: '송편/떡국 세트' },
-  { value: 'baekil_dol_set', label: '백일&돌 세트' },
+  { value: "all", label: "모든 메뉴" },
+  { value: "gift_set", label: "선물 세트" },
+  { value: "songpyeon_set", label: "송편/떡국 세트" },
+  { value: "baekil_dol_set", label: "백일&돌 세트" },
 ];
 
 const categoryLabels: Record<string, string> = {
-  gift_set: '선물 세트',
-  songpyeon_set: '송편/떡국 세트',
-  baekil_dol_set: '백일&돌 세트',
+  gift_set: "선물 세트",
+  songpyeon_set: "송편/떡국 세트",
+  baekil_dol_set: "백일&돌 세트",
 };
 
 export default function GiftsPage() {
-  const [activeFilter, setActiveFilter] = useState<GiftCategory>('all');
+  const [activeFilter, setActiveFilter] = useState<GiftCategory>("all");
 
   const filteredItems = useMemo(() => {
-    if (activeFilter === 'all') {
+    if (activeFilter === "all") {
       return sampleGiftSets;
     }
     return sampleGiftSets.filter((item) => item.category === activeFilter);
   }, [activeFilter]);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
+    return new Intl.NumberFormat("ko-KR").format(price);
   };
 
   return (
@@ -203,10 +203,7 @@ export default function GiftsPage() {
       <PageHeader
         title="선물 & 세트"
         description="소중한 분께 마음을 전하는 특별한 선물 세트를 준비했습니다."
-        breadcrumbs={[
-          { label: '홈', href: '/' },
-          { label: '선물 & 세트' },
-        ]}
+        breadcrumbs={[{ label: "홈", href: "/" }, { label: "선물 & 세트" }]}
       />
 
       <Section>
@@ -236,18 +233,22 @@ export default function GiftsPage() {
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
-                      <CategoryBadge>{categoryLabels[item.category]}</CategoryBadge>
+                      <CategoryBadge>
+                        {categoryLabels[item.category]}
+                      </CategoryBadge>
                     </ImageWrapper>
                     <CardContent>
                       <GiftName>{item.name}</GiftName>
                       <GiftDescription>{item.description}</GiftDescription>
                       <ItemsList>
                         <h4>구성품</h4>
-                        <p>{item.items.join(', ')}</p>
+                        <p>{item.items.join(", ")}</p>
                       </ItemsList>
                       <PriceRow>
                         <Price>{formatPrice(item.price)}원</Price>
-                        <ViewMoreButton href={`/gifts/${item.id}`}>자세히 보기</ViewMoreButton>
+                        <ViewMoreButton href={`/gifts/${item.id}`}>
+                          자세히 보기
+                        </ViewMoreButton>
                       </PriceRow>
                     </CardContent>
                   </GiftCard>

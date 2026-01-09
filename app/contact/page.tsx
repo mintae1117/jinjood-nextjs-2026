@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { FiPhone, FiMail, FiMapPin, FiClock, FiCreditCard } from 'react-icons/fi';
-import { FaInstagram } from 'react-icons/fa';
-import { RiKakaoTalkFill } from 'react-icons/ri';
-import { SiNaver } from 'react-icons/si';
-import PageHeader from '@/components/common/PageHeader';
-import { contactInfo, socialLinks } from '@/data/sampleData';
+import styled from "styled-components";
+import { motion } from "framer-motion";
+import {
+  FiPhone,
+  FiMail,
+  FiMapPin,
+  FiClock,
+  FiCreditCard,
+} from "react-icons/fi";
+import { FaInstagram } from "react-icons/fa";
+import { RiKakaoTalkFill } from "react-icons/ri";
+import { SiNaver } from "react-icons/si";
+import PageHeader from "@/components/common/PageHeader";
+import { contactInfo, socialLinks } from "@/data/sampleData";
 
 const Section = styled.section`
   padding: 4rem 0;
@@ -46,7 +52,7 @@ const SectionTitle = styled.h2`
   padding-bottom: 1rem;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 0;
@@ -247,7 +253,7 @@ const CopyButton = styled.button`
 export default function ContactPage() {
   const handleCopyAccount = () => {
     navigator.clipboard.writeText(contactInfo.bank_account);
-    alert('계좌번호가 복사되었습니다.');
+    alert("계좌번호가 복사되었습니다.");
   };
 
   return (
@@ -255,10 +261,7 @@ export default function ContactPage() {
       <PageHeader
         title="오시는 길"
         description="진주떡집을 방문해 주셔서 감사합니다. 아래 정보를 참고해 주세요."
-        breadcrumbs={[
-          { label: '홈', href: '/' },
-          { label: '오시는 길' },
-        ]}
+        breadcrumbs={[{ label: "홈", href: "/" }, { label: "오시는 길" }]}
       />
 
       <Section>
@@ -292,8 +295,15 @@ export default function ContactPage() {
                   <InfoContent>
                     <h3>전화번호</h3>
                     <p>
-                      매장: <a href={`tel:${contactInfo.phone[0]}`}>{contactInfo.phone[0]}</a><br />
-                      휴대폰: <a href={`tel:${contactInfo.phone[1]}`}>{contactInfo.phone[1]}</a>
+                      매장:{" "}
+                      <a href={`tel:${contactInfo.phone[0]}`}>
+                        {contactInfo.phone[0]}
+                      </a>
+                      <br />
+                      휴대폰:{" "}
+                      <a href={`tel:${contactInfo.phone[1]}`}>
+                        {contactInfo.phone[1]}
+                      </a>
                     </p>
                   </InfoContent>
                 </InfoCard>
@@ -309,7 +319,9 @@ export default function ContactPage() {
                   <InfoContent>
                     <h3>이메일</h3>
                     <p>
-                      <a href={`mailto:${contactInfo.email}`}>{contactInfo.email}</a>
+                      <a href={`mailto:${contactInfo.email}`}>
+                        {contactInfo.email}
+                      </a>
                     </p>
                   </InfoContent>
                 </InfoCard>
@@ -325,8 +337,10 @@ export default function ContactPage() {
                   <InfoContent>
                     <h3>영업시간</h3>
                     <p>
-                      월-금: {contactInfo.business_hours.weekday}<br />
-                      토요일: {contactInfo.business_hours.saturday}<br />
+                      월-금: {contactInfo.business_hours.weekday}
+                      <br />
+                      토요일: {contactInfo.business_hours.saturday}
+                      <br />
                       일요일: {contactInfo.business_hours.sunday}
                     </p>
                   </InfoContent>
@@ -342,9 +356,13 @@ export default function ContactPage() {
                   <FiCreditCard />
                   입금 계좌
                 </BankTitle>
-                <BankNumber>{contactInfo.bank_name} {contactInfo.bank_account}</BankNumber>
+                <BankNumber>
+                  {contactInfo.bank_name} {contactInfo.bank_account}
+                </BankNumber>
                 <BankDetails>예금주: {contactInfo.account_holder}</BankDetails>
-                <CopyButton onClick={handleCopyAccount}>계좌번호 복사</CopyButton>
+                <CopyButton onClick={handleCopyAccount}>
+                  계좌번호 복사
+                </CopyButton>
               </BankInfoCard>
             </InfoSection>
 
@@ -360,7 +378,9 @@ export default function ContactPage() {
                 />
               </MapWrapper>
               <DirectionsButton
-                href={`https://map.naver.com/v5/search/${encodeURIComponent(contactInfo.address)}`}
+                href={`https://map.naver.com/v5/search/${encodeURIComponent(
+                  contactInfo.address
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -387,7 +407,7 @@ export default function ContactPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 $color="#FEE500"
-                style={{ color: '#1e1e1e' }}
+                style={{ color: "#1e1e1e" }}
               >
                 <RiKakaoTalkFill />
                 카카오 채널

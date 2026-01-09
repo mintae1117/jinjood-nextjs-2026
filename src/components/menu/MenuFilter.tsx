@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import styled from 'styled-components';
-import { motion } from 'framer-motion';
+import styled from "styled-components";
+import { motion } from "framer-motion";
 
 const FilterWrapper = styled.div`
   display: flex;
@@ -20,14 +20,14 @@ const FilterButton = styled(motion.button)<{ $active: boolean }>`
   font-size: 0.9375rem;
   font-weight: 500;
   border-radius: 30px;
-  background-color: ${({ $active }) => ($active ? '#f35525' : '#f8f8f8')};
-  color: ${({ $active }) => ($active ? '#ffffff' : '#666666')};
-  border: 1px solid ${({ $active }) => ($active ? '#f35525' : '#eeeeee')};
+  background-color: ${({ $active }) => ($active ? "#f35525" : "#f8f8f8")};
+  color: ${({ $active }) => ($active ? "#ffffff" : "#666666")};
+  border: 1px solid ${({ $active }) => ($active ? "#f35525" : "#eeeeee")};
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: ${({ $active }) => ($active ? '#d94820' : '#eeeeee')};
-    border-color: ${({ $active }) => ($active ? '#d94820' : '#dddddd')};
+    background-color: ${({ $active }) => ($active ? "#d94820" : "#eeeeee")};
+    border-color: ${({ $active }) => ($active ? "#d94820" : "#dddddd")};
   }
 
   @media (max-width: 640px) {

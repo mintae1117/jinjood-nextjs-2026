@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRef, useState } from 'react';
-import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { FiPlay, FiPause } from 'react-icons/fi';
+import { useRef, useState } from "react";
+import styled from "styled-components";
+import { motion } from "framer-motion";
+import { FiPlay, FiPause } from "react-icons/fi";
 
 const Section = styled.section`
   position: relative;
@@ -101,7 +101,7 @@ const VideoWrapper = styled(motion.div)`
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: -2px;
     left: -2px;
@@ -136,7 +136,7 @@ const PlayButton = styled.button<{ $isPlaying: boolean }>`
   font-size: 2rem;
   transition: all 0.3s ease;
   opacity: ${({ $isPlaying }) => ($isPlaying ? 0 : 1)};
-  pointer-events: ${({ $isPlaying }) => ($isPlaying ? 'none' : 'auto')};
+  pointer-events: ${({ $isPlaying }) => ($isPlaying ? "none" : "auto")};
 
   &:hover {
     background-color: #f35525;
@@ -229,7 +229,9 @@ export default function VideoSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              {yearsOfTradition}년 전통의 맛,<br />진주떡집입니다
+              {yearsOfTradition}년 전통의 맛,
+              <br />
+              진주떡집입니다
             </SectionTitle>
             <Description
               initial={{ opacity: 0, y: 20 }}
@@ -238,8 +240,8 @@ export default function VideoSection() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               1995년 부산 남천동에서 시작한 진주떡집은 오랜 세월 동안 변함없이
-              전통의 맛을 지켜오고 있습니다. 국내산 쌀과 엄선된 재료만을 사용하여
-              매일 아침 신선하게 만드는 정성이 담긴 떡을 제공합니다.
+              전통의 맛을 지켜오고 있습니다. 국내산 쌀과 엄선된 재료만을
+              사용하여 매일 아침 신선하게 만드는 정성이 담긴 떡을 제공합니다.
             </Description>
             <FeatureList
               initial={{ opacity: 0, y: 20 }}
@@ -248,21 +250,36 @@ export default function VideoSection() {
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <FeatureItem>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
                 100% 국내산 쌀 사용
               </FeatureItem>
               <FeatureItem>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
                 매일 아침 당일 생산
               </FeatureItem>
               <FeatureItem>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
@@ -286,7 +303,11 @@ export default function VideoSection() {
               <source src="/videos/jinjooad.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </Video>
-            <PlayButton onClick={togglePlay} $isPlaying={isPlaying} aria-label={isPlaying ? 'Pause' : 'Play'}>
+            <PlayButton
+              onClick={togglePlay}
+              $isPlaying={isPlaying}
+              aria-label={isPlaying ? "Pause" : "Play"}
+            >
               {isPlaying ? <FiPause /> : <FiPlay />}
             </PlayButton>
           </VideoWrapper>

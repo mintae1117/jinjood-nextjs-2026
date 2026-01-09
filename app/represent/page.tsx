@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import styled from 'styled-components';
-import { AnimatePresence } from 'framer-motion';
-import PageHeader from '@/components/common/PageHeader';
-import MenuFilter from '@/components/menu/MenuFilter';
-import MenuCard from '@/components/menu/MenuCard';
-import { sampleMenuItems } from '@/data/sampleData';
-import { MenuCategory } from '@/types';
+import { useState, useMemo } from "react";
+import styled from "styled-components";
+import { AnimatePresence } from "framer-motion";
+import PageHeader from "@/components/common/PageHeader";
+import MenuFilter from "@/components/menu/MenuFilter";
+import MenuCard from "@/components/menu/MenuCard";
+import { sampleMenuItems } from "@/data/sampleData";
+import { MenuCategory } from "@/types";
 
 const Section = styled.section`
   padding: 4rem 0;
@@ -58,18 +58,18 @@ const EmptyState = styled.div`
 `;
 
 const filterOptions = [
-  { value: 'all', label: '모든 메뉴' },
-  { value: 'chapssaltteok', label: '찹쌀떡' },
-  { value: 'mepssaltteok', label: '멥쌀떡' },
-  { value: 'tteokguk', label: '떡국' },
-  { value: 'others', label: '기타' },
+  { value: "all", label: "모든 메뉴" },
+  { value: "chapssaltteok", label: "찹쌀떡" },
+  { value: "mepssaltteok", label: "멥쌀떡" },
+  { value: "tteokguk", label: "떡국" },
+  { value: "others", label: "기타" },
 ];
 
 export default function MenuPage() {
-  const [activeFilter, setActiveFilter] = useState<MenuCategory>('all');
+  const [activeFilter, setActiveFilter] = useState<MenuCategory>("all");
 
   const filteredItems = useMemo(() => {
-    if (activeFilter === 'all') {
+    if (activeFilter === "all") {
       return sampleMenuItems;
     }
     return sampleMenuItems.filter((item) => item.category === activeFilter);
@@ -80,10 +80,7 @@ export default function MenuPage() {
       <PageHeader
         title="대표 메뉴"
         description="1995년부터 이어온 전통의 맛, 정성을 담아 만든 진주떡집의 메뉴를 소개합니다."
-        breadcrumbs={[
-          { label: '홈', href: '/' },
-          { label: '대표 메뉴' },
-        ]}
+        breadcrumbs={[{ label: "홈", href: "/" }, { label: "대표 메뉴" }]}
       />
 
       <Section>

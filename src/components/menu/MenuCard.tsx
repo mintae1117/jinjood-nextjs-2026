@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import styled from 'styled-components';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { MenuItem } from '@/types';
+import styled from "styled-components";
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { MenuItem } from "@/types";
 
 const Card = styled(motion.div)`
   background-color: #ffffff;
@@ -44,24 +44,24 @@ const TagsWrapper = styled.div`
   z-index: 10;
 `;
 
-const Tag = styled.span<{ $variant?: 'popular' | 'best' | 'recommended' }>`
+const Tag = styled.span<{ $variant?: "popular" | "best" | "recommended" }>`
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 20px;
   background-color: ${({ $variant }) => {
     switch ($variant) {
-      case 'popular':
-        return '#ff6b6b';
-      case 'best':
-        return '#ffd93d';
-      case 'recommended':
-        return '#6bcb77';
+      case "popular":
+        return "#ff6b6b";
+      case "best":
+        return "#ffd93d";
+      case "recommended":
+        return "#6bcb77";
       default:
-        return '#f35525';
+        return "#f35525";
     }
   }};
-  color: ${({ $variant }) => ($variant === 'best' ? '#1e1e1e' : '#ffffff')};
+  color: ${({ $variant }) => ($variant === "best" ? "#1e1e1e" : "#ffffff")};
 `;
 
 const CardContent = styled.div`
@@ -129,10 +129,10 @@ const ViewMoreButton = styled(Link)`
 `;
 
 const categoryLabels: Record<string, string> = {
-  chapssaltteok: '찹쌀떡',
-  mepssaltteok: '멥쌀떡',
-  tteokguk: '떡국',
-  others: '기타',
+  chapssaltteok: "찹쌀떡",
+  mepssaltteok: "멥쌀떡",
+  tteokguk: "떡국",
+  others: "기타",
 };
 
 interface MenuCardProps {
@@ -142,7 +142,7 @@ interface MenuCardProps {
 
 export default function MenuCard({ item, index = 0 }: MenuCardProps) {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
+    return new Intl.NumberFormat("ko-KR").format(price);
   };
 
   return (
@@ -167,12 +167,16 @@ export default function MenuCard({ item, index = 0 }: MenuCardProps) {
         </TagsWrapper>
       </ImageWrapper>
       <CardContent>
-        <CategoryBadge>{categoryLabels[item.category] || item.category}</CategoryBadge>
+        <CategoryBadge>
+          {categoryLabels[item.category] || item.category}
+        </CategoryBadge>
         <MenuName>{item.name}</MenuName>
         <MenuDescription>{item.description}</MenuDescription>
         <PriceRow>
           <Price>{formatPrice(item.price)}원</Price>
-          <ViewMoreButton href={`/represent/${item.id}`}>자세히 보기</ViewMoreButton>
+          <ViewMoreButton href={`/represent/${item.id}`}>
+            자세히 보기
+          </ViewMoreButton>
         </PriceRow>
       </CardContent>
     </Card>

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaInstagram } from 'react-icons/fa';
-import { RiKakaoTalkFill } from 'react-icons/ri';
-import { SiNaver } from 'react-icons/si';
+import { useState } from "react";
+import styled from "styled-components";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaInstagram } from "react-icons/fa";
+import { RiKakaoTalkFill } from "react-icons/ri";
+import { SiNaver } from "react-icons/si";
 
 const Section = styled.section`
   padding: 5rem 0;
@@ -72,8 +72,8 @@ const TabButton = styled.button<{ $active: boolean }>`
   font-size: 1rem;
   font-weight: 500;
   border-radius: 30px;
-  background-color: ${({ $active }) => ($active ? '#f35525' : '#f8f8f8')};
-  color: ${({ $active }) => ($active ? '#ffffff' : '#666666')};
+  background-color: ${({ $active }) => ($active ? "#f35525" : "#f8f8f8")};
+  color: ${({ $active }) => ($active ? "#ffffff" : "#666666")};
   transition: all 0.3s ease;
 
   svg {
@@ -81,7 +81,7 @@ const TabButton = styled.button<{ $active: boolean }>`
   }
 
   &:hover {
-    background-color: ${({ $active }) => ($active ? '#d94820' : '#eeeeee')};
+    background-color: ${({ $active }) => ($active ? "#d94820" : "#eeeeee")};
   }
 
   @media (max-width: 480px) {
@@ -186,39 +186,43 @@ const PreviewImage = styled.div`
 
 const snsData = [
   {
-    id: 'instagram',
+    id: "instagram",
     icon: FaInstagram,
-    color: '#E1306C',
-    title: '인스타그램',
-    description: '진주떡집의 일상과 신제품 소식을 실시간으로 만나보세요. 매일 업데이트되는 맛있는 떡 사진과 함께 소통해요!',
-    link: 'https://www.instagram.com/busan_jinjoods_rice_cake',
-    linkText: '인스타그램 팔로우하기',
+    color: "#E1306C",
+    title: "인스타그램",
+    description:
+      "진주떡집의 일상과 신제품 소식을 실시간으로 만나보세요. 매일 업데이트되는 맛있는 떡 사진과 함께 소통해요!",
+    link: "https://www.instagram.com/busan_jinjoods_rice_cake",
+    linkText: "인스타그램 팔로우하기",
   },
   {
-    id: 'kakao',
+    id: "kakao",
     icon: RiKakaoTalkFill,
-    color: '#FEE500',
-    textColor: '#1e1e1e',
-    title: '카카오 채널',
-    description: '카카오 채널을 추가하시면 새로운 메뉴 소식과 할인 정보를 가장 먼저 받아보실 수 있습니다.',
-    link: 'https://pf.kakao.com/_zsKlb',
-    linkText: '카카오 채널 추가하기',
+    color: "#FEE500",
+    textColor: "#1e1e1e",
+    title: "카카오 채널",
+    description:
+      "카카오 채널을 추가하시면 새로운 메뉴 소식과 할인 정보를 가장 먼저 받아보실 수 있습니다.",
+    link: "https://pf.kakao.com/_zsKlb",
+    linkText: "카카오 채널 추가하기",
   },
   {
-    id: 'naver',
+    id: "naver",
     icon: SiNaver,
-    color: '#03C75A',
-    title: '네이버 밴드',
-    description: '네이버 밴드에서 다른 고객님들과 함께 떡 이야기를 나눠보세요. 후기와 추천 메뉴를 공유합니다.',
-    link: 'https://band.us/band/77842984',
-    linkText: '네이버 밴드 가입하기',
+    color: "#03C75A",
+    title: "네이버 밴드",
+    description:
+      "네이버 밴드에서 다른 고객님들과 함께 떡 이야기를 나눠보세요. 후기와 추천 메뉴를 공유합니다.",
+    link: "https://band.us/band/77842984",
+    linkText: "네이버 밴드 가입하기",
   },
 ];
 
 export default function SNSSection() {
-  const [activeTab, setActiveTab] = useState('instagram');
+  const [activeTab, setActiveTab] = useState("instagram");
 
-  const activeData = snsData.find((item) => item.id === activeTab) || snsData[0];
+  const activeData =
+    snsData.find((item) => item.id === activeTab) || snsData[0];
   const IconComponent = activeData.icon;
 
   return (
@@ -255,7 +259,9 @@ export default function SNSSection() {
               transition={{ duration: 0.3 }}
             >
               <SNSIcon $color={activeData.color}>
-                <IconComponent style={{ color: activeData.textColor || '#ffffff' }} />
+                <IconComponent
+                  style={{ color: activeData.textColor || "#ffffff" }}
+                />
               </SNSIcon>
               <SNSTitle>{activeData.title}</SNSTitle>
               <SNSDescription>{activeData.description}</SNSDescription>
@@ -264,7 +270,7 @@ export default function SNSSection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 $color={activeData.color}
-                style={{ color: activeData.textColor || '#ffffff' }}
+                style={{ color: activeData.textColor || "#ffffff" }}
               >
                 {activeData.linkText}
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -280,9 +286,7 @@ export default function SNSSection() {
 
               <ImagePreview>
                 {[1, 2, 3, 4].map((i) => (
-                  <PreviewImage key={i}>
-                    최신 게시물 {i}
-                  </PreviewImage>
+                  <PreviewImage key={i}>최신 게시물 {i}</PreviewImage>
                 ))}
               </ImagePreview>
             </TabContent>

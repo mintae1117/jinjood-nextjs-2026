@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import styled from 'styled-components';
-import { FiPhone, FiMail, FiMapPin, FiClock } from 'react-icons/fi';
-import { FaInstagram } from 'react-icons/fa';
-import { RiKakaoTalkFill } from 'react-icons/ri';
-import { SiNaver } from 'react-icons/si';
+import Link from "next/link";
+import styled from "styled-components";
+import { FiPhone, FiMail, FiMapPin, FiClock } from "react-icons/fi";
+import { FaInstagram } from "react-icons/fa";
+import { RiKakaoTalkFill } from "react-icons/ri";
+import { SiNaver } from "react-icons/si";
 
 const FooterWrapper = styled.footer`
   background-color: #1e1e1e;
@@ -44,7 +44,7 @@ const FooterSection = styled.div`
     padding-bottom: 0.75rem;
 
     &::after {
-      content: '';
+      content: "";
       position: absolute;
       bottom: 0;
       left: 0;
@@ -183,17 +183,32 @@ export default function Footer() {
           <FooterSection>
             <FooterLogo>진주떡집</FooterLogo>
             <FooterDescription>
-              1995년부터 전통의 맛을 지켜온 진주떡집입니다.
-              정성을 담아 만든 신선한 떡으로 특별한 순간을 더욱 빛나게 해드립니다.
+              1995년부터 전통의 맛을 지켜온 진주떡집입니다. 정성을 담아 만든
+              신선한 떡으로 특별한 순간을 더욱 빛나게 해드립니다.
             </FooterDescription>
             <SocialIcons>
-              <a href="https://www.instagram.com/busan_jinjoods_rice_cake" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <a
+                href="https://www.instagram.com/busan_jinjoods_rice_cake"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+              >
                 <FaInstagram />
               </a>
-              <a href="https://pf.kakao.com/_zsKlb" target="_blank" rel="noopener noreferrer" aria-label="Kakao Channel">
+              <a
+                href="https://pf.kakao.com/_zsKlb"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Kakao Channel"
+              >
                 <RiKakaoTalkFill />
               </a>
-              <a href="https://band.us/band/77842984" target="_blank" rel="noopener noreferrer" aria-label="Naver Band">
+              <a
+                href="https://band.us/band/77842984"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Naver Band"
+              >
                 <SiNaver />
               </a>
             </SocialIcons>
@@ -202,11 +217,21 @@ export default function Footer() {
           <FooterSection>
             <h3>바로가기</h3>
             <FooterLinks>
-              <li><Link href="/">홈</Link></li>
-              <li><Link href="/represent">대표 메뉴</Link></li>
-              <li><Link href="/gifts">선물 & 세트</Link></li>
-              <li><Link href="/reciprocate">이바지 & 답례</Link></li>
-              <li><Link href="/contact">오시는 길</Link></li>
+              <li>
+                <Link href="/">홈</Link>
+              </li>
+              <li>
+                <Link href="/represent">대표 메뉴</Link>
+              </li>
+              <li>
+                <Link href="/gifts">선물 & 세트</Link>
+              </li>
+              <li>
+                <Link href="/reciprocate">이바지 & 답례</Link>
+              </li>
+              <li>
+                <Link href="/contact">오시는 길</Link>
+              </li>
             </FooterLinks>
           </FooterSection>
 
@@ -216,8 +241,10 @@ export default function Footer() {
               <li>
                 <FiClock />
                 <span>
-                  월-금: 오전 7시 - 오후 7시<br />
-                  토요일: 오전 7시 - 오후 5시<br />
+                  월-금: 오전 7시 - 오후 7시
+                  <br />
+                  토요일: 오전 7시 - 오후 5시
+                  <br />
                   일요일: 휴무
                 </span>
               </li>
@@ -234,7 +261,8 @@ export default function Footer() {
               <li>
                 <FiPhone />
                 <span>
-                  매장: 051-621-5108<br />
+                  매장: 051-621-5108
+                  <br />
                   휴대폰: 010-4728-6922
                 </span>
               </li>

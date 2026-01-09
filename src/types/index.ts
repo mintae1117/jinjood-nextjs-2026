@@ -5,7 +5,7 @@ export interface MenuItem {
   price: number;
   description: string;
   image_url: string;
-  category: 'chapssaltteok' | 'mepssaltteok' | 'tteokguk' | 'others';
+  category: "chapssaltteok" | "mepssaltteok" | "tteokguk" | "others";
   tags: string[];
   is_popular: boolean;
   is_recommended: boolean;
@@ -20,7 +20,7 @@ export interface GiftSet {
   price: number;
   description: string;
   image_url: string;
-  category: 'gift_set' | 'songpyeon_set' | 'baekil_dol_set';
+  category: "gift_set" | "songpyeon_set" | "baekil_dol_set";
   items: string[];
   created_at?: string;
 }
@@ -32,7 +32,7 @@ export interface ReciprocateItem {
   price: number;
   description: string;
   image_url: string;
-  category: 'ibaji' | 'daprye';
+  category: "ibaji" | "daprye";
   created_at?: string;
 }
 
@@ -77,6 +77,15 @@ export interface SocialLinks {
 }
 
 // Category Filter Type
-export type MenuCategory = 'all' | 'chapssaltteok' | 'mepssaltteok' | 'tteokguk' | 'others';
-export type GiftCategory = 'all' | 'gift_set' | 'songpyeon_set' | 'baekil_dol_set';
-export type ReciprocateCategory = 'all' | 'ibaji' | 'daprye';
+export type MenuCategory =
+  | "all"
+  | "chapssaltteok"
+  | "mepssaltteok"
+  | "tteokguk"
+  | "others";
+export type GiftCategory =
+  | "all"
+  | "gift_set"
+  | "songpyeon_set"
+  | "baekil_dol_set";
+export type ReciprocateCategory = "all" | "ibaji" | "daprye";

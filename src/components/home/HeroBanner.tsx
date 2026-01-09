@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination, Navigation, EffectFade } from 'swiper/modules';
-import { motion } from 'framer-motion';
-import 'swiper/css';
-import 'swiper/css/pagination';
-import 'swiper/css/navigation';
-import 'swiper/css/effect-fade';
-import { Banner } from '@/types';
+import { useState, useEffect } from "react";
+import styled from "styled-components";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
+import { motion } from "framer-motion";
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
+import "swiper/css/effect-fade";
+import { Banner } from "@/types";
 
 const BannerSection = styled.section`
   position: relative;
@@ -41,7 +41,7 @@ const SlideBackground = styled.div<{ $imageUrl: string }>`
   background-position: center;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -246,7 +246,7 @@ const ScrollLine = styled(motion.div)`
   overflow: hidden;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -281,7 +281,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
       transition: {
         delay: i * 0.2,
         duration: 0.6,
-        ease: 'easeOut' as const,
+        ease: "easeOut" as const,
       },
     }),
   };
@@ -310,7 +310,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                 <Subtitle
                   variants={textVariants}
                   initial="hidden"
-                  animate={activeIndex === index ? 'visible' : 'hidden'}
+                  animate={activeIndex === index ? "visible" : "hidden"}
                   custom={0}
                 >
                   {banner.subtitle}
@@ -318,7 +318,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                 <Title
                   variants={textVariants}
                   initial="hidden"
-                  animate={activeIndex === index ? 'visible' : 'hidden'}
+                  animate={activeIndex === index ? "visible" : "hidden"}
                   custom={1}
                 >
                   {banner.title}
@@ -326,7 +326,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                 <Description
                   variants={textVariants}
                   initial="hidden"
-                  animate={activeIndex === index ? 'visible' : 'hidden'}
+                  animate={activeIndex === index ? "visible" : "hidden"}
                   custom={2}
                 >
                   {banner.description}
@@ -334,7 +334,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                 <ButtonGroup
                   variants={textVariants}
                   initial="hidden"
-                  animate={activeIndex === index ? 'visible' : 'hidden'}
+                  animate={activeIndex === index ? "visible" : "hidden"}
                   custom={3}
                 >
                   <PrimaryButton href="/menu">메뉴 보기</PrimaryButton>

@@ -103,12 +103,21 @@ const Logo = styled(Link)`
   }
 `;
 
-const Nav = styled.nav<{ $isOpen: boolean }>`
+const DesktopNav = styled.nav`
   display: flex;
   align-items: center;
   gap: 2rem;
 
   @media (max-width: 1024px) {
+    display: none;
+  }
+`;
+
+const MobileNav = styled.nav<{ $isOpen: boolean }>`
+  display: none;
+
+  @media (max-width: 1024px) {
+    display: flex;
     position: fixed;
     top: 0;
     right: ${({ $isOpen }) => ($isOpen ? "0" : "-100%")};
@@ -122,7 +131,7 @@ const Nav = styled.nav<{ $isOpen: boolean }>`
     gap: 1.5rem;
     box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
     transition: right 0.3s ease;
-    z-index: 1001;
+    z-index: 1002;
   }
 `;
 
@@ -177,14 +186,13 @@ const SearchButton = styled.button`
   }
 `;
 
-const MenuButton = styled.button`
+const MenuButton = styled.button<{ $isOpen: boolean }>`
   display: none;
   font-size: 1.5rem;
   color: #1e1e1e;
-  z-index: 1002;
 
   @media (max-width: 1024px) {
-    display: block;
+    display: ${({ $isOpen }) => ($isOpen ? "none" : "block")};
   }
 `;
 
@@ -199,7 +207,7 @@ const Overlay = styled.div<{ $isOpen: boolean }>`
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    z-index: 1001;
   }
 `;
 
@@ -305,27 +313,24 @@ export default function Header() {
           <HeaderContainer>
             <Logo href="/">진주떡집</Logo>
 
-            <Nav $isOpen={isMobileMenuOpen}>
-              <CloseButton onClick={closeMobileMenu} aria-label="Close menu">
-                <FiX />
-              </CloseButton>
+            <DesktopNav>
               {navItems.map((item) => (
                 <NavLink
                   key={item.href}
                   href={item.href}
                   $active={pathname === item.href}
-                  onClick={closeMobileMenu}
                 >
                   {item.label}
                 </NavLink>
               ))}
-            </Nav>
+            </DesktopNav>
 
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               <SearchButton aria-label="Search">
                 <FiSearch />
               </SearchButton>
               <MenuButton
+                $isOpen={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(true)}
                 aria-label="Open menu"
               >
@@ -339,6 +344,22 @@ export default function Header() {
       <HeaderSpacer $scrolled={isScrolled} />
 
       <Overlay $isOpen={isMobileMenuOpen} onClick={closeMobileMenu} />
+
+      <MobileNav $isOpen={isMobileMenuOpen}>
+        <CloseButton onClick={closeMobileMenu} aria-label="Close menu">
+          <FiX />
+        </CloseButton>
+        {navItems.map((item) => (
+          <NavLink
+            key={item.href}
+            href={item.href}
+            $active={pathname === item.href}
+            onClick={closeMobileMenu}
+          >
+            {item.label}
+          </NavLink>
+        ))}
+      </MobileNav>
     </>
   );
 }

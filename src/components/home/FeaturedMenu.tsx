@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import styled from 'styled-components';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { MenuItem } from '@/types';
+import styled from "styled-components";
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { MenuItem } from "@/types";
 
 const Section = styled.section`
   padding: 5rem 0;
@@ -112,24 +112,24 @@ const TagsWrapper = styled.div`
   z-index: 10;
 `;
 
-const Tag = styled.span<{ $variant?: 'popular' | 'best' | 'recommended' }>`
+const Tag = styled.span<{ $variant?: "popular" | "best" | "recommended" }>`
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 20px;
   background-color: ${({ $variant }) => {
     switch ($variant) {
-      case 'popular':
-        return '#ff6b6b';
-      case 'best':
-        return '#ffd93d';
-      case 'recommended':
-        return '#6bcb77';
+      case "popular":
+        return "#ff6b6b";
+      case "best":
+        return "#ffd93d";
+      case "recommended":
+        return "#6bcb77";
       default:
-        return '#f35525';
+        return "#f35525";
     }
   }};
-  color: ${({ $variant }) => ($variant === 'best' ? '#1e1e1e' : '#ffffff')};
+  color: ${({ $variant }) => ($variant === "best" ? "#1e1e1e" : "#ffffff")};
 `;
 
 const CardContent = styled.div`
@@ -215,7 +215,7 @@ interface FeaturedMenuProps {
 
 export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
+    return new Intl.NumberFormat("ko-KR").format(price);
   };
 
   const cardVariants = {
@@ -226,7 +226,7 @@ export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
       transition: {
         delay: i * 0.1,
         duration: 0.5,
-        ease: 'easeOut' as const,
+        ease: "easeOut" as const,
       },
     }),
   };
@@ -238,7 +238,8 @@ export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
           <SectionSubtitle>Best Menu</SectionSubtitle>
           <SectionTitle>대표 메뉴</SectionTitle>
           <SectionDescription>
-            1995년부터 이어온 전통의 맛, 정성을 담아 만든 진주떡집의 대표 메뉴를 소개합니다.
+            1995년부터 이어온 전통의 맛, 정성을 담아 만든 진주떡집의 대표 메뉴를
+            소개합니다.
           </SectionDescription>
         </SectionHeader>
 
@@ -249,7 +250,7 @@ export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
               variants={cardVariants}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: '-50px' }}
+              viewport={{ once: true, margin: "-50px" }}
               custom={index}
             >
               <ImageWrapper>
@@ -262,7 +263,9 @@ export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
                 <TagsWrapper>
                   {item.is_popular && <Tag $variant="popular">인기</Tag>}
                   {item.is_best && <Tag $variant="best">베스트</Tag>}
-                  {item.is_recommended && <Tag $variant="recommended">추천</Tag>}
+                  {item.is_recommended && (
+                    <Tag $variant="recommended">추천</Tag>
+                  )}
                 </TagsWrapper>
               </ImageWrapper>
               <CardContent>
@@ -270,7 +273,9 @@ export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
                 <MenuDescription>{item.description}</MenuDescription>
                 <PriceRow>
                   <Price>{formatPrice(item.price)}원</Price>
-                  <ViewMoreButton href={`/represent/${item.id}`}>자세히 보기</ViewMoreButton>
+                  <ViewMoreButton href={`/represent/${item.id}`}>
+                    자세히 보기
+                  </ViewMoreButton>
                 </PriceRow>
               </CardContent>
             </MenuCard>

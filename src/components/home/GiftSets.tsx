@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import styled from 'styled-components';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { GiftSet } from '@/types';
+import styled from "styled-components";
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { GiftSet } from "@/types";
 
 const Section = styled.section`
   padding: 5rem 0;
@@ -200,7 +200,7 @@ interface GiftSetsProps {
 
 export default function GiftSets({ giftSets }: GiftSetsProps) {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
+    return new Intl.NumberFormat("ko-KR").format(price);
   };
 
   const cardVariants = {
@@ -211,7 +211,7 @@ export default function GiftSets({ giftSets }: GiftSetsProps) {
       transition: {
         delay: i * 0.1,
         duration: 0.5,
-        ease: 'easeOut' as const,
+        ease: "easeOut" as const,
       },
     }),
   };
@@ -234,7 +234,7 @@ export default function GiftSets({ giftSets }: GiftSetsProps) {
               variants={cardVariants}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: '-50px' }}
+              viewport={{ once: true, margin: "-50px" }}
               custom={index}
             >
               <ImageWrapper>
@@ -245,7 +245,9 @@ export default function GiftSets({ giftSets }: GiftSetsProps) {
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 />
                 <Overlay>
-                  <ViewButton href={`/gifts/${gift.id}`}>자세히 보기</ViewButton>
+                  <ViewButton href={`/gifts/${gift.id}`}>
+                    자세히 보기
+                  </ViewButton>
                 </Overlay>
               </ImageWrapper>
               <CardContent>

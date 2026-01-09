@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import styled from 'styled-components';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import PageHeader from '@/components/common/PageHeader';
-import MenuFilter from '@/components/menu/MenuFilter';
-import { sampleReciprocateItems } from '@/data/sampleData';
-import { ReciprocateCategory } from '@/types';
+import { useState, useMemo } from "react";
+import styled from "styled-components";
+import Link from "next/link";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import PageHeader from "@/components/common/PageHeader";
+import MenuFilter from "@/components/menu/MenuFilter";
+import { sampleReciprocateItems } from "@/data/sampleData";
+import { ReciprocateCategory } from "@/types";
 
 const Section = styled.section`
   padding: 4rem 0;
@@ -206,28 +206,30 @@ const EmptyState = styled.div`
 `;
 
 const filterOptions = [
-  { value: 'all', label: '모든 메뉴' },
-  { value: 'ibaji', label: '이바지' },
-  { value: 'daprye', label: '답례' },
+  { value: "all", label: "모든 메뉴" },
+  { value: "ibaji", label: "이바지" },
+  { value: "daprye", label: "답례" },
 ];
 
 const categoryLabels: Record<string, string> = {
-  ibaji: '이바지',
-  daprye: '답례',
+  ibaji: "이바지",
+  daprye: "답례",
 };
 
 export default function ReciprocatePage() {
-  const [activeFilter, setActiveFilter] = useState<ReciprocateCategory>('all');
+  const [activeFilter, setActiveFilter] = useState<ReciprocateCategory>("all");
 
   const filteredItems = useMemo(() => {
-    if (activeFilter === 'all') {
+    if (activeFilter === "all") {
       return sampleReciprocateItems;
     }
-    return sampleReciprocateItems.filter((item) => item.category === activeFilter);
+    return sampleReciprocateItems.filter(
+      (item) => item.category === activeFilter
+    );
   }, [activeFilter]);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
+    return new Intl.NumberFormat("ko-KR").format(price);
   };
 
   return (
@@ -235,10 +237,7 @@ export default function ReciprocatePage() {
       <PageHeader
         title="이바지 & 답례"
         description="특별한 날을 더욱 의미있게 만드는 전통 이바지떡과 답례떡을 준비했습니다."
-        breadcrumbs={[
-          { label: '홈', href: '/' },
-          { label: '이바지 & 답례' },
-        ]}
+        breadcrumbs={[{ label: "홈", href: "/" }, { label: "이바지 & 답례" }]}
       />
 
       <Section>
@@ -246,15 +245,17 @@ export default function ReciprocatePage() {
           <InfoBanner>
             <h3>맞춤 주문 안내</h3>
             <p>
-              이바지떡과 답례떡은 행사 규모와 예산에 맞춰 맞춤 구성이 가능합니다.
-              자세한 상담은 전화(051-621-5108)로 문의해 주세요.
+              이바지떡과 답례떡은 행사 규모와 예산에 맞춰 맞춤 구성이
+              가능합니다. 자세한 상담은 전화(051-621-5108)로 문의해 주세요.
             </p>
           </InfoBanner>
 
           <MenuFilter
             filters={filterOptions}
             activeFilter={activeFilter}
-            onFilterChange={(filter) => setActiveFilter(filter as ReciprocateCategory)}
+            onFilterChange={(filter) =>
+              setActiveFilter(filter as ReciprocateCategory)
+            }
           />
 
           <ReciprocateGrid>
@@ -276,12 +277,16 @@ export default function ReciprocatePage() {
                         fill
                         sizes="(max-width: 640px) 100vw, 40vw"
                       />
-                      <CategoryBadge>{categoryLabels[item.category]}</CategoryBadge>
+                      <CategoryBadge>
+                        {categoryLabels[item.category]}
+                      </CategoryBadge>
                     </ImageWrapper>
                     <CardContent>
                       <ContentTop>
                         <ReciprocateName>{item.name}</ReciprocateName>
-                        <ReciprocateDescription>{item.description}</ReciprocateDescription>
+                        <ReciprocateDescription>
+                          {item.description}
+                        </ReciprocateDescription>
                       </ContentTop>
                       <ContentBottom>
                         <Price>{formatPrice(item.price)}원~</Price>

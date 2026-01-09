@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import styled from 'styled-components';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
+import styled from "styled-components";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 const HeaderSection = styled.section<{ $backgroundImage?: string }>`
   position: relative;
   padding: 8rem 0 4rem;
   background-color: #1e1e1e;
   background-image: ${({ $backgroundImage }) =>
-    $backgroundImage ? `url(${$backgroundImage})` : 'none'};
+    $backgroundImage ? `url(${$backgroundImage})` : "none"};
   background-size: cover;
   background-position: center;
   min-height: 300px;
@@ -17,7 +17,7 @@ const HeaderSection = styled.section<{ $backgroundImage?: string }>`
   align-items: center;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -141,7 +141,14 @@ export default function PageHeader({
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               {breadcrumbs.map((crumb, index) => (
-                <span key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span
+                  key={index}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
                   {index > 0 && <Separator>/</Separator>}
                   {crumb.href ? (
                     <Link href={crumb.href}>{crumb.label}</Link>

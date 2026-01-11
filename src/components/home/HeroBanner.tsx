@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
@@ -200,10 +200,7 @@ const StyledSwiper = styled(Swiper)`
     height: 50px;
     background-color: rgba(0, 0, 0, 0.3);
     border-radius: 50%;
-
-    &::after {
-      font-size: 1.25rem;
-    }
+    padding: 15px;
 
     &:hover {
       background-color: #f35525;

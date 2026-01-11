@@ -24,7 +24,7 @@ const Container = styled.div`
 
 const ContentWrapper = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 3fr;
   gap: 4rem;
   align-items: center;
 

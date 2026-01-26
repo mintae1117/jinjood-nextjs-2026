@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useEffect } from "react";
 import styled from "styled-components";
-import { motion } from "framer-motion";
-import { FiPlay, FiPause } from "react-icons/fi";
+import { motion, useInView } from "framer-motion";
 
 const Section = styled.section`
   position: relative;
@@ -116,38 +115,9 @@ const VideoWrapper = styled(motion.div)`
 
 const Video = styled.video`
   width: 100%;
+  height: auto;
   display: block;
   border-radius: 12px;
-`;
-
-const PlayButton = styled.button<{ $isPlaying: boolean }>`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background-color: rgba(243, 85, 37, 0.9);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  transition: all 0.3s ease;
-  opacity: ${({ $isPlaying }) => ($isPlaying ? 0 : 1)};
-  pointer-events: ${({ $isPlaying }) => ($isPlaying ? "none" : "auto")};
-
-  &:hover {
-    background-color: #f35525;
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-
-  @media (max-width: 768px) {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
-  }
 `;
 
 const StatsWrapper = styled(motion.div)`
@@ -188,30 +158,26 @@ const StatLabel = styled.div`
 
 export default function VideoSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
 
-  const togglePlay = () => {
+  const isInView = useInView(sectionRef, { amount: 0.5 });
+
+  // 스크롤하여 비디오가 화면에 보이면 자동 재생
+  useEffect(() => {
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
+      if (isInView) {
         videoRef.current.play();
+      } else {
+        videoRef.current.pause();
       }
-      setIsPlaying(!isPlaying);
     }
-  };
-
-  const handleVideoClick = () => {
-    if (isPlaying) {
-      togglePlay();
-    }
-  };
+  }, [isInView]);
 
   const currentYear = new Date().getFullYear();
   const yearsOfTradition = currentYear - 1995;
 
   return (
-    <Section>
+    <Section ref={sectionRef}>
       <Container>
         <ContentWrapper>
           <TextContent>
@@ -297,19 +263,12 @@ export default function VideoSection() {
             <Video
               ref={videoRef}
               poster="/images/banners/banner001.jpeg"
-              onClick={handleVideoClick}
-              onEnded={() => setIsPlaying(false)}
+              muted
+              playsInline
+              controls
             >
               <source src="/videos/jinjooad.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
             </Video>
-            <PlayButton
-              onClick={togglePlay}
-              $isPlaying={isPlaying}
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? <FiPause /> : <FiPlay />}
-            </PlayButton>
           </VideoWrapper>
         </ContentWrapper>
 

@@ -14,7 +14,7 @@ import { Banner } from "@/types";
 const BannerSection = styled.section`
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 85vh;
   min-height: 600px;
   max-height: 900px;
 

@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styled from "styled-components";
-import { FiPhone, FiMail, FiMenu, FiX, FiSearch } from "react-icons/fi";
+import { FiPhone, FiMail, FiMenu, FiX, FiSearch, FiShoppingCart, FiUser } from "react-icons/fi";
 import { FaInstagram } from "react-icons/fa";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { SiNaver } from "react-icons/si";
+import { useAuth, useCart } from "@/hooks";
+import UserDropdown from "@/components/auth/UserDropdown";
 
 const HeaderWrapper = styled.header<{ $scrolled: boolean }>`
   position: fixed;
@@ -186,6 +188,75 @@ const SearchButton = styled.button`
   }
 `;
 
+const CartButton = styled(Link)`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #1e1e1e;
+  border: 1px solid #eeeeee;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #f35525;
+    color: #f35525;
+  }
+`;
+
+const CartBadge = styled.span`
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f35525;
+  color: #ffffff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 9px;
+  padding: 0 4px;
+`;
+
+const LoginButton = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  color: #1e1e1e;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #eeeeee;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #f35525;
+    color: #f35525;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.5rem 0.75rem;
+
+    span {
+      display: none;
+    }
+  }
+`;
+
+const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
 const MenuButton = styled.button<{ $isOpen: boolean }>`
   display: none;
   font-size: 1.5rem;
@@ -245,6 +316,8 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { isAuthenticated, isInitialized } = useAuth();
+  const { totalItems } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -325,10 +398,27 @@ export default function Header() {
               ))}
             </DesktopNav>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <HeaderActions>
               <SearchButton aria-label="Search">
                 <FiSearch />
               </SearchButton>
+
+              <CartButton href="/cart" aria-label="장바구니">
+                <FiShoppingCart />
+                {totalItems > 0 && <CartBadge>{totalItems > 99 ? "99+" : totalItems}</CartBadge>}
+              </CartButton>
+
+              {isInitialized && (
+                isAuthenticated ? (
+                  <UserDropdown />
+                ) : (
+                  <LoginButton href="/login">
+                    <FiUser />
+                    <span>로그인</span>
+                  </LoginButton>
+                )
+              )}
+
               <MenuButton
                 $isOpen={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -336,7 +426,7 @@ export default function Header() {
               >
                 <FiMenu />
               </MenuButton>
-            </div>
+            </HeaderActions>
           </HeaderContainer>
         </MainHeader>
       </HeaderWrapper>

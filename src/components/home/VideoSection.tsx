@@ -262,7 +262,7 @@ export default function VideoSection() {
           >
             <Video
               ref={videoRef}
-              poster="/images/banners/banner001.jpeg"
+              poster="https://dtrkgewjilthseguqlgy.supabase.co/storage/v1/object/public/images/banners/banner001.jpeg"
               muted
               playsInline
               controls

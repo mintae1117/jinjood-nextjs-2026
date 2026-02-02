@@ -18,18 +18,18 @@
 
 ## 기술 스택
 
-| 분류 | 기술 | 버전 |
-|------|------|------|
-| Framework | **Next.js** (App Router) | 16.1.1 |
-| Language | TypeScript | 5.x |
-| React | React | 19.2.3 |
-| Styling | Styled Components + Tailwind | 6.2.0 + 4.x |
-| Animation | Framer Motion | 12.24.12 |
-| Database | **Supabase** (PostgreSQL) | Latest |
-| Auth | Supabase Auth | (예정) |
-| Payment | Toss Payments / Stripe | (예정) |
-| State | Zustand | (예정) |
-| UI | React Icons, Swiper | 5.5.0 + 12.0.3 |
+| 분류 | 기술 | 버전 | 상태 |
+|------|------|------|------|
+| Framework | **Next.js** (App Router) | 16.1.1 | ✅ |
+| Language | TypeScript | 5.x | ✅ |
+| React | React | 19.2.3 | ✅ |
+| Styling | Styled Components + Tailwind | 6.2.0 + 4.x | ✅ |
+| Animation | Framer Motion | 12.24.12 | ✅ |
+| Database | **Supabase** (PostgreSQL) | Latest | ✅ |
+| Auth | Supabase Auth + @supabase/ssr | Latest | ✅ |
+| State | Zustand | 5.x | ✅ |
+| Payment | Toss Payments / Stripe | - | 예정 |
+| UI | React Icons, Swiper | 5.5.0 + 12.0.3 | ✅ |
 
 ---
 
@@ -72,15 +72,18 @@ npm run lint
 │   ├── contact/                   # 오시는 길
 │   │   └── page.tsx
 │   │
-│   ├── (auth)/                    # (예정) 인증 그룹
-│   │   ├── login/page.tsx
-│   │   ├── register/page.tsx
-│   │   └── forgot-password/page.tsx
+│   ├── (auth)/                    # ✅ 인증 그룹
+│   │   ├── login/page.tsx         # 로그인 페이지
+│   │   ├── register/page.tsx      # 회원가입 페이지
+│   │   └── forgot-password/page.tsx # 비밀번호 찾기
 │   │
-│   ├── (shop)/                    # (예정) 쇼핑 그룹
+│   ├── auth/                      # ✅ OAuth 콜백
+│   │   └── callback/route.ts      # Supabase OAuth 콜백 핸들러
+│   │
+│   ├── (shop)/                    # ✅ 쇼핑 그룹
 │   │   ├── cart/page.tsx          # 장바구니
-│   │   ├── checkout/page.tsx      # 결제
-│   │   └── orders/page.tsx        # 주문 내역
+│   │   ├── checkout/page.tsx      # (예정) 결제
+│   │   └── orders/page.tsx        # (예정) 주문 내역
 │   │
 │   ├── (board)/                   # (예정) 게시판 그룹
 │   │   ├── notice/page.tsx        # 공지사항
@@ -97,10 +100,12 @@ npm run lint
 │       ├── orders/page.tsx
 │       └── users/page.tsx
 │
+├── middleware.ts                  # ✅ Supabase 세션 관리 미들웨어
+│
 ├── src/
 │   ├── components/
 │   │   ├── common/                # 공통 컴포넌트
-│   │   │   ├── Header.tsx
+│   │   │   ├── Header.tsx         # ✅ 로그인/장바구니 버튼 포함
 │   │   │   ├── Footer.tsx
 │   │   │   ├── PageHeader.tsx
 │   │   │   ├── Button.tsx         # (예정)
@@ -111,7 +116,7 @@ npm run lint
 │   │   │   ├── HeroBanner.tsx
 │   │   │   ├── FeaturedMenu.tsx
 │   │   │   ├── GiftSets.tsx
-│   │   │   ├── VideoSection.tsx
+│   │   │   ├── VideoSection.tsx   # ✅ Supabase Storage 이미지 사용
 │   │   │   └── SNSSection.tsx
 │   │   ├── menu/                  # 메뉴 관련
 │   │   │   ├── MenuCard.tsx
@@ -121,43 +126,50 @@ npm run lint
 │   │   │   ├── ProductGallery.tsx
 │   │   │   ├── ProductOptions.tsx
 │   │   │   └── ProductReviews.tsx
-│   │   ├── cart/                  # (예정) 장바구니
-│   │   │   ├── CartItem.tsx
-│   │   │   ├── CartSummary.tsx
-│   │   │   └── CartEmpty.tsx
+│   │   ├── cart/                  # ✅ 장바구니
+│   │   │   ├── CartContent.tsx    # 메인 컨텐츠 (로그인 체크)
+│   │   │   ├── CartItem.tsx       # 개별 아이템 카드
+│   │   │   ├── CartSummary.tsx    # 요약 및 결제 버튼
+│   │   │   └── CartEmpty.tsx      # 빈 장바구니 안내
 │   │   ├── checkout/              # (예정) 결제
 │   │   │   ├── CheckoutForm.tsx
 │   │   │   ├── PaymentMethod.tsx
 │   │   │   └── OrderSummary.tsx
-│   │   ├── auth/                  # (예정) 인증
-│   │   │   ├── LoginForm.tsx
-│   │   │   ├── RegisterForm.tsx
-│   │   │   └── SocialLogin.tsx
+│   │   ├── auth/                  # ✅ 인증
+│   │   │   ├── LoginForm.tsx      # 이메일 + 카카오 로그인
+│   │   │   ├── RegisterForm.tsx   # 회원가입 폼
+│   │   │   ├── ForgotPasswordForm.tsx # 비밀번호 찾기
+│   │   │   └── UserDropdown.tsx   # 로그인 후 사용자 메뉴
 │   │   └── board/                 # (예정) 게시판
 │   │       ├── PostList.tsx
 │   │       ├── PostDetail.tsx
 │   │       └── CommentSection.tsx
 │   │
 │   ├── hooks/                     # 커스텀 훅
-│   │   ├── useAuth.ts             # (예정) 인증 훅
-│   │   ├── useCart.ts             # (예정) 장바구니 훅
-│   │   ├── useProducts.ts         # (예정) 상품 조회 훅
+│   │   ├── index.ts               # 통합 export
+│   │   ├── useAuth.ts             # ✅ 인증 상태 초기화, 세션 구독
+│   │   ├── useCart.ts             # ✅ 장바구니 작업 래퍼
+│   │   ├── useProducts.ts         # 상품 조회 훅
+│   │   ├── useBanners.ts          # 배너 조회 훅
 │   │   └── useOrders.ts           # (예정) 주문 훅
 │   │
-│   ├── stores/                    # (예정) Zustand 스토어
-│   │   ├── authStore.ts           # 인증 상태
-│   │   ├── cartStore.ts           # 장바구니 상태
-│   │   └── uiStore.ts             # UI 상태 (모달, 토스트)
+│   ├── stores/                    # ✅ Zustand 스토어
+│   │   ├── index.ts               # 통합 export
+│   │   ├── authStore.ts           # 사용자 상태, 인증 상태
+│   │   └── cartStore.ts           # 장바구니 아이템, 총액 계산
 │   │
-│   ├── services/                  # (예정) API 서비스
-│   │   ├── auth.ts                # 인증 API
+│   ├── services/                  # API 서비스
+│   │   ├── index.ts               # 통합 export
+│   │   ├── auth.ts                # ✅ 회원가입, 로그인, 로그아웃, 카카오 OAuth
+│   │   ├── cart.ts                # ✅ 장바구니 CRUD
 │   │   ├── products.ts            # 상품 API
-│   │   ├── orders.ts              # 주문 API
-│   │   ├── payments.ts            # 결제 API
-│   │   └── board.ts               # 게시판 API
+│   │   ├── banners.ts             # 배너 API
+│   │   ├── settings.ts            # 사이트 설정 API
+│   │   ├── orders.ts              # (예정) 주문 API
+│   │   └── payments.ts            # (예정) 결제 API
 │   │
 │   ├── types/                     # TypeScript 타입
-│   │   └── index.ts
+│   │   └── index.ts               # ✅ User, CartItem, AuthState 등 추가
 │   │
 │   ├── styles/
 │   │   ├── GlobalStyles.ts
@@ -167,7 +179,11 @@ npm run lint
 │   │   └── sampleData.ts
 │   │
 │   ├── lib/
-│   │   ├── supabase.ts            # Supabase 클라이언트
+│   │   ├── supabase/              # ✅ Supabase 클라이언트 (리팩토링)
+│   │   │   ├── index.ts           # 통합 export + 싱글톤 supabase
+│   │   │   ├── client.ts          # 브라우저용 클라이언트
+│   │   │   ├── server.ts          # 서버 컴포넌트용 클라이언트
+│   │   │   └── middleware.ts      # 미들웨어용 클라이언트
 │   │   └── registry.tsx           # Styled Components 레지스트리
 │   │
 │   └── utils/                     # (예정) 유틸리티
@@ -180,10 +196,9 @@ npm run lint
 │
 └── public/
     ├── images/
-    │   ├── banners/
-    │   ├── menu/
-    │   └── sns/
+    │   └── sns/                   # SNS 이미지 (banners, menu는 Supabase Storage로 이동)
     └── videos/
+        └── jinjooad.mp4           # 홍보 영상
 ```
 
 ---
@@ -200,9 +215,8 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=<Google Maps API Key>
 TOSS_CLIENT_KEY=<Toss Client Key>
 TOSS_SECRET_KEY=<Toss Secret Key>
 
-# (예정) 소셜 로그인
-KAKAO_CLIENT_ID=<Kakao Client ID>
-GOOGLE_CLIENT_ID=<Google Client ID>
+# 카카오 OAuth는 Supabase Dashboard에서 설정
+# Redirect URI: https://<project-ref>.supabase.co/auth/v1/callback
 ```
 
 ---
@@ -225,21 +239,26 @@ banners (id, title, subtitle, image_url, link, display_order, is_active)
 
 -- 사이트 설정
 site_settings (key, value:JSONB)
+
+-- ✅ 장바구니 (신규)
+cart_items (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id),
+  product_id UUID,
+  product_type VARCHAR(50),  -- 'menu_item' | 'gift_set' | 'reciprocate_item'
+  quantity INTEGER,
+  options JSONB,
+  created_at, updated_at
+)
 ```
 
 ### 예정 테이블
 ```sql
--- 사용자 (Supabase Auth 연동)
-users (id, email, name, phone, address, role, created_at)
-
 -- 주문
 orders (id, user_id, status, total_price, shipping_address, payment_method, created_at)
 
 -- 주문 상품
 order_items (id, order_id, product_id, quantity, price, options)
-
--- 장바구니
-cart_items (id, user_id, product_id, quantity, options, created_at)
 
 -- 결제
 payments (id, order_id, method, amount, status, transaction_id, created_at)
@@ -255,6 +274,32 @@ comments (id, post_id, user_id, content, parent_id, created_at)
 
 -- 위시리스트
 wishlist (id, user_id, product_id, created_at)
+```
+
+### cart_items 테이블 생성 SQL
+```sql
+CREATE TABLE IF NOT EXISTS cart_items (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL,
+  product_type VARCHAR(50) NOT NULL CHECK (product_type IN ('menu_item', 'gift_set', 'reciprocate_item')),
+  quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+  options JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  UNIQUE(user_id, product_id, product_type)
+);
+
+-- RLS 정책
+ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own cart"
+  ON cart_items FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX idx_cart_items_user_id ON cart_items(user_id);
 ```
 
 ---
@@ -282,23 +327,32 @@ interface MenuItem {
 
 type MenuCategory = 'chapssaltteok' | 'mepssaltteok' | 'tteokguk' | 'others';
 
-// (예정) 사용자
+// ✅ 사용자
 interface User {
   id: string;
   email: string;
-  name: string;
+  name?: string;
   phone?: string;
-  address?: Address;
-  role: 'customer' | 'admin';
-  created_at: string;
+  avatar_url?: string;
+  created_at?: string;
 }
 
-// (예정) 장바구니 아이템
+// ✅ 인증 상태
+interface AuthState {
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+}
+
+// ✅ 장바구니 아이템
 interface CartItem {
   id: string;
-  product: MenuItem;
+  user_id: string;
+  product_id: string;
+  product_type: ProductType;  // 'menu_item' | 'gift_set' | 'reciprocate_item'
   quantity: number;
-  options?: ProductOption[];
+  options: Record<string, unknown>;
+  product?: MenuItem | GiftSet | ReciprocateItem;  // 조인된 상품 정보
 }
 
 // (예정) 주문
@@ -342,9 +396,9 @@ const theme = {
     background: '#ffffff',
     backgroundGray: '#f8f8f8',
     border: '#eeeeee',
-    success: '#22c55e',      // (예정)
-    error: '#ef4444',        // (예정)
-    warning: '#f59e0b',      // (예정)
+    success: '#22c55e',
+    error: '#ef4444',
+    warning: '#f59e0b',
   },
   breakpoints: {
     sm: '640px',
@@ -422,43 +476,90 @@ export const Card = styled.div<CardProps>`
 
 ---
 
-## 인증 구현 가이드 (예정)
+## 인증 구현 가이드 ✅
 
-### Supabase Auth 설정
+### Supabase 클라이언트 구조
 ```typescript
-// src/lib/supabase.ts
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+// src/lib/supabase/client.ts - 브라우저용
+import { createBrowserClient } from "@supabase/ssr";
 
-export const supabase = createClientComponentClient();
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
-// 로그인
-await supabase.auth.signInWithPassword({ email, password });
+// src/lib/supabase/server.ts - 서버 컴포넌트용
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-// 소셜 로그인
-await supabase.auth.signInWithOAuth({ provider: 'kakao' });
+export async function createClient() {
+  const cookieStore = await cookies();
+  return createServerClient(url, key, { cookies: { ... } });
+}
+```
 
-// 로그아웃
-await supabase.auth.signOut();
+### Auth 서비스
+```typescript
+// src/services/auth.ts
+export const authService = {
+  // 이메일/비밀번호 로그인
+  async signIn(data: LoginFormData) { ... },
+
+  // 카카오 OAuth 로그인
+  async signInWithKakao() {
+    const supabase = createBrowserClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "kakao",
+      options: { redirectTo: `${window.location.origin}/auth/callback` }
+    });
+  },
+
+  // 로그아웃
+  async signOut() { ... },
+
+  // 현재 사용자 정보
+  async getCurrentUser() { ... },
+
+  // Auth 상태 변경 구독
+  onAuthStateChange(callback) { ... },
+};
 ```
 
 ### Auth 훅
 ```typescript
 // src/hooks/useAuth.ts
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading, setUser } = useAuthStore();
 
   useEffect(() => {
-    // 세션 체크 및 구독
+    // 초기화 및 세션 구독
+    const subscription = authService.onAuthStateChange(setUser);
+    return () => subscription.unsubscribe();
   }, []);
 
-  return { user, loading, signIn, signOut };
+  return {
+    user,
+    isLoading,
+    isAuthenticated: !!user,
+    signIn,
+    signUp,
+    signInWithKakao,
+    signOut,
+  };
 }
 ```
 
+### 카카오 OAuth 설정 (수동)
+1. [Kakao Developers](https://developers.kakao.com/)에서 앱 생성
+2. Redirect URI 설정: `https://<project-ref>.supabase.co/auth/v1/callback`
+3. Supabase Dashboard > Authentication > Providers > Kakao 활성화
+4. Client ID/Secret 입력
+
 ---
 
-## 장바구니 구현 가이드 (예정)
+## 장바구니 구현 가이드 ✅
 
 ### Zustand 스토어
 ```typescript
@@ -468,26 +569,67 @@ import { persist } from 'zustand/middleware';
 
 interface CartStore {
   items: CartItem[];
+  isLoading: boolean;
+  setItems: (items: CartItem[]) => void;
   addItem: (item: CartItem) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  clearCart: () => void;
-  totalPrice: number;
-  totalItems: number;
+  updateItem: (itemId: string, updates: Partial<CartItem>) => void;
+  removeItem: (itemId: string) => void;
+  clearItems: () => void;
+  getTotalItems: () => number;
+  getTotalPrice: () => number;
 }
 
 export const useCartStore = create<CartStore>()(
   persist(
-    (set, get) => ({
-      items: [],
-      addItem: (item) => set((state) => ({
-        items: [...state.items, item]
-      })),
-      // ...
-    }),
+    (set, get) => ({ ... }),
     { name: 'jinjood-cart' }
   )
 );
+```
+
+### Cart 서비스
+```typescript
+// src/services/cart.ts
+export const cartService = {
+  // 장바구니 조회
+  async getCartItems(userId: string) { ... },
+
+  // 장바구니 추가
+  async addToCart(userId: string, data: AddToCartData) { ... },
+
+  // 수량 변경
+  async updateQuantity(itemId: string, quantity: number) { ... },
+
+  // 삭제
+  async removeFromCart(itemId: string) { ... },
+
+  // 비우기
+  async clearCart(userId: string) { ... },
+};
+```
+
+### Cart 훅
+```typescript
+// src/hooks/useCart.ts
+export function useCart() {
+  const { items, isLoading } = useCartStore();
+  const { user, isAuthenticated } = useAuthStore();
+
+  // 로그인 시 장바구니 로드
+  useEffect(() => {
+    if (isAuthenticated && user?.id) loadCart();
+  }, [isAuthenticated]);
+
+  return {
+    items,
+    totalItems,
+    totalPrice,
+    addToCart,      // 로그인 필요
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+  };
+}
 ```
 
 ---
@@ -514,7 +656,7 @@ export async function requestPayment(order: Order) {
 
 ---
 
-## API 서비스 패턴 (예정)
+## API 서비스 패턴
 
 ```typescript
 // src/services/products.ts
@@ -622,29 +764,36 @@ style(product): 상품 카드 반응형 개선
 
 ## 개발 우선순위 (Roadmap)
 
-### Phase 1: 기본 기능 (현재)
+### Phase 1: 기본 기능 ✅
 - [x] 홈페이지 레이아웃
 - [x] 메뉴 목록 페이지
 - [x] 오시는 길 페이지
-- [ ] Supabase 데이터 연동
+- [x] Supabase 데이터 연동
 - [ ] 상품 상세 페이지
 
-### Phase 2: 쇼핑 기능
-- [ ] 장바구니 기능
+### Phase 2: 인증 & 장바구니 ✅
+- [x] 로그인/회원가입 페이지
+- [x] 이메일 로그인
+- [x] 카카오 소셜 로그인 (OAuth 설정 필요)
+- [x] 장바구니 기능 (로그인 필수)
+- [x] Header에 로그인/장바구니 UI
+
+### Phase 3: 결제 (예정)
 - [ ] 결제 페이지
+- [ ] Toss Payments 연동
 - [ ] 주문 완료 페이지
 
-### Phase 3: 인증 & 회원
-- [ ] 로그인/회원가입
-- [ ] 소셜 로그인 (카카오, 구글)
+### Phase 4: 마이페이지 (예정)
 - [ ] 마이페이지
-
-### Phase 4: 주문 관리
 - [ ] 주문 내역 조회
 - [ ] 주문 상태 추적
-- [ ] 관리자 대시보드
 
-### Phase 5: 커뮤니티
+### Phase 5: 관리자 (예정)
+- [ ] 관리자 대시보드
+- [ ] 상품 관리
+- [ ] 주문 관리
+
+### Phase 6: 커뮤니티 (예정)
 - [ ] 상품 리뷰
 - [ ] 공지사항
 - [ ] Q&A 게시판
@@ -657,3 +806,4 @@ style(product): 상품 카드 반응형 개선
 - **URL**: https://jinjood.vercel.app/ (예정)
 - **CI/CD**: Git push 시 자동 배포
 - **Database**: Supabase (별도 관리)
+- **Storage**: Supabase Storage (이미지 호스팅)

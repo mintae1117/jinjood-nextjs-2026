@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import { AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/common/PageHeader";
 import MenuFilter from "@/components/menu/MenuFilter";
 import MenuCard from "@/components/menu/MenuCard";
-import { sampleMenuItems } from "@/data/sampleData";
+import { useMenuItems } from "@/hooks";
 import { MenuCategory } from "@/types";
 
 const Section = styled.section`
@@ -57,6 +57,33 @@ const EmptyState = styled.div`
   }
 `;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  color: #666666;
+  font-size: 1rem;
+`;
+
+const ErrorContainer = styled.div`
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #ef4444;
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 1rem;
+    color: #666666;
+  }
+`;
+
 const filterOptions = [
   { value: "all", label: "모든 메뉴" },
   { value: "chapssaltteok", label: "찹쌀떡" },
@@ -67,13 +94,7 @@ const filterOptions = [
 
 export default function MenuPage() {
   const [activeFilter, setActiveFilter] = useState<MenuCategory>("all");
-
-  const filteredItems = useMemo(() => {
-    if (activeFilter === "all") {
-      return sampleMenuItems;
-    }
-    return sampleMenuItems.filter((item) => item.category === activeFilter);
-  }, [activeFilter]);
+  const { items, isLoading, error } = useMenuItems(activeFilter === "all" ? undefined : activeFilter);
 
   return (
     <>
@@ -91,20 +112,29 @@ export default function MenuPage() {
             onFilterChange={(filter) => setActiveFilter(filter as MenuCategory)}
           />
 
-          <MenuGrid>
-            <AnimatePresence mode="wait">
-              {filteredItems.length > 0 ? (
-                filteredItems.map((item, index) => (
-                  <MenuCard key={item.id} item={item} index={index} />
-                ))
-              ) : (
-                <EmptyState>
-                  <h3>메뉴가 없습니다</h3>
-                  <p>선택한 카테고리에 해당하는 메뉴가 없습니다.</p>
-                </EmptyState>
-              )}
-            </AnimatePresence>
-          </MenuGrid>
+          {isLoading ? (
+            <LoadingContainer>메뉴를 불러오는 중...</LoadingContainer>
+          ) : error ? (
+            <ErrorContainer>
+              <h3>오류가 발생했습니다</h3>
+              <p>{error.message}</p>
+            </ErrorContainer>
+          ) : (
+            <MenuGrid>
+              <AnimatePresence mode="wait">
+                {items.length > 0 ? (
+                  items.map((item, index) => (
+                    <MenuCard key={item.id} item={item} index={index} />
+                  ))
+                ) : (
+                  <EmptyState>
+                    <h3>메뉴가 없습니다</h3>
+                    <p>선택한 카테고리에 해당하는 메뉴가 없습니다.</p>
+                  </EmptyState>
+                )}
+              </AnimatePresence>
+            </MenuGrid>
+          )}
         </Container>
       </Section>
     </>

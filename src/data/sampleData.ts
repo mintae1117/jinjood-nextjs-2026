@@ -240,7 +240,7 @@ export const sampleBanners: Banner[] = [
     subtitle: "진주떡집",
     description: "국내산 쌀과 엄선된 재료만을 사용하여 정성껏 만듭니다.",
     image_url: "/images/banners/banner001.jpeg",
-    order: 1,
+    display_order: 1,
     is_active: true,
   },
   {
@@ -249,7 +249,7 @@ export const sampleBanners: Banner[] = [
     subtitle: "당일 생산",
     description: "매일 아침 신선하게 만들어 최상의 맛을 제공합니다.",
     image_url: "/images/banners/banner002.jpeg",
-    order: 2,
+    display_order: 2,
     is_active: true,
   },
   {
@@ -258,7 +258,7 @@ export const sampleBanners: Banner[] = [
     subtitle: "최고급 원재료",
     description: "엄선된 국내산 재료로 건강하고 맛있는 떡을 만듭니다.",
     image_url: "/images/banners/banner003.jpeg",
-    order: 3,
+    display_order: 3,
     is_active: true,
   },
 ];

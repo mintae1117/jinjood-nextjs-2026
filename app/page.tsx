@@ -1,20 +1,70 @@
+"use client";
+
+import styled from "styled-components";
 import HeroBanner from "@/components/home/HeroBanner";
 import FeaturedMenu from "@/components/home/FeaturedMenu";
 import GiftSets from "@/components/home/GiftSets";
 import VideoSection from "@/components/home/VideoSection";
 import SNSSection from "@/components/home/SNSSection";
-import {
-  sampleBanners,
-  sampleMenuItems,
-  sampleGiftSets,
-} from "@/data/sampleData";
+import { useBanners, usePopularItems, useGiftSets } from "@/hooks";
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 1.125rem;
+  color: #666666;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 2rem;
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e1e1e;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: #666666;
+    font-size: 1rem;
+  }
+`;
 
 export default function HomePage() {
+  const { banners, isLoading: bannersLoading, error: bannersError } = useBanners();
+  const { items: menuItems, isLoading: menuLoading, error: menuError } = usePopularItems(9);
+  const { items: giftSets, isLoading: giftsLoading, error: giftsError } = useGiftSets();
+
+  const isLoading = bannersLoading || menuLoading || giftsLoading;
+  const error = bannersError || menuError || giftsError;
+
+  if (isLoading) {
+    return <LoadingContainer>로딩 중...</LoadingContainer>;
+  }
+
+  if (error) {
+    return (
+      <ErrorContainer>
+        <h2>데이터를 불러오는데 실패했습니다</h2>
+        <p>{error.message}</p>
+      </ErrorContainer>
+    );
+  }
+
   return (
     <>
-      <HeroBanner banners={sampleBanners} />
-      <FeaturedMenu menuItems={sampleMenuItems} />
-      <GiftSets giftSets={sampleGiftSets} />
+      <HeroBanner banners={banners} />
+      <FeaturedMenu menuItems={menuItems} />
+      <GiftSets giftSets={giftSets} />
       <VideoSection />
       <SNSSection />
     </>

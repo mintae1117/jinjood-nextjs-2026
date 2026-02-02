@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/common/PageHeader";
 import MenuFilter from "@/components/menu/MenuFilter";
-import { sampleReciprocateItems } from "@/data/sampleData";
+import { useReciprocateItems } from "@/hooks";
 import { ReciprocateCategory } from "@/types";
 
 const Section = styled.section`
@@ -205,6 +205,33 @@ const EmptyState = styled.div`
   }
 `;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  color: #666666;
+  font-size: 1rem;
+`;
+
+const ErrorContainer = styled.div`
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #ef4444;
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 1rem;
+    color: #666666;
+  }
+`;
+
 const filterOptions = [
   { value: "all", label: "모든 메뉴" },
   { value: "ibaji", label: "이바지" },
@@ -218,15 +245,7 @@ const categoryLabels: Record<string, string> = {
 
 export default function ReciprocatePage() {
   const [activeFilter, setActiveFilter] = useState<ReciprocateCategory>("all");
-
-  const filteredItems = useMemo(() => {
-    if (activeFilter === "all") {
-      return sampleReciprocateItems;
-    }
-    return sampleReciprocateItems.filter(
-      (item) => item.category === activeFilter
-    );
-  }, [activeFilter]);
+  const { items, isLoading, error } = useReciprocateItems(activeFilter === "all" ? undefined : activeFilter);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price);
@@ -258,51 +277,60 @@ export default function ReciprocatePage() {
             }
           />
 
-          <ReciprocateGrid>
-            <AnimatePresence mode="wait">
-              {filteredItems.length > 0 ? (
-                filteredItems.map((item, index) => (
-                  <ReciprocateCard
-                    key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, delay: index * 0.05 }}
-                    layout
-                  >
-                    <ImageWrapper>
-                      <Image
-                        src={item.image_url}
-                        alt={item.name}
-                        fill
-                        sizes="(max-width: 640px) 100vw, 40vw"
-                      />
-                      <CategoryBadge>
-                        {categoryLabels[item.category]}
-                      </CategoryBadge>
-                    </ImageWrapper>
-                    <CardContent>
-                      <ContentTop>
-                        <ReciprocateName>{item.name}</ReciprocateName>
-                        <ReciprocateDescription>
-                          {item.description}
-                        </ReciprocateDescription>
-                      </ContentTop>
-                      <ContentBottom>
-                        <Price>{formatPrice(item.price)}원~</Price>
-                        <InquiryButton href="/contact">문의하기</InquiryButton>
-                      </ContentBottom>
-                    </CardContent>
-                  </ReciprocateCard>
-                ))
-              ) : (
-                <EmptyState>
-                  <h3>상품이 없습니다</h3>
-                  <p>선택한 카테고리에 해당하는 상품이 없습니다.</p>
-                </EmptyState>
-              )}
-            </AnimatePresence>
-          </ReciprocateGrid>
+          {isLoading ? (
+            <LoadingContainer>상품을 불러오는 중...</LoadingContainer>
+          ) : error ? (
+            <ErrorContainer>
+              <h3>오류가 발생했습니다</h3>
+              <p>{error.message}</p>
+            </ErrorContainer>
+          ) : (
+            <ReciprocateGrid>
+              <AnimatePresence mode="wait">
+                {items.length > 0 ? (
+                  items.map((item, index) => (
+                    <ReciprocateCard
+                      key={item.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ duration: 0.4, delay: index * 0.05 }}
+                      layout
+                    >
+                      <ImageWrapper>
+                        <Image
+                          src={item.image_url}
+                          alt={item.name}
+                          fill
+                          sizes="(max-width: 640px) 100vw, 40vw"
+                        />
+                        <CategoryBadge>
+                          {categoryLabels[item.category]}
+                        </CategoryBadge>
+                      </ImageWrapper>
+                      <CardContent>
+                        <ContentTop>
+                          <ReciprocateName>{item.name}</ReciprocateName>
+                          <ReciprocateDescription>
+                            {item.description}
+                          </ReciprocateDescription>
+                        </ContentTop>
+                        <ContentBottom>
+                          <Price>{formatPrice(item.price)}원~</Price>
+                          <InquiryButton href="/contact">문의하기</InquiryButton>
+                        </ContentBottom>
+                      </CardContent>
+                    </ReciprocateCard>
+                  ))
+                ) : (
+                  <EmptyState>
+                    <h3>상품이 없습니다</h3>
+                    <p>선택한 카테고리에 해당하는 상품이 없습니다.</p>
+                  </EmptyState>
+                )}
+              </AnimatePresence>
+            </ReciprocateGrid>
+          )}
         </Container>
       </Section>
     </>

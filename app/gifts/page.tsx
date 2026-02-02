@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/common/PageHeader";
 import MenuFilter from "@/components/menu/MenuFilter";
-import { sampleGiftSets } from "@/data/sampleData";
+import { useGiftSets } from "@/hooks";
 import { GiftCategory } from "@/types";
 
 const Section = styled.section`
@@ -171,6 +171,33 @@ const EmptyState = styled.div`
   }
 `;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  color: #666666;
+  font-size: 1rem;
+`;
+
+const ErrorContainer = styled.div`
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #ef4444;
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 1rem;
+    color: #666666;
+  }
+`;
+
 const filterOptions = [
   { value: "all", label: "모든 메뉴" },
   { value: "gift_set", label: "선물 세트" },
@@ -186,13 +213,7 @@ const categoryLabels: Record<string, string> = {
 
 export default function GiftsPage() {
   const [activeFilter, setActiveFilter] = useState<GiftCategory>("all");
-
-  const filteredItems = useMemo(() => {
-    if (activeFilter === "all") {
-      return sampleGiftSets;
-    }
-    return sampleGiftSets.filter((item) => item.category === activeFilter);
-  }, [activeFilter]);
+  const { items, isLoading, error } = useGiftSets(activeFilter === "all" ? undefined : activeFilter);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price);
@@ -214,53 +235,62 @@ export default function GiftsPage() {
             onFilterChange={(filter) => setActiveFilter(filter as GiftCategory)}
           />
 
-          <GiftGrid>
-            <AnimatePresence mode="wait">
-              {filteredItems.length > 0 ? (
-                filteredItems.map((item, index) => (
-                  <GiftCard
-                    key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, delay: index * 0.05 }}
-                    layout
-                  >
-                    <ImageWrapper>
-                      <Image
-                        src={item.image_url}
-                        alt={item.name}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                      <CategoryBadge>
-                        {categoryLabels[item.category]}
-                      </CategoryBadge>
-                    </ImageWrapper>
-                    <CardContent>
-                      <GiftName>{item.name}</GiftName>
-                      <GiftDescription>{item.description}</GiftDescription>
-                      <ItemsList>
-                        <h4>구성품</h4>
-                        <p>{item.items.join(", ")}</p>
-                      </ItemsList>
-                      <PriceRow>
-                        <Price>{formatPrice(item.price)}원</Price>
-                        <ViewMoreButton href={`/gifts/${item.id}`}>
-                          자세히 보기
-                        </ViewMoreButton>
-                      </PriceRow>
-                    </CardContent>
-                  </GiftCard>
-                ))
-              ) : (
-                <EmptyState>
-                  <h3>상품이 없습니다</h3>
-                  <p>선택한 카테고리에 해당하는 상품이 없습니다.</p>
-                </EmptyState>
-              )}
-            </AnimatePresence>
-          </GiftGrid>
+          {isLoading ? (
+            <LoadingContainer>상품을 불러오는 중...</LoadingContainer>
+          ) : error ? (
+            <ErrorContainer>
+              <h3>오류가 발생했습니다</h3>
+              <p>{error.message}</p>
+            </ErrorContainer>
+          ) : (
+            <GiftGrid>
+              <AnimatePresence mode="wait">
+                {items.length > 0 ? (
+                  items.map((item, index) => (
+                    <GiftCard
+                      key={item.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ duration: 0.4, delay: index * 0.05 }}
+                      layout
+                    >
+                      <ImageWrapper>
+                        <Image
+                          src={item.image_url}
+                          alt={item.name}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                        <CategoryBadge>
+                          {categoryLabels[item.category]}
+                        </CategoryBadge>
+                      </ImageWrapper>
+                      <CardContent>
+                        <GiftName>{item.name}</GiftName>
+                        <GiftDescription>{item.description}</GiftDescription>
+                        <ItemsList>
+                          <h4>구성품</h4>
+                          <p>{item.items.join(", ")}</p>
+                        </ItemsList>
+                        <PriceRow>
+                          <Price>{formatPrice(item.price)}원</Price>
+                          <ViewMoreButton href={`/gifts/${item.id}`}>
+                            자세히 보기
+                          </ViewMoreButton>
+                        </PriceRow>
+                      </CardContent>
+                    </GiftCard>
+                  ))
+                ) : (
+                  <EmptyState>
+                    <h3>상품이 없습니다</h3>
+                    <p>선택한 카테고리에 해당하는 상품이 없습니다.</p>
+                  </EmptyState>
+                )}
+              </AnimatePresence>
+            </GiftGrid>
+          )}
         </Container>
       </Section>
     </>

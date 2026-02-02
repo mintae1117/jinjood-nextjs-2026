@@ -5,7 +5,9 @@ export {
   useMenuItems,
   useMenuItem,
   useGiftSets,
+  useGiftSet,
   useReciprocateItems,
+  useReciprocateItem,
   usePopularItems
 } from './useProducts';
 

@@ -62,13 +62,13 @@ npm run lint
 │   │
 │   ├── represent/                 # 대표 메뉴
 │   │   ├── page.tsx               # 목록 페이지
-│   │   └── [id]/page.tsx          # (예정) 상품 상세
+│   │   └── [id]/page.tsx          # ✅ 상품 상세 페이지
 │   ├── gifts/                     # 선물 세트
 │   │   ├── page.tsx
-│   │   └── [id]/page.tsx          # (예정)
+│   │   └── [id]/page.tsx          # ✅ 상품 상세 페이지
 │   ├── reciprocate/               # 이바지/답례
 │   │   ├── page.tsx
-│   │   └── [id]/page.tsx          # (예정)
+│   │   └── [id]/page.tsx          # ✅ 상품 상세 페이지
 │   ├── contact/                   # 오시는 길
 │   │   └── page.tsx
 │   │
@@ -121,11 +121,8 @@ npm run lint
 │   │   ├── menu/                  # 메뉴 관련
 │   │   │   ├── MenuCard.tsx
 │   │   │   └── MenuFilter.tsx
-│   │   ├── product/               # (예정) 상품 상세
-│   │   │   ├── ProductInfo.tsx
-│   │   │   ├── ProductGallery.tsx
-│   │   │   ├── ProductOptions.tsx
-│   │   │   └── ProductReviews.tsx
+│   │   ├── product/               # ✅ 상품 상세
+│   │   │   └── ProductDetail.tsx  # 통합 상품 상세 컴포넌트 (모든 상품 타입 지원)
 │   │   ├── cart/                  # ✅ 장바구니
 │   │   │   ├── CartContent.tsx    # 메인 컨텐츠 (로그인 체크)
 │   │   │   ├── CartItem.tsx       # 개별 아이템 카드
@@ -149,7 +146,7 @@ npm run lint
 │   │   ├── index.ts               # 통합 export
 │   │   ├── useAuth.ts             # ✅ 인증 상태 초기화, 세션 구독
 │   │   ├── useCart.ts             # ✅ 장바구니 작업 래퍼
-│   │   ├── useProducts.ts         # 상품 조회 훅
+│   │   ├── useProducts.ts         # ✅ 상품 조회 훅 (목록 + 단일 조회)
 │   │   ├── useBanners.ts          # 배너 조회 훅
 │   │   └── useOrders.ts           # (예정) 주문 훅
 │   │
@@ -634,6 +631,76 @@ export function useCart() {
 
 ---
 
+## 상품 상세 페이지 구현 가이드 ✅
+
+### ProductDetail 컴포넌트
+통합 상품 상세 컴포넌트로 모든 상품 타입(MenuItem, GiftSet, ReciprocateItem)을 지원합니다.
+
+```typescript
+// src/components/product/ProductDetail.tsx
+interface ProductDetailProps {
+  product: MenuItem | GiftSet | ReciprocateItem;
+  productType: ProductType;  // 'menu_item' | 'gift_set' | 'reciprocate_item'
+  backLink: string;          // 목록 페이지 링크
+  backLabel: string;         // 뒤로가기 라벨
+}
+
+// 주요 기능
+// - 상품 이미지, 이름, 가격, 설명 표시
+// - MenuItem: 인기/베스트/추천 태그 표시
+// - GiftSet: 구성품 목록 표시
+// - ReciprocateItem: 문의하기 버튼 (장바구니 X)
+// - 수량 선택 (ReciprocateItem 제외)
+// - 장바구니 추가 + 바로 구매 버튼
+// - 로그인 필요 안내 (비로그인 시)
+```
+
+### 상품 조회 훅
+```typescript
+// src/hooks/useProducts.ts
+// 목록 조회
+useMenuItems(category?)     // 메뉴 목록
+useGiftSets(category?)      // 선물세트 목록
+useReciprocateItems(category?)  // 이바지/답례 목록
+usePopularItems(limit?)     // 인기 메뉴
+
+// 단일 조회
+useMenuItem(id)         // 단일 메뉴 조회
+useGiftSet(id)          // 단일 선물세트 조회
+useReciprocateItem(id)  // 단일 이바지/답례 조회
+```
+
+### 동적 라우트 페이지
+```typescript
+// app/represent/[id]/page.tsx
+export default function MenuItemDetailPage() {
+  const params = useParams();
+  const id = typeof params.id === "string" ? params.id : null;
+  const { item, isLoading, error } = useMenuItem(id);
+
+  if (isLoading) return <Loading />;
+  if (error || !item) return <NotFound />;
+
+  return (
+    <ProductDetail
+      product={item}
+      productType="menu_item"
+      backLink="/represent"
+      backLabel="메뉴 목록"
+    />
+  );
+}
+```
+
+### 상품 타입별 동작
+| 상품 타입 | 장바구니 | 바로 구매 | 문의하기 |
+|----------|---------|----------|---------|
+| menu_item | ✅ | ✅ | - |
+| gift_set | ✅ | ✅ | - |
+| reciprocate_item | - | - | ✅ |
+
+---
+
 ## 결제 구현 가이드 (예정)
 
 ### Toss Payments 연동
@@ -769,7 +836,7 @@ style(product): 상품 카드 반응형 개선
 - [x] 메뉴 목록 페이지
 - [x] 오시는 길 페이지
 - [x] Supabase 데이터 연동
-- [ ] 상품 상세 페이지
+- [x] 상품 상세 페이지 (메뉴/선물세트/이바지·답례)
 
 ### Phase 2: 인증 & 장바구니 ✅
 - [x] 로그인/회원가입 페이지

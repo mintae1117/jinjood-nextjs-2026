@@ -67,6 +67,40 @@ export function useMenuItem(id: string | null) {
 }
 
 /**
+ * 단일 선물세트 조회 훅
+ */
+export function useGiftSet(id: string | null) {
+  const [item, setItem] = useState<GiftSet | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      setItem(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchItem = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await productService.getGiftSet(id);
+        setItem(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchItem();
+  }, [id]);
+
+  return { item, isLoading, error };
+}
+
+/**
  * 선물세트 목록 조회 훅
  */
 export function useGiftSets(category?: string) {
@@ -92,6 +126,40 @@ export function useGiftSets(category?: string) {
   }, [fetchItems]);
 
   return { items, isLoading, error, refetch: fetchItems };
+}
+
+/**
+ * 단일 이바지/답례 아이템 조회 훅
+ */
+export function useReciprocateItem(id: string | null) {
+  const [item, setItem] = useState<ReciprocateItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      setItem(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchItem = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await productService.getReciprocateItem(id);
+        setItem(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchItem();
+  }, [id]);
+
+  return { item, isLoading, error };
 }
 
 /**

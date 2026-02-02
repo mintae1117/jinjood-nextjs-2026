@@ -49,6 +49,25 @@ export const productService = {
   },
 
   /**
+   * 단일 선물세트 조회
+   */
+  async getGiftSet(id: string): Promise<GiftSet | null> {
+    const { data, error } = await supabase
+      .from('gift_sets')
+      .select('*')
+      .eq('id', id)
+      .eq('is_active', true)
+      .single();
+
+    if (error) {
+      console.error('Error fetching gift set:', error);
+      return null;
+    }
+
+    return data as GiftSet;
+  },
+
+  /**
    * 선물세트 목록 조회
    */
   async getGiftSets(category?: string): Promise<GiftSet[]> {
@@ -70,6 +89,25 @@ export const productService = {
     }
 
     return data as GiftSet[];
+  },
+
+  /**
+   * 단일 이바지/답례 아이템 조회
+   */
+  async getReciprocateItem(id: string): Promise<ReciprocateItem | null> {
+    const { data, error } = await supabase
+      .from('reciprocate_items')
+      .select('*')
+      .eq('id', id)
+      .eq('is_active', true)
+      .single();
+
+    if (error) {
+      console.error('Error fetching reciprocate item:', error);
+      return null;
+    }
+
+    return data as ReciprocateItem;
   },
 
   /**

@@ -170,6 +170,28 @@ const Price = styled.span`
   }
 `;
 
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const ViewDetailButton = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e1e1e;
+  background-color: #f8f8f8;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #eeeeee;
+  }
+`;
+
 const InquiryButton = styled(Link)`
   display: inline-flex;
   align-items: center;
@@ -317,7 +339,10 @@ export default function ReciprocatePage() {
                         </ContentTop>
                         <ContentBottom>
                           <Price>{formatPrice(item.price)}원~</Price>
-                          <InquiryButton href="/contact">문의하기</InquiryButton>
+                          <ButtonGroup>
+                            <ViewDetailButton href={`/reciprocate/${item.id}`}>자세히 보기</ViewDetailButton>
+                            <InquiryButton href="/contact">문의하기</InquiryButton>
+                          </ButtonGroup>
                         </ContentBottom>
                       </CardContent>
                     </ReciprocateCard>

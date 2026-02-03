@@ -4,6 +4,7 @@ import styled from "styled-components";
 import Link from "next/link";
 import { FiArrowLeft } from "react-icons/fi";
 import { useAuth, useCart } from "@/hooks";
+import { Loading } from "@/components/common/Loading";
 import CartItem from "./CartItem";
 import CartSummary from "./CartSummary";
 import CartEmpty from "./CartEmpty";
@@ -118,12 +119,6 @@ const LoginButton = styled(Link)`
   }
 `;
 
-const LoadingWrapper = styled.div`
-  text-align: center;
-  padding: 4rem 2rem;
-  color: #666666;
-`;
-
 export default function CartContent() {
   const { isAuthenticated, isInitialized } = useAuth();
   const { items, isLoading, totalItems, updateQuantity, removeFromCart } = useCart();
@@ -133,7 +128,7 @@ export default function CartContent() {
     return (
       <Container>
         <Inner>
-          <LoadingWrapper>로딩 중...</LoadingWrapper>
+          <Loading minHeight="400px" text="장바구니를 불러오는 중..." />
         </Inner>
       </Container>
     );
@@ -204,7 +199,7 @@ export default function CartContent() {
             <ItemCount>총 {totalItems}개의 상품</ItemCount>
 
             {isLoading ? (
-              <LoadingWrapper>로딩 중...</LoadingWrapper>
+              <Loading minHeight="200px" text="상품을 불러오는 중..." />
             ) : (
               <ItemList>
                 {items.map((item) => (

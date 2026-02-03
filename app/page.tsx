@@ -6,16 +6,8 @@ import FeaturedMenu from "@/components/home/FeaturedMenu";
 import GiftSets from "@/components/home/GiftSets";
 import VideoSection from "@/components/home/VideoSection";
 import SNSSection from "@/components/home/SNSSection";
+import { Loading } from "@/components/common/Loading";
 import { useBanners, usePopularItems, useGiftSets } from "@/hooks";
-
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  font-size: 1.125rem;
-  color: #666666;
-`;
 
 const ErrorContainer = styled.div`
   display: flex;
@@ -48,7 +40,7 @@ export default function HomePage() {
   const error = bannersError || menuError || giftsError;
 
   if (isLoading) {
-    return <LoadingContainer>로딩 중...</LoadingContainer>;
+    return <Loading fullScreen />;
   }
 
   if (error) {

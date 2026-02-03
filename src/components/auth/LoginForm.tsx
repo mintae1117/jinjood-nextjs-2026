@@ -7,6 +7,7 @@ import styled from "styled-components";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { useAuth } from "@/hooks";
+import { SpinnerLoading } from "@/components/common/Loading";
 import type { LoginFormData } from "@/types";
 
 const Container = styled.div`
@@ -325,7 +326,7 @@ function LoginFormInner() {
 
 export default function LoginForm() {
   return (
-    <Suspense fallback={<Container><FormWrapper>로딩 중...</FormWrapper></Container>}>
+    <Suspense fallback={<Container><FormWrapper><SpinnerLoading minHeight="300px" /></FormWrapper></Container>}>
       <LoginFormInner />
     </Suspense>
   );

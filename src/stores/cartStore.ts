@@ -6,6 +6,7 @@ interface CartStore {
   // 상태
   items: CartItem[];
   isLoading: boolean;
+  isCartLoaded: boolean;
 
   // 액션
   setItems: (items: CartItem[]) => void;
@@ -14,6 +15,7 @@ interface CartStore {
   removeItem: (itemId: string) => void;
   clearItems: () => void;
   setLoading: (isLoading: boolean) => void;
+  setCartLoaded: (loaded: boolean) => void;
 
   // 계산된 값
   getTotalItems: () => number;
@@ -31,8 +33,9 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isLoading: false,
+      isCartLoaded: false,
 
-      setItems: (items) => set({ items }),
+      setItems: (items) => set({ items, isCartLoaded: true }),
 
       addItem: (item) =>
         set((state) => {
@@ -46,11 +49,12 @@ export const useCartStore = create<CartStore>()(
             newItems[existingIndex] = {
               ...newItems[existingIndex],
               quantity: newItems[existingIndex].quantity + item.quantity,
+              product: item.product || newItems[existingIndex].product,
             };
-            return { items: newItems };
+            return { items: newItems, isCartLoaded: true };
           }
 
-          return { items: [...state.items, item] };
+          return { items: [...state.items, item], isCartLoaded: true };
         }),
 
       updateItem: (itemId, updates) =>
@@ -65,9 +69,11 @@ export const useCartStore = create<CartStore>()(
           items: state.items.filter((item) => item.id !== itemId),
         })),
 
-      clearItems: () => set({ items: [] }),
+      clearItems: () => set({ items: [], isCartLoaded: true }),
 
       setLoading: (isLoading) => set({ isLoading }),
+
+      setCartLoaded: (loaded) => set({ isCartLoaded: loaded }),
 
       getTotalItems: () => {
         const { items } = get();

@@ -58,37 +58,40 @@ const InfoBanner = styled.div`
 
 const ReciprocateGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 
   @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  @media (max-width: 480px) {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
   }
 `;
 
 const ReciprocateCard = styled(motion.div)`
-  display: flex;
   background-color: #ffffff;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  }
-
-  @media (max-width: 640px) {
-    flex-direction: column;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   }
 `;
 
 const ImageWrapper = styled.div`
   position: relative;
-  width: 40%;
-  min-height: 250px;
+  width: 100%;
+  aspect-ratio: 1;
   overflow: hidden;
 
   img {
@@ -97,13 +100,45 @@ const ImageWrapper = styled.div`
   }
 
   ${ReciprocateCard}:hover & img {
-    transform: scale(1.05);
+    transform: scale(1.08);
   }
+`;
 
-  @media (max-width: 640px) {
-    width: 100%;
-    aspect-ratio: 16/9;
-    min-height: auto;
+const Overlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0) 50%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1.5rem;
+
+  ${ReciprocateCard}:hover & {
+    opacity: 1;
+  }
+`;
+
+const ViewButton = styled(Link)`
+  padding: 0.75rem 1.5rem;
+  background-color: #ffffff;
+  color: #1e1e1e;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #f35525;
+    color: #ffffff;
   }
 `;
 
@@ -121,83 +156,51 @@ const CategoryBadge = styled.span`
 `;
 
 const CardContent = styled.div`
-  flex: 1;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  padding: 1.25rem;
 `;
 
-const ContentTop = styled.div``;
-
 const ReciprocateName = styled.h3`
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: #1e1e1e;
-  margin-bottom: 0.75rem;
-
-  @media (max-width: 768px) {
-    font-size: 1.25rem;
-  }
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const ReciprocateDescription = styled.p`
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: #666666;
-  line-height: 1.7;
-  margin-bottom: 1.5rem;
-
-  @media (max-width: 768px) {
-    font-size: 0.9375rem;
-  }
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.625rem;
 `;
 
-const ContentBottom = styled.div`
+const PriceRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 1rem;
-  border-top: 1px solid #eeeeee;
+  margin-bottom: 0.75rem;
 `;
 
 const Price = styled.span`
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #f35525;
-
-  @media (max-width: 768px) {
-    font-size: 1.25rem;
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`;
-
-const ViewDetailButton = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #1e1e1e;
-  background-color: #f8f8f8;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #eeeeee;
-  }
 `;
 
 const InquiryButton = styled(Link)`
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9375rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #ffffff;
   background-color: #f35525;
@@ -273,6 +276,19 @@ export default function ReciprocatePage() {
     return new Intl.NumberFormat("ko-KR").format(price);
   };
 
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: "easeOut" as const,
+      },
+    }),
+  };
+
   return (
     <>
       <PageHeader
@@ -313,37 +329,39 @@ export default function ReciprocatePage() {
                   items.map((item, index) => (
                     <ReciprocateCard
                       key={item.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      transition={{ duration: 0.4, delay: index * 0.05 }}
-                      layout
+                      variants={cardVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true, margin: "-50px" }}
+                      custom={index}
                     >
                       <ImageWrapper>
                         <Image
                           src={item.image_url}
                           alt={item.name}
                           fill
-                          sizes="(max-width: 640px) 100vw, 40vw"
+                          sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         />
                         <CategoryBadge>
                           {categoryLabels[item.category]}
                         </CategoryBadge>
+                        <Overlay>
+                          <ViewButton href={`/reciprocate/${item.id}`}>
+                            자세히 보기
+                          </ViewButton>
+                        </Overlay>
                       </ImageWrapper>
                       <CardContent>
-                        <ContentTop>
-                          <ReciprocateName>{item.name}</ReciprocateName>
-                          <ReciprocateDescription>
-                            {item.description}
-                          </ReciprocateDescription>
-                        </ContentTop>
-                        <ContentBottom>
+                        <ReciprocateName>{item.name}</ReciprocateName>
+                        <ReciprocateDescription>
+                          {item.description}
+                        </ReciprocateDescription>
+                        <PriceRow>
                           <Price>{formatPrice(item.price)}원~</Price>
-                          <ButtonGroup>
-                            <ViewDetailButton href={`/reciprocate/${item.id}`}>자세히 보기</ViewDetailButton>
-                            <InquiryButton href="/contact">문의하기</InquiryButton>
-                          </ButtonGroup>
-                        </ContentBottom>
+                        </PriceRow>
+                        <InquiryButton href="/contact">
+                          문의하기
+                        </InquiryButton>
                       </CardContent>
                     </ReciprocateCard>
                   ))

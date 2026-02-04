@@ -266,20 +266,37 @@ export const sampleBanners: Banner[] = [
 // Contact Info
 export const contactInfo = {
   address: "부산광역시 수영구 황령대로 481번길 10-3",
-  phone: ["051-621-5108", "010-4728-6922", "010-6251-5108"],
+  phone: {
+    store: "051-621-5108",
+    mobile: "010-6251-5108",
+    admin: "010-4728-6922",
+  },
+  fax: "051-625-2720",
   email: "jea6922@naver.com",
   bank_account: "112-2038-7604-08",
   bank_name: "부산은행",
   account_holder: "정은아",
   business_hours: {
-    weekday: "오전 7시 - 오후 7시",
-    saturday: "오전 7시 - 오후 5시",
-    sunday: "휴무",
+    weekday: "07시-19시",
+    saturday: "07시-17시",
+    sunday: "정기휴무",
   },
-  call_hours: "매일 오전 7시 - 오후 9시",
+  call_hours: "매일 07시-21시 통화가능",
   map_coordinates: {
-    lat: 35.1595,
-    lng: 129.1015,
+    lat: 35.1595454,
+    lng: 129.1017891,
+  },
+  // 사업자 정보
+  business_number: "452-23-00331",
+  representative: "정창구외 1명",
+  // 사이트 관리자 정보
+  developer: {
+    name: "김민태",
+    github: "https://github.com/mintae1117",
+  },
+  site_admin: {
+    name: "조장현",
+    phone: "010-4728-6922",
   },
 };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import styled from "styled-components";
 import Link from "next/link";
 import { FiArrowLeft } from "react-icons/fi";
@@ -121,7 +122,15 @@ const LoginButton = styled(Link)`
 
 export default function CartContent() {
   const { isAuthenticated, isInitialized } = useAuth();
-  const { items, isLoading, totalItems, updateQuantity, removeFromCart } = useCart();
+  const { items, isLoading, isCartLoaded, totalItems, updateQuantity, removeFromCart, loadCart } = useCart();
+
+  // 장바구니 페이지 진입 시 장바구니 새로고침
+  useEffect(() => {
+    if (isInitialized && isAuthenticated) {
+      loadCart();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized, isAuthenticated]);
 
   // 초기화 중
   if (!isInitialized) {
@@ -158,8 +167,25 @@ export default function CartContent() {
     );
   }
 
+  // 장바구니 로딩 중 (첫 로드 시에만)
+  if (isLoading && items.length === 0) {
+    return (
+      <Container>
+        <Inner>
+          <Header>
+            <BackLink href="/">
+              <FiArrowLeft />
+            </BackLink>
+            <Title>장바구니</Title>
+          </Header>
+          <Loading minHeight="400px" text="장바구니를 불러오는 중..." />
+        </Inner>
+      </Container>
+    );
+  }
+
   // 장바구니가 비어있음
-  if (!isLoading && items.length === 0) {
+  if (items.length === 0) {
     return (
       <Container>
         <Inner>

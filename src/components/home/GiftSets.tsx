@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import styled from "styled-components";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { FiShoppingCart, FiCheck } from "react-icons/fi";
 import { GiftSet } from "@/types";
+import { useCart, useAuth } from "@/hooks";
 
 const Section = styled.section`
   padding: 5rem 0;
@@ -163,10 +167,45 @@ const GiftDescription = styled.p`
   overflow: hidden;
 `;
 
+const PriceRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+`;
+
 const Price = styled.span`
   font-size: 1.125rem;
   font-weight: 700;
   color: #f35525;
+`;
+
+const AddToCartButton = styled.button<{ $added?: boolean }>`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: ${({ $added }) => ($added ? "#ffffff" : "#1e1e1e")};
+  background-color: ${({ $added }) => ($added ? "#22c55e" : "#ffffff")};
+  border: 1px solid ${({ $added }) => ($added ? "#22c55e" : "#eeeeee")};
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: ${({ $added }) => ($added ? "#16a34a" : "#f35525")};
+    border-color: ${({ $added }) => ($added ? "#16a34a" : "#f35525")};
+    color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
 const ViewAllWrapper = styled.div`
@@ -182,15 +221,14 @@ const ViewAllButton = styled(Link)`
   padding: 1rem 2.5rem;
   font-size: 1rem;
   font-weight: 600;
-  color: #1e1e1e;
-  background-color: transparent;
-  border: 2px solid #1e1e1e;
+  color: #ffffff;
+  background-color: #f35525;
   border-radius: 6px;
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: #1e1e1e;
-    color: #ffffff;
+    background-color: #d94820;
+    transform: translateY(-2px);
   }
 `;
 
@@ -198,24 +236,103 @@ interface GiftSetsProps {
   giftSets: GiftSet[];
 }
 
-export default function GiftSets({ giftSets }: GiftSetsProps) {
+function GiftSetCard({ gift, index }: { gift: GiftSet; index: number }) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price);
   };
 
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      router.push(`/login?redirectTo=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
+    setIsAdding(true);
+    const result = await addToCart({
+      product_id: gift.id,
+      product_type: "gift_set",
+      quantity: 1,
+    });
+
+    setIsAdding(false);
+
+    if (result.success) {
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    }
+  };
+
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: (i: number) => ({
+    visible: {
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.1,
+        delay: index * 0.1,
         duration: 0.5,
         ease: "easeOut" as const,
       },
-    }),
+    },
   };
 
+  return (
+    <GiftCard
+      variants={cardVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-50px" }}
+    >
+      <ImageWrapper>
+        <Image
+          src={gift.image_url}
+          alt={gift.name}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        />
+        <Overlay>
+          <ViewButton href={`/gifts/${gift.id}`}>
+            자세히 보기
+          </ViewButton>
+        </Overlay>
+      </ImageWrapper>
+      <CardContent>
+        <GiftName>{gift.name}</GiftName>
+        <GiftDescription>{gift.description}</GiftDescription>
+        <PriceRow>
+          <Price>{formatPrice(gift.price)}원</Price>
+        </PriceRow>
+        <AddToCartButton
+          onClick={handleAddToCart}
+          disabled={isAdding}
+          $added={added}
+        >
+          {added ? (
+            <>
+              <FiCheck />
+              담았어요
+            </>
+          ) : (
+            <>
+              <FiShoppingCart />
+              {isAdding ? "담는 중..." : "장바구니 담기"}
+            </>
+          )}
+        </AddToCartButton>
+      </CardContent>
+    </GiftCard>
+  );
+}
+
+export default function GiftSets({ giftSets }: GiftSetsProps) {
   return (
     <Section>
       <Container>
@@ -229,33 +346,7 @@ export default function GiftSets({ giftSets }: GiftSetsProps) {
 
         <GiftGrid>
           {giftSets.map((gift, index) => (
-            <GiftCard
-              key={gift.id}
-              variants={cardVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              custom={index}
-            >
-              <ImageWrapper>
-                <Image
-                  src={gift.image_url}
-                  alt={gift.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                />
-                <Overlay>
-                  <ViewButton href={`/gifts/${gift.id}`}>
-                    자세히 보기
-                  </ViewButton>
-                </Overlay>
-              </ImageWrapper>
-              <CardContent>
-                <GiftName>{gift.name}</GiftName>
-                <GiftDescription>{gift.description}</GiftDescription>
-                <Price>{formatPrice(gift.price)}원</Price>
-              </CardContent>
-            </GiftCard>
+            <GiftSetCard key={gift.id} gift={gift} index={index} />
           ))}
         </GiftGrid>
 

@@ -192,15 +192,15 @@ export default function UserDropdown() {
             <FiUser />
             마이페이지
           </MenuItem>
-          <MenuItem href="/orders" onClick={() => setIsOpen(false)}>
+          <MenuItem href="/mypage/orders" onClick={() => setIsOpen(false)}>
             <FiShoppingBag />
             주문 내역
           </MenuItem>
-          <MenuItem href="/wishlist" onClick={() => setIsOpen(false)}>
+          <MenuItem href="/mypage/wishlist" onClick={() => setIsOpen(false)}>
             <FiHeart />
             위시리스트
           </MenuItem>
-          <MenuItem href="/settings" onClick={() => setIsOpen(false)}>
+          <MenuItem href="/mypage/settings" onClick={() => setIsOpen(false)}>
             <FiSettings />
             설정
           </MenuItem>

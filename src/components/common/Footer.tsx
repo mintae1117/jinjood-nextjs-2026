@@ -6,11 +6,12 @@ import { FiPhone, FiMail, FiMapPin, FiClock } from "react-icons/fi";
 import { FaInstagram } from "react-icons/fa";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { SiNaver } from "react-icons/si";
+import { contactInfo, socialLinks } from "@/data/sampleData";
 
 const FooterWrapper = styled.footer`
   background-color: #1e1e1e;
   color: #ffffff;
-  padding: 4rem 0 2rem;
+  padding: 2.5rem 0 1.5rem;
 `;
 
 const FooterContainer = styled.div`
@@ -22,33 +23,35 @@ const FooterContainer = styled.div`
 const FooterGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 3rem;
+  gap: 2rem;
 
   @media (max-width: 1024px) {
     grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
+    gap: 1.5rem;
   }
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 `;
 
 const FooterSection = styled.div`
   h3 {
-    font-size: 1.25rem;
+    display: inline-block;
+    font-size: 1rem;
     font-weight: 600;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     color: #ffffff;
     position: relative;
-    padding-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
 
     &::after {
       content: "";
       position: absolute;
       bottom: 0;
       left: 0;
-      width: 40px;
+      width: 100%;
       height: 2px;
       background-color: #f35525;
     }
@@ -56,38 +59,38 @@ const FooterSection = styled.div`
 `;
 
 const FooterLogo = styled.div`
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: #ffffff;
 `;
 
 const FooterDescription = styled.p`
   color: #999999;
-  font-size: 0.875rem;
-  line-height: 1.8;
-  margin-bottom: 1.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
 `;
 
 const SocialIcons = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
 
   a {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    font-size: 1.125rem;
+    font-size: 1rem;
     transition: all 0.3s ease;
 
     &:hover {
       background-color: #f35525;
-      transform: translateY(-3px);
+      transform: translateY(-2px);
     }
   }
 `;
@@ -95,11 +98,11 @@ const SocialIcons = styled.div`
 const FooterLinks = styled.ul`
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 
   li a {
     color: #999999;
-    font-size: 0.9rem;
+    font-size: 0.8125rem;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
@@ -115,37 +118,93 @@ const FooterLinks = styled.ul`
 const ContactList = styled.ul`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.625rem;
 
   li {
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.625rem;
     color: #999999;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
 
     svg {
       color: #f35525;
-      font-size: 1.125rem;
+      font-size: 0.9375rem;
       margin-top: 0.125rem;
       flex-shrink: 0;
     }
 
     span {
-      line-height: 1.6;
+      line-height: 1.5;
+    }
+
+    a {
+      color: #999999;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #f35525;
+      }
     }
   }
 `;
 
 const FooterBottom = styled.div`
-  margin-top: 3rem;
-  padding-top: 2rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const BusinessInfo = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  color: #666666;
+  line-height: 1.6;
+
+  span {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 0.125rem;
+    text-align: center;
+  }
+`;
+
+const SiteInfo = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  color: #666666;
+
+  a {
+    color: #f35525;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #ff7a52;
+    }
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 0.125rem;
+    text-align: center;
+  }
+`;
+
+const CopyrightRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.5rem;
 
   @media (max-width: 640px) {
     flex-direction: column;
@@ -155,16 +214,16 @@ const FooterBottom = styled.div`
 
 const Copyright = styled.p`
   color: #666666;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 `;
 
 const FooterBottomLinks = styled.div`
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
 
   a {
     color: #666666;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     transition: color 0.3s ease;
 
     &:hover {
@@ -174,8 +233,6 @@ const FooterBottomLinks = styled.div`
 `;
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
     <FooterWrapper>
       <FooterContainer>
@@ -188,7 +245,7 @@ export default function Footer() {
             </FooterDescription>
             <SocialIcons>
               <a
-                href="https://www.instagram.com/busan_jinjoods_rice_cake"
+                href={socialLinks.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -196,7 +253,7 @@ export default function Footer() {
                 <FaInstagram />
               </a>
               <a
-                href="https://pf.kakao.com/_zsKlb"
+                href={socialLinks.kakao_channel}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Kakao Channel"
@@ -204,7 +261,7 @@ export default function Footer() {
                 <RiKakaoTalkFill />
               </a>
               <a
-                href="https://band.us/band/77842984"
+                href={socialLinks.naver_band}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Naver Band"
@@ -241,12 +298,16 @@ export default function Footer() {
               <li>
                 <FiClock />
                 <span>
-                  월-금: 오전 7시 - 오후 7시
+                  월-금: {contactInfo.business_hours.weekday}
                   <br />
-                  토요일: 오전 7시 - 오후 5시
+                  토요일: {contactInfo.business_hours.saturday}
                   <br />
-                  일요일: 휴무
+                  일요일: {contactInfo.business_hours.sunday}
                 </span>
+              </li>
+              <li>
+                <FiPhone />
+                <span>{contactInfo.call_hours}</span>
               </li>
             </ContactList>
           </FooterSection>
@@ -256,32 +317,60 @@ export default function Footer() {
             <ContactList>
               <li>
                 <FiMapPin />
-                <span>부산광역시 수영구 황령대로 481번길 10-3</span>
+                <span>{contactInfo.address}</span>
               </li>
               <li>
                 <FiPhone />
                 <span>
-                  매장: 051-621-5108
+                  매장: <a href={`tel:${contactInfo.phone.store}`}>{contactInfo.phone.store}</a>
                   <br />
-                  휴대폰: 010-4728-6922
+                  휴대폰: <a href={`tel:${contactInfo.phone.mobile}`}>{contactInfo.phone.mobile}</a>
+                  <br />
+                  관리자: <a href={`tel:${contactInfo.phone.admin}`}>{contactInfo.phone.admin}</a>
                 </span>
               </li>
               <li>
                 <FiMail />
-                <span>jea6922@naver.com</span>
+                <span>
+                  <a href={`mailto:${contactInfo.email}`}>{contactInfo.email}</a>
+                </span>
               </li>
             </ContactList>
           </FooterSection>
         </FooterGrid>
 
         <FooterBottom>
-          <Copyright>
-            &copy; {currentYear} 진주떡집. All rights reserved.
-          </Copyright>
-          <FooterBottomLinks>
-            <a href="#">이용약관</a>
-            <a href="#">개인정보처리방침</a>
-          </FooterBottomLinks>
+          <BusinessInfo>
+            <span>사업자등록번호: {contactInfo.business_number}</span>
+            <span>대표: {contactInfo.representative}</span>
+            <span>팩스: {contactInfo.fax}</span>
+            <span>입금계좌: {contactInfo.bank_name} {contactInfo.bank_account} (예금주: {contactInfo.account_holder})</span>
+          </BusinessInfo>
+
+          <SiteInfo>
+            <span>
+              Developer:{" "}
+              <a
+                href={contactInfo.developer.github}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {contactInfo.developer.name}
+              </a>
+            </span>
+            <span>사이트 관리자: {contactInfo.site_admin.name}</span>
+            <span>관리자 번호: {contactInfo.site_admin.phone}</span>
+          </SiteInfo>
+
+          <CopyrightRow>
+            <Copyright>
+              Copyright &copy; jinjood.com All rights reserved.
+            </Copyright>
+            <FooterBottomLinks>
+              <a href="#">이용약관</a>
+              <a href="#">개인정보처리방침</a>
+            </FooterBottomLinks>
+          </CopyrightRow>
         </FooterBottom>
       </FooterContainer>
     </FooterWrapper>

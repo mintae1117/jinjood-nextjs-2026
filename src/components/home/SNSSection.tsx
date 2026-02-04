@@ -64,7 +64,7 @@ const TabsWrapper = styled.div`
   }
 `;
 
-const TabButton = styled.button<{ $active: boolean }>`
+const TabButton = styled.button<{ $active: boolean; $color: string; $isGradient?: boolean; $textColor?: string }>`
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -72,8 +72,12 @@ const TabButton = styled.button<{ $active: boolean }>`
   font-size: 1rem;
   font-weight: 500;
   border-radius: 30px;
-  background-color: ${({ $active }) => ($active ? "#f35525" : "#f8f8f8")};
-  color: ${({ $active }) => ($active ? "#ffffff" : "#666666")};
+  background: ${({ $active, $color, $isGradient }) =>
+    $active
+      ? ($isGradient ? $color : $color)
+      : "#f8f8f8"
+  };
+  color: ${({ $active, $textColor }) => ($active ? ($textColor || "#ffffff") : "#666666")};
   transition: all 0.3s ease;
 
   svg {
@@ -81,7 +85,12 @@ const TabButton = styled.button<{ $active: boolean }>`
   }
 
   &:hover {
-    background-color: ${({ $active }) => ($active ? "#d94820" : "#eeeeee")};
+    background: ${({ $active, $color, $isGradient }) =>
+      $active
+        ? ($isGradient ? $color : $color)
+        : "#eeeeee"
+    };
+    opacity: ${({ $active }) => ($active ? 0.9 : 1)};
   }
 
   @media (max-width: 480px) {
@@ -92,7 +101,7 @@ const TabButton = styled.button<{ $active: boolean }>`
 
 const ContentWrapper = styled.div`
   position: relative;
-  min-height: 400px;
+  min-height: 280px;
 `;
 
 const TabContent = styled(motion.div)`
@@ -107,7 +116,7 @@ const SNSIcon = styled.div<{ $color: string }>`
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background-color: ${({ $color }) => $color};
+  background: ${({ $color }) => $color};
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -146,7 +155,7 @@ const SNSLink = styled.a<{ $color: string }>`
   align-items: center;
   gap: 0.5rem;
   padding: 0.875rem 2rem;
-  background-color: ${({ $color }) => $color};
+  background: ${({ $color }) => $color};
   color: #ffffff;
   font-weight: 600;
   border-radius: 6px;
@@ -158,37 +167,12 @@ const SNSLink = styled.a<{ $color: string }>`
   }
 `;
 
-const ImagePreview = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-top: 2rem;
-  width: 100%;
-  max-width: 800px;
-
-  @media (max-width: 640px) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-`;
-
-const PreviewImage = styled.div`
-  aspect-ratio: 1;
-  background-color: #f8f8f8;
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999999;
-  font-size: 0.875rem;
-`;
-
 const snsData = [
   {
     id: "instagram",
     icon: FaInstagram,
-    color: "#E1306C",
+    color: "linear-gradient(45deg, #F58529 0%, #DD2A7B 50%, #8134AF 100%)",
+    isGradient: true,
     title: "인스타그램",
     description:
       "진주떡집의 일상과 신제품 소식을 실시간으로 만나보세요. 매일 업데이트되는 맛있는 떡 사진과 함께 소통해요!",
@@ -240,6 +224,9 @@ export default function SNSSection() {
               <TabButton
                 key={item.id}
                 $active={activeTab === item.id}
+                $color={item.color}
+                $isGradient={item.isGradient}
+                $textColor={item.textColor}
                 onClick={() => setActiveTab(item.id)}
               >
                 <TabIcon />
@@ -283,12 +270,6 @@ export default function SNSSection() {
                   />
                 </svg>
               </SNSLink>
-
-              <ImagePreview>
-                {[1, 2, 3, 4].map((i) => (
-                  <PreviewImage key={i}>최신 게시물 {i}</PreviewImage>
-                ))}
-              </ImagePreview>
             </TabContent>
           </AnimatePresence>
         </ContentWrapper>

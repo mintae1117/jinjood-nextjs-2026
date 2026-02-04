@@ -7,20 +7,26 @@ import { cartService } from "@/services";
 import type { AddToCartData } from "@/types";
 
 export function useCart() {
-  const { items, isLoading, setItems, addItem, updateItem, removeItem, clearItems, setLoading } =
+  const { items, isLoading, setItems, addItem, updateItem, removeItem, clearItems, setLoading, setCartLoaded, isCartLoaded } =
     useCartStore();
   const totalItems = useCartStore(selectCartItemCount);
   const totalPrice = useCartStore(selectCartTotal);
 
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const isAuthInitialized = useAuthStore((state) => state.isInitialized);
 
   // 로그인 시 장바구니 로드
   useEffect(() => {
-    if (isAuthenticated && user?.id) {
+    if (isAuthInitialized && isAuthenticated && user?.id) {
       loadCart();
+    } else if (isAuthInitialized && !isAuthenticated) {
+      // 로그아웃 시 장바구니 초기화
+      setItems([]);
+      setCartLoaded(true);
     }
-  }, [isAuthenticated, user?.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthInitialized, isAuthenticated, user?.id]);
 
   // 장바구니 로드
   const loadCart = useCallback(async () => {
@@ -30,8 +36,16 @@ export function useCart() {
     try {
       const cartItems = await cartService.getCartItems(user.id);
       setItems(cartItems);
-    } catch (error) {
-      console.error("Load cart error:", error);
+    } catch (error: unknown) {
+      const err = error as { message?: string; code?: string; details?: string };
+      console.error("Load cart error:", {
+        message: err?.message,
+        code: err?.code,
+        details: err?.details,
+        error,
+      });
+      // 테이블이 없는 경우 빈 배열로 설정
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -53,11 +67,17 @@ export function useCart() {
         const newItem = await cartService.addToCart(user.id, data);
         addItem(newItem);
         return { success: true, item: newItem };
-      } catch (error) {
-        console.error("Add to cart error:", error);
+      } catch (error: unknown) {
+        const err = error as { message?: string; code?: string; details?: string };
+        console.error("Add to cart error:", {
+          message: err?.message,
+          code: err?.code,
+          details: err?.details,
+          error,
+        });
         return {
           success: false,
-          error: error instanceof Error ? error.message : "장바구니 추가에 실패했습니다.",
+          error: err?.message || "장바구니 추가에 실패했습니다. cart_items 테이블이 생성되어 있는지 확인하세요.",
         };
       } finally {
         setLoading(false);
@@ -140,6 +160,7 @@ export function useCart() {
   return {
     items,
     isLoading,
+    isCartLoaded,
     totalItems,
     totalPrice,
     isAuthenticated,

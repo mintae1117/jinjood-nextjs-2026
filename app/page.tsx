@@ -6,6 +6,7 @@ import FeaturedMenu from "@/components/home/FeaturedMenu";
 import GiftSets from "@/components/home/GiftSets";
 import VideoSection from "@/components/home/VideoSection";
 import SNSSection from "@/components/home/SNSSection";
+import LocationSection from "@/components/home/LocationSection";
 import { Loading } from "@/components/common/Loading";
 import { useBanners, usePopularItems, useGiftSets } from "@/hooks";
 
@@ -59,6 +60,7 @@ export default function HomePage() {
       <GiftSets giftSets={giftSets} />
       <VideoSection />
       <SNSSection />
+      <LocationSection />
     </>
   );
 }

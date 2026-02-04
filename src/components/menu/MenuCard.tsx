@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import styled from "styled-components";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { FiShoppingCart, FiCheck } from "react-icons/fi";
 import { MenuItem } from "@/types";
+import { useCart, useAuth } from "@/hooks";
 
 const Card = styled(motion.div)`
   background-color: #ffffff;
@@ -101,6 +105,40 @@ const PriceRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1rem;
+`;
+
+const ButtonsRow = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const AddToCartButton = styled.button<{ $added?: boolean }>`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: ${({ $added }) => ($added ? "#ffffff" : "#1e1e1e")};
+  background-color: ${({ $added }) => ($added ? "#22c55e" : "#ffffff")};
+  border: 1px solid ${({ $added }) => ($added ? "#22c55e" : "#eeeeee")};
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: ${({ $added }) => ($added ? "#16a34a" : "#f35525")};
+    border-color: ${({ $added }) => ($added ? "#16a34a" : "#f35525")};
+    color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
 const Price = styled.span`
@@ -141,8 +179,38 @@ interface MenuCardProps {
 }
 
 export default function MenuCard({ item, index = 0 }: MenuCardProps) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price);
+  };
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      router.push(`/login?redirectTo=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
+    setIsAdding(true);
+    const result = await addToCart({
+      product_id: item.id,
+      product_type: "menu_item",
+      quantity: 1,
+    });
+
+    setIsAdding(false);
+
+    if (result.success) {
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    }
   };
 
   return (
@@ -178,6 +246,25 @@ export default function MenuCard({ item, index = 0 }: MenuCardProps) {
             자세히 보기
           </ViewMoreButton>
         </PriceRow>
+        <ButtonsRow>
+          <AddToCartButton
+            onClick={handleAddToCart}
+            disabled={isAdding}
+            $added={added}
+          >
+            {added ? (
+              <>
+                <FiCheck />
+                담았어요
+              </>
+            ) : (
+              <>
+                <FiShoppingCart />
+                {isAdding ? "담는 중..." : "장바구니 담기"}
+              </>
+            )}
+          </AddToCartButton>
+        </ButtonsRow>
       </CardContent>
     </Card>
   );

@@ -74,6 +74,19 @@ CREATE TABLE IF NOT EXISTS site_settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
+-- Cart Items Table (장바구니)
+CREATE TABLE IF NOT EXISTS cart_items (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL,
+  product_type VARCHAR(50) NOT NULL CHECK (product_type IN ('menu_item', 'gift_set', 'reciprocate_item')),
+  quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+  options JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  UNIQUE(user_id, product_id, product_type)
+);
+
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -104,12 +117,17 @@ CREATE TRIGGER update_site_settings_updated_at
   BEFORE UPDATE ON site_settings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_cart_items_updated_at
+  BEFORE UPDATE ON cart_items
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Enable Row Level Security
 ALTER TABLE menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE gift_sets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reciprocate_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE banners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for public read access
 CREATE POLICY "Allow public read access on menu_items"
@@ -136,6 +154,28 @@ CREATE POLICY "Allow public read access on site_settings"
   ON site_settings FOR SELECT
   TO anon, authenticated
   USING (true);
+
+-- Cart items policies (사용자 본인의 장바구니만 접근 가능)
+CREATE POLICY "Users can view own cart items"
+  ON cart_items FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own cart items"
+  ON cart_items FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own cart items"
+  ON cart_items FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own cart items"
+  ON cart_items FOR DELETE
+  TO authenticated
+  USING (auth.uid() = user_id);
 
 -- Insert sample data
 INSERT INTO site_settings (key, value) VALUES
@@ -172,6 +212,7 @@ CREATE INDEX idx_gift_sets_is_active ON gift_sets(is_active);
 CREATE INDEX idx_reciprocate_items_category ON reciprocate_items(category);
 CREATE INDEX idx_banners_is_active ON banners(is_active);
 CREATE INDEX idx_banners_display_order ON banners(display_order);
+CREATE INDEX idx_cart_items_user_id ON cart_items(user_id);
 
 -- Storage bucket setup instructions
 -- 1. Go to Supabase Dashboard > Storage

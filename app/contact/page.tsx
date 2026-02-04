@@ -34,6 +34,7 @@ const ContentGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3rem;
+  align-items: stretch;
 
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
@@ -41,7 +42,10 @@ const ContentGrid = styled.div`
   }
 `;
 
-const InfoSection = styled.div``;
+const InfoSection = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
 
 const SectionTitle = styled.h2`
   font-size: 1.75rem;
@@ -70,6 +74,7 @@ const InfoGrid = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  flex: 1;
 `;
 
 const InfoCard = styled(motion.div)`
@@ -125,29 +130,45 @@ const InfoContent = styled.div`
   }
 `;
 
-const MapSection = styled.div``;
+const MapSection = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
 
 const MapWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: 400px;
+  flex: 1;
+  min-height: 300px;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   margin-bottom: 1.5rem;
 
+  @media (max-width: 1024px) {
+    min-height: 300px;
+    flex: none;
+    height: 300px;
+  }
+
   iframe {
     width: 100%;
     height: 100%;
-    border: none;
+    border: 0;
   }
+`;
+
+const DirectionsButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
 `;
 
 const DirectionsButton = styled.a`
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem 2rem;
+  padding: 1rem 1.5rem;
   background-color: #f35525;
   color: #ffffff;
   font-weight: 600;
@@ -161,6 +182,23 @@ const DirectionsButton = styled.a`
 
   svg {
     font-size: 1.25rem;
+  }
+`;
+
+const NaverButton = styled(DirectionsButton)`
+  background-color: #03c75a;
+
+  &:hover {
+    background-color: #02a94d;
+  }
+`;
+
+const KakaoButton = styled(DirectionsButton)`
+  background-color: #fee500;
+  color: #1e1e1e;
+
+  &:hover {
+    background-color: #e6cf00;
   }
 `;
 
@@ -204,7 +242,7 @@ const SocialButton = styled.a<{ $color: string }>`
 `;
 
 const BankInfoCard = styled(motion.div)`
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   padding: 1.5rem;
   background: linear-gradient(135deg, #1e1e1e 0%, #333333 100%);
   border-radius: 12px;
@@ -296,13 +334,18 @@ export default function ContactPage() {
                     <h3>전화번호</h3>
                     <p>
                       매장:{" "}
-                      <a href={`tel:${contactInfo.phone[0]}`}>
-                        {contactInfo.phone[0]}
+                      <a href={`tel:${contactInfo.phone.store}`}>
+                        {contactInfo.phone.store}
                       </a>
                       <br />
                       휴대폰:{" "}
-                      <a href={`tel:${contactInfo.phone[1]}`}>
-                        {contactInfo.phone[1]}
+                      <a href={`tel:${contactInfo.phone.mobile}`}>
+                        {contactInfo.phone.mobile}
+                      </a>
+                      <br />
+                      관리자:{" "}
+                      <a href={`tel:${contactInfo.phone.admin}`}>
+                        {contactInfo.phone.admin}
                       </a>
                     </p>
                   </InfoContent>
@@ -343,6 +386,9 @@ export default function ContactPage() {
                       <br />
                       일요일: {contactInfo.business_hours.sunday}
                     </p>
+                    <p style={{ marginTop: "0.5rem", color: "#f35525" }}>
+                      {contactInfo.call_hours}
+                    </p>
                   </InfoContent>
                 </InfoCard>
               </InfoGrid>
@@ -370,23 +416,34 @@ export default function ContactPage() {
               <SectionTitle>지도</SectionTitle>
               <MapWrapper>
                 <iframe
-                  src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3262.4!2d${contactInfo.map_coordinates.lng}!3d${contactInfo.map_coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z67aA7IKw6rSR7Jet7IucIOyImOyYgeas!5e0!3m2!1sko!2skr!4v1234567890`}
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3262.7008587104706!2d129.1074524!3d35.1391379!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3568ece455555555%3A0x51b13060777f1eba!2z7KeE7KO865ah7KeR!5e0!3m2!1sko!2skr!4v1770170342174!5m2!1sko!2skr"
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="진주떡집 위치"
                 />
               </MapWrapper>
-              <DirectionsButton
-                href={`https://map.naver.com/v5/search/${encodeURIComponent(
-                  contactInfo.address
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FiMapPin />
-                네이버 지도에서 길찾기
-              </DirectionsButton>
+              <DirectionsButtons>
+                <NaverButton
+                  href={`https://map.naver.com/v5/search/${encodeURIComponent(
+                    contactInfo.address
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <SiNaver />
+                  네이버 지도
+                </NaverButton>
+                <KakaoButton
+                  href={`https://map.kakao.com/link/search/${encodeURIComponent(
+                    contactInfo.address
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <RiKakaoTalkFill />
+                  카카오맵
+                </KakaoButton>
+              </DirectionsButtons>
             </MapSection>
           </ContentGrid>
 

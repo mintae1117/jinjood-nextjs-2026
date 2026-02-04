@@ -30,6 +30,7 @@
 | State | Zustand | 5.x | ✅ |
 | Payment | Toss Payments / Stripe | - | 예정 |
 | UI | React Icons, Swiper | 5.5.0 + 12.0.3 | ✅ |
+| Map | Google Maps Embed | iframe | ✅ |
 
 ---
 
@@ -70,7 +71,14 @@ npm run lint
 │   │   ├── page.tsx
 │   │   └── [id]/page.tsx          # ✅ 상품 상세 페이지
 │   ├── contact/                   # 오시는 길
-│   │   └── page.tsx
+│   │   └── page.tsx               # ✅ Google Maps embed
+│   │
+│   ├── mypage/                    # ✅ 마이페이지
+│   │   ├── page.tsx               # 마이페이지 메인
+│   │   ├── orders/page.tsx        # 주문 내역
+│   │   ├── wishlist/page.tsx      # 위시리스트
+│   │   ├── profile/page.tsx       # 프로필 설정
+│   │   └── settings/page.tsx      # 알림/테마 설정
 │   │
 │   ├── (auth)/                    # ✅ 인증 그룹
 │   │   ├── login/page.tsx         # 로그인 페이지
@@ -80,20 +88,13 @@ npm run lint
 │   ├── auth/                      # ✅ OAuth 콜백
 │   │   └── callback/route.ts      # Supabase OAuth 콜백 핸들러
 │   │
-│   ├── (shop)/                    # ✅ 쇼핑 그룹
-│   │   ├── cart/page.tsx          # 장바구니
-│   │   ├── checkout/page.tsx      # (예정) 결제
-│   │   └── orders/page.tsx        # (예정) 주문 내역
+│   ├── cart/                      # ✅ 장바구니
+│   │   └── page.tsx
 │   │
 │   ├── (board)/                   # (예정) 게시판 그룹
 │   │   ├── notice/page.tsx        # 공지사항
 │   │   ├── review/page.tsx        # 상품 후기
 │   │   └── qna/page.tsx           # Q&A
-│   │
-│   ├── (dashboard)/               # (예정) 마이페이지
-│   │   ├── profile/page.tsx
-│   │   ├── orders/page.tsx
-│   │   └── wishlist/page.tsx
 │   │
 │   └── admin/                     # (예정) 관리자
 │       ├── products/page.tsx
@@ -105,21 +106,23 @@ npm run lint
 ├── src/
 │   ├── components/
 │   │   ├── common/                # 공통 컴포넌트
-│   │   │   ├── Header.tsx         # ✅ 로그인/장바구니 버튼 포함
-│   │   │   ├── Footer.tsx
+│   │   │   ├── Header.tsx         # ✅ 로그인/장바구니/검색 버튼 포함
+│   │   │   ├── Footer.tsx         # ✅ 사업자정보/개발자정보 포함
+│   │   │   ├── SearchBar.tsx      # ✅ 상품 검색 오버레이
 │   │   │   ├── PageHeader.tsx
+│   │   │   ├── Loading.tsx        # ✅ 로딩 스피너
 │   │   │   ├── Button.tsx         # (예정)
 │   │   │   ├── Input.tsx          # (예정)
-│   │   │   ├── Modal.tsx          # (예정)
-│   │   │   └── Loading.tsx        # (예정)
+│   │   │   └── Modal.tsx          # (예정)
 │   │   ├── home/                  # 홈페이지 전용
 │   │   │   ├── HeroBanner.tsx
 │   │   │   ├── FeaturedMenu.tsx
-│   │   │   ├── GiftSets.tsx
+│   │   │   ├── GiftSets.tsx       # ✅ 장바구니 담기 버튼 포함
 │   │   │   ├── VideoSection.tsx   # ✅ Supabase Storage 이미지 사용
-│   │   │   └── SNSSection.tsx
+│   │   │   ├── SNSSection.tsx
+│   │   │   └── LocationSection.tsx # ✅ Google Maps embed + 연락처 정보
 │   │   ├── menu/                  # 메뉴 관련
-│   │   │   ├── MenuCard.tsx
+│   │   │   ├── MenuCard.tsx       # ✅ 장바구니 담기 버튼 포함
 │   │   │   └── MenuFilter.tsx
 │   │   ├── product/               # ✅ 상품 상세
 │   │   │   └── ProductDetail.tsx  # 통합 상품 상세 컴포넌트 (모든 상품 타입 지원)
@@ -189,7 +192,8 @@ npm run lint
 │       └── storage.ts             # 로컬 스토리지
 │
 ├── supabase/
-│   └── schema.sql                 # DB 스키마
+│   ├── schema.sql                 # DB 스키마
+│   └── cart_items.sql             # ✅ 장바구니 테이블 (Supabase에서 실행 필요)
 │
 └── public/
     ├── images/
@@ -206,7 +210,6 @@ npm run lint
 # .env.local
 NEXT_PUBLIC_SUPABASE_URL=<Supabase URL>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<Supabase Anon Key>
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=<Google Maps API Key>
 
 # (예정) 결제
 TOSS_CLIENT_KEY=<Toss Client Key>
@@ -274,6 +277,9 @@ wishlist (id, user_id, product_id, created_at)
 ```
 
 ### cart_items 테이블 생성 SQL
+> **중요**: 장바구니 기능을 사용하려면 Supabase SQL Editor에서 아래 SQL을 실행해야 합니다.
+> 파일 위치: `supabase/cart_items.sql`
+
 ```sql
 CREATE TABLE IF NOT EXISTS cart_items (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -631,6 +637,89 @@ export function useCart() {
 
 ---
 
+## 상품 검색 구현 가이드 ✅
+
+### SearchBar 컴포넌트
+헤더의 검색 아이콘 클릭 시 오버레이 형태로 열리는 검색 바입니다.
+
+```typescript
+// src/components/common/SearchBar.tsx
+interface SearchBarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+// 주요 기능
+// - 실시간 검색 (300ms 디바운스)
+// - 3개 테이블 통합 검색 (menu_items, gift_sets, reciprocate_items)
+// - 키보드 네비게이션 (위/아래 화살표, Enter, ESC)
+// - 검색 결과에 상품 타입 라벨 표시
+// - 클릭 또는 Enter로 상품 상세 페이지 이동
+```
+
+### 사용 방법
+```tsx
+// src/components/common/Header.tsx
+const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+<SearchButton onClick={() => setIsSearchOpen(true)}>
+  <FiSearch />
+</SearchButton>
+<SearchBar isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+```
+
+---
+
+## Google Maps Embed 구현 가이드 ✅
+
+### iframe 사용
+API 키 없이 Google Maps embed iframe을 사용합니다.
+
+```tsx
+// src/components/home/LocationSection.tsx 또는 app/contact/page.tsx
+const MapWrapper = styled.div`
+  width: 100%;
+  height: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+`;
+
+<MapWrapper>
+  <iframe
+    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3262.7008587104706!2d129.1074524!3d35.1391379!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3568ece455555555%3A0x51b13060777f1eba!2z7KeE7KO865ah7KeR!5e0!3m2!1sko!2skr!4v1770170342174!5m2!1sko!2skr"
+    allowFullScreen
+    loading="lazy"
+    referrerPolicy="no-referrer-when-downgrade"
+  />
+</MapWrapper>
+```
+
+### embed 코드 생성 방법
+1. [Google Maps](https://www.google.com/maps)에서 장소 검색
+2. 공유 버튼 클릭 > "지도 퍼가기" 선택
+3. iframe 코드 복사
+
+### 외부 지도 연결
+```tsx
+// 네이버 지도
+<a href={`https://map.naver.com/v5/search/${encodeURIComponent(address)}`}>
+  네이버 지도
+</a>
+
+// 카카오맵
+<a href={`https://map.kakao.com/link/search/${encodeURIComponent(address)}`}>
+  카카오맵
+</a>
+```
+
+---
+
 ## 상품 상세 페이지 구현 가이드 ✅
 
 ### ProductDetail 컴포넌트
@@ -834,9 +923,11 @@ style(product): 상품 카드 반응형 개선
 ### Phase 1: 기본 기능 ✅
 - [x] 홈페이지 레이아웃
 - [x] 메뉴 목록 페이지
-- [x] 오시는 길 페이지
+- [x] 오시는 길 페이지 (Google Maps embed)
 - [x] Supabase 데이터 연동
 - [x] 상품 상세 페이지 (메뉴/선물세트/이바지·답례)
+- [x] 상품 검색 기능
+- [x] 홈페이지 오시는 길 섹션
 
 ### Phase 2: 인증 & 장바구니 ✅
 - [x] 로그인/회원가입 페이지
@@ -844,15 +935,19 @@ style(product): 상품 카드 반응형 개선
 - [x] 카카오 소셜 로그인 (OAuth 설정 필요)
 - [x] 장바구니 기능 (로그인 필수)
 - [x] Header에 로그인/장바구니 UI
+- [x] 메뉴/선물세트 카드에 장바구니 담기 버튼
 
-### Phase 3: 결제 (예정)
+### Phase 3: 마이페이지 ✅
+- [x] 마이페이지 메인 (/mypage)
+- [x] 주문 내역 (/mypage/orders)
+- [x] 위시리스트 (/mypage/wishlist)
+- [x] 프로필 설정 (/mypage/profile)
+- [x] 알림/테마 설정 (/mypage/settings)
+
+### Phase 4: 결제 (예정)
 - [ ] 결제 페이지
 - [ ] Toss Payments 연동
 - [ ] 주문 완료 페이지
-
-### Phase 4: 마이페이지 (예정)
-- [ ] 마이페이지
-- [ ] 주문 내역 조회
 - [ ] 주문 상태 추적
 
 ### Phase 5: 관리자 (예정)
@@ -867,6 +962,57 @@ style(product): 상품 카드 반응형 개선
 
 ---
 
+## 사이트 정보 (sampleData.ts)
+
+### contactInfo 구조
+```typescript
+// src/data/sampleData.ts
+export const contactInfo = {
+  address: "부산광역시 수영구 황령대로 481번길 10-3",
+  phone: {
+    store: "051-621-5108",     // 매장 전화
+    mobile: "010-6251-5108",   // 휴대폰
+    admin: "010-4728-6922",    // 관리자
+  },
+  fax: "051-625-2720",
+  email: "jea6922@naver.com",
+  bank_account: "112-2038-7604-08",
+  bank_name: "부산은행",
+  account_holder: "정은아",
+  business_hours: {
+    weekday: "07시-19시",
+    saturday: "07시-17시",
+    sunday: "정기휴무",
+  },
+  call_hours: "매일 07시-21시 통화가능",
+  map_coordinates: {
+    lat: 35.1595454,
+    lng: 129.1017891,
+  },
+  // 사업자 정보
+  business_number: "452-23-00331",
+  representative: "정창구외 1명",
+  // 개발자/관리자 정보
+  developer: {
+    name: "김민태",
+    github: "https://github.com/mintae1117",
+  },
+  site_admin: {
+    name: "조장현",
+    phone: "010-4728-6922",
+  },
+};
+
+export const socialLinks = {
+  instagram: "https://www.instagram.com/busan_jinjoods_rice_cake",
+  kakao_channel: "https://pf.kakao.com/_zsKlb",
+  naver_band: "https://band.us/band/77842984",
+  naver_blog: "https://m.blog.naver.com/jinjoo_ricecake",
+};
+```
+
+---
+
 ## 배포
 
 - **플랫폼**: Vercel
@@ -874,3 +1020,4 @@ style(product): 상품 카드 반응형 개선
 - **CI/CD**: Git push 시 자동 배포
 - **Database**: Supabase (별도 관리)
 - **Storage**: Supabase Storage (이미지 호스팅)
+- **Map**: Google Maps Embed (API 키 불필요)

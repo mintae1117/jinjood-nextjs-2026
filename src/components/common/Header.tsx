@@ -10,6 +10,7 @@ import { RiKakaoTalkFill } from "react-icons/ri";
 import { SiNaver } from "react-icons/si";
 import { useAuth, useCart } from "@/hooks";
 import UserDropdown from "@/components/auth/UserDropdown";
+import SearchBar from "@/components/common/SearchBar";
 
 const HeaderWrapper = styled.header<{ $scrolled: boolean }>`
   position: fixed;
@@ -315,6 +316,7 @@ const navItems = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated, isInitialized } = useAuth();
   const { totalItems } = useCart();
@@ -399,7 +401,10 @@ export default function Header() {
             </DesktopNav>
 
             <HeaderActions>
-              <SearchButton aria-label="Search">
+              <SearchButton
+                aria-label="Search"
+                onClick={() => setIsSearchOpen(true)}
+              >
                 <FiSearch />
               </SearchButton>
 
@@ -450,6 +455,8 @@ export default function Header() {
           </NavLink>
         ))}
       </MobileNav>
+
+      <SearchBar isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 }

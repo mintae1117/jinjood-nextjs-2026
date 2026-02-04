@@ -1016,8 +1016,77 @@ export const socialLinks = {
 ## 배포
 
 - **플랫폼**: Vercel
-- **URL**: https://jinjood.vercel.app/ (예정)
+- **Staging URL**: https://jinjood-nextjs.vercel.app/ (테스트용)
+- **Production URL**: https://jinjood.com (도메인 연결 후)
 - **CI/CD**: Git push 시 자동 배포
 - **Database**: Supabase (별도 관리)
 - **Storage**: Supabase Storage (이미지 호스팅)
 - **Map**: Google Maps Embed (API 키 불필요)
+
+---
+
+## Vercel 배포 가이드
+
+### 1. GitHub에 푸시
+```bash
+git init
+git add .
+git commit -m "Initial commit: 진주떡집 Next.js"
+git branch -M main
+git remote add origin https://github.com/your-username/jinjood-nextjs.git
+git push -u origin main
+```
+
+### 2. Vercel 배포
+1. [vercel.com](https://vercel.com) 로그인
+2. "Add New Project" 클릭
+3. GitHub 저장소 import
+4. **Environment Variables 설정** (필수!)
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://dtrkgewjilthseguqlgy.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
+   ```
+5. "Deploy" 클릭
+
+### 3. 배포 후 테스트 체크리스트
+- [ ] 메뉴/선물세트/이바지 상품 목록 로딩
+- [ ] 상품 상세 페이지
+- [ ] 회원가입/로그인 (이메일, 카카오)
+- [ ] 장바구니 담기/조회
+- [ ] 검색 기능
+- [ ] 지도 표시 (Google Maps embed)
+- [ ] 모바일 반응형
+
+---
+
+## 도메인 이전 가이드 (jinjood.com)
+
+### 1. 기존 HTML 사이트 DNS 설정 백업
+- 현재 DNS 레코드 스크린샷 저장
+
+### 2. Vercel에서 도메인 추가
+- Project > Settings > Domains > Add
+- `jinjood.com` 입력
+
+### 3. DNS 레코드 변경
+- 기존 호스팅의 DNS에서 A 레코드 또는 CNAME을 Vercel 값으로 변경
+- Vercel이 안내하는 값으로 설정
+- 예시:
+  - A 레코드: `76.76.21.21`
+  - CNAME: `cname.vercel-dns.com`
+
+### 4. DNS 전파 대기
+- 최대 48시간 (보통 몇 분~몇 시간)
+
+### 5. Supabase 설정 업데이트 (카카오 로그인)
+- Supabase Dashboard > Authentication > URL Configuration
+- Site URL: `https://jinjood.com`
+- Redirect URLs에 `https://jinjood.com/**` 추가
+
+### 6. 도메인 이전 전 체크리스트
+- [ ] 기존 사이트의 중요 URL이 새 사이트에도 있는지 확인
+- [ ] 없어진 URL은 리다이렉트 설정 고려 (SEO 영향)
+  - 예: `/menu.html` → `/represent`
+- [ ] Google Search Console 사이트 등록
+- [ ] Naver Search Advisor 사이트 등록
+- [ ] layout.tsx의 naver/google site verification 코드 추가

@@ -120,60 +120,6 @@ const Description = styled(motion.p)`
   }
 `;
 
-const ButtonGroup = styled(motion.div)`
-  display: flex;
-  gap: 1rem;
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    width: 100%;
-    max-width: 300px;
-  }
-`;
-
-const PrimaryButton = styled.a`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2rem;
-  background-color: #f35525;
-  color: #ffffff;
-  font-weight: 600;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #d94820;
-    transform: translateY(-2px);
-  }
-
-  @media (max-width: 480px) {
-    width: 100%;
-  }
-`;
-
-const SecondaryButton = styled.a`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2rem;
-  background-color: transparent;
-  color: #ffffff;
-  font-weight: 600;
-  border: 2px solid #ffffff;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #ffffff;
-    color: #1e1e1e;
-  }
-
-  @media (max-width: 480px) {
-    width: 100%;
-  }
-`;
-
 const StyledSwiper = styled(Swiper)`
   width: 100%;
   height: 100%;
@@ -328,15 +274,6 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                 >
                   {banner.description}
                 </Description>
-                <ButtonGroup
-                  variants={textVariants}
-                  initial="hidden"
-                  animate={activeIndex === index ? "visible" : "hidden"}
-                  custom={3}
-                >
-                  <PrimaryButton href="/menu">메뉴 보기</PrimaryButton>
-                  <SecondaryButton href="/contact">매장 방문</SecondaryButton>
-                </ButtonGroup>
               </SlideContent>
             </SlideWrapper>
           </SwiperSlide>

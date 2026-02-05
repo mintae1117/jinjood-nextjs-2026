@@ -102,6 +102,23 @@ export function useAuth() {
     }
   }, [setLoading]);
 
+  // 구글 로그인
+  const signInWithGoogle = useCallback(async () => {
+    setLoading(true);
+    try {
+      await authService.signInWithGoogle();
+      return { success: true };
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "구글 로그인에 실패했습니다.",
+      };
+    } finally {
+      setLoading(false);
+    }
+  }, [setLoading]);
+
   // 로그아웃
   const signOut = useCallback(async () => {
     setLoading(true);
@@ -149,6 +166,7 @@ export function useAuth() {
     signIn,
     signUp,
     signInWithKakao,
+    signInWithGoogle,
     signOut,
     resetPassword,
   };

@@ -3,12 +3,26 @@ import type { LoginFormData, RegisterFormData, User } from "@/types";
 
 // Supabase Auth 사용자를 앱 User 타입으로 변환
 function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metadata?: Record<string, unknown> }): User {
+  const metadata = supabaseUser.user_metadata || {};
+
+  // 이름: name > full_name > nickname (카카오) 순으로 확인
+  const name = (metadata.name as string) ||
+               (metadata.full_name as string) ||
+               (metadata.nickname as string) ||
+               "";
+
+  // 프로필 이미지: avatar_url > picture (구글) > profile_image (카카오) 순으로 확인
+  const avatar_url = (metadata.avatar_url as string) ||
+                     (metadata.picture as string) ||
+                     (metadata.profile_image as string) ||
+                     "";
+
   return {
     id: supabaseUser.id,
     email: supabaseUser.email || "",
-    name: (supabaseUser.user_metadata?.name as string) || (supabaseUser.user_metadata?.full_name as string) || "",
-    phone: (supabaseUser.user_metadata?.phone as string) || "",
-    avatar_url: (supabaseUser.user_metadata?.avatar_url as string) || "",
+    name,
+    phone: (metadata.phone as string) || "",
+    avatar_url,
   };
 }
 
@@ -47,7 +61,7 @@ export const authService = {
     return authData.user ? mapSupabaseUser(authData.user) : null;
   },
 
-  // 카카오 OAuth 로그인
+  // 카카오 OAuth 로그인 (비즈앱: 이메일 포함)
   async signInWithKakao() {
     const supabase = createBrowserClient();
 
@@ -55,6 +69,27 @@ export const authService = {
       provider: "kakao",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        scopes: "profile_nickname profile_image account_email",
+      },
+    });
+
+    if (error) throw error;
+
+    return data;
+  },
+
+  // 구글 OAuth 로그인
+  async signInWithGoogle() {
+    const supabase = createBrowserClient();
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
 

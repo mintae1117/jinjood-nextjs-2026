@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import styled from "styled-components";
 import { RiKakaoTalkFill } from "react-icons/ri";
+import { FcGoogle } from "react-icons/fc";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { useAuth } from "@/hooks";
 import { SpinnerLoading } from "@/components/common/Loading";
@@ -142,6 +143,12 @@ const Divider = styled.div`
   }
 `;
 
+const SocialButtonGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
 const KakaoButton = styled.button`
   width: 100%;
   padding: 0.875rem;
@@ -160,6 +167,37 @@ const KakaoButton = styled.button`
 
   &:hover:not(:disabled) {
     background-color: #e6cf00;
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+
+  svg {
+    font-size: 1.25rem;
+  }
+`;
+
+const GoogleButton = styled.button`
+  width: 100%;
+  padding: 0.875rem;
+  background-color: #ffffff;
+  color: #1e1e1e;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 1px solid #eeeeee;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #f8f8f8;
+    border-color: #dddddd;
   }
 
   &:disabled {
@@ -212,7 +250,7 @@ function LoginFormInner() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/";
 
-  const { signIn, signInWithKakao, isLoading } = useAuth();
+  const { signIn, signInWithKakao, signInWithGoogle, isLoading } = useAuth();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -253,6 +291,15 @@ function LoginFormInner() {
 
     if (!result.success) {
       setError(result.error || "카카오 로그인에 실패했습니다.");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+    const result = await signInWithGoogle();
+
+    if (!result.success) {
+      setError(result.error || "구글 로그인에 실패했습니다.");
     }
   };
 
@@ -310,10 +357,17 @@ function LoginFormInner() {
 
         <Divider>또는</Divider>
 
-        <KakaoButton onClick={handleKakaoLogin} disabled={isLoading}>
-          <RiKakaoTalkFill />
-          카카오로 시작하기
-        </KakaoButton>
+        <SocialButtonGroup>
+          <KakaoButton onClick={handleKakaoLogin} disabled={isLoading}>
+            <RiKakaoTalkFill />
+            카카오로 시작하기
+          </KakaoButton>
+
+          <GoogleButton onClick={handleGoogleLogin} disabled={isLoading}>
+            <FcGoogle />
+            Google로 시작하기
+          </GoogleButton>
+        </SocialButtonGroup>
 
         <Links>
           <Link href="/register">회원가입</Link>

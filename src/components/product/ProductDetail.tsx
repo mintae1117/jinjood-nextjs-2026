@@ -144,6 +144,7 @@ const Description = styled.p`
   line-height: 1.8;
   margin-bottom: 2rem;
   white-space: pre-line;
+  word-break: keep-all;
 `;
 
 const Divider = styled.hr`

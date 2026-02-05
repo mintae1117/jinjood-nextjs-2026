@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { motion } from "framer-motion";
 import { FiPhone, FiMail, FiMapPin, FiClock, FiCreditCard } from "react-icons/fi";
 import { contactInfo } from "@/data/sampleData";
+import KakaoMap from "@/components/common/KakaoMap";
 
 const Section = styled.section`
   padding: 5rem 0;
@@ -74,11 +75,6 @@ const MapWrapper = styled.div`
     height: 300px;
   }
 
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: 0;
-  }
 `;
 
 const InfoWrapper = styled.div`
@@ -190,11 +186,9 @@ export default function LocationSection() {
 
         <ContentGrid>
           <MapWrapper>
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3262.7008587104706!2d129.1074524!3d35.1391379!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3568ece455555555%3A0x51b13060777f1eba!2z7KeE7KO865ah7KeR!5e0!3m2!1sko!2skr!4v1770170342174!5m2!1sko!2skr"
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
+            <KakaoMap
+              lat={contactInfo.map_coordinates.lat}
+              lng={contactInfo.map_coordinates.lng}
             />
           </MapWrapper>
 

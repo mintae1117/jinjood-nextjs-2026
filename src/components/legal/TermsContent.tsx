@@ -109,7 +109,7 @@ export default function TermsContent() {
         </BackLink>
 
         <Title>이용약관</Title>
-        <UpdateDate>시행일: 2024년 10월 3일</UpdateDate>
+        <UpdateDate>시행일: 2026년 3월 1일</UpdateDate>
 
         <Section>
           <SectionTitle>제1조 (목적)</SectionTitle>
@@ -329,7 +329,7 @@ export default function TermsContent() {
 
         <Section>
           <SectionTitle>부칙</SectionTitle>
-          <Paragraph>이 약관은 2024년 10월 3일부터 적용됩니다.</Paragraph>
+          <Paragraph>이 약관은 2026년 3월 1일부터 적용됩니다.</Paragraph>
         </Section>
       </Inner>
     </Container>

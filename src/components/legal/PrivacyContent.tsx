@@ -159,7 +159,7 @@ export default function PrivacyContent() {
         </BackLink>
 
         <Title>개인정보처리방침</Title>
-        <UpdateDate>시행일: 2024년 10월 3일</UpdateDate>
+        <UpdateDate>시행일: 2026년 3월 1일</UpdateDate>
 
         <Paragraph>
           진주떡집(이하 &quot;회사&quot;)은 개인정보보호법 등 관련 법령상의 개인정보보호 규정을
@@ -395,7 +395,7 @@ export default function PrivacyContent() {
             <Paragraph>
               <strong>개인정보 보호책임자</strong>
             </Paragraph>
-            <Paragraph>성명: 정창구</Paragraph>
+            <Paragraph>성명: 조장현</Paragraph>
             <Paragraph>직책: 대표</Paragraph>
             <Paragraph>연락처: 051-621-5108</Paragraph>
             <Paragraph>이메일: jea6922@naver.com</Paragraph>
@@ -431,7 +431,7 @@ export default function PrivacyContent() {
 
         <Section>
           <SectionTitle>부칙</SectionTitle>
-          <Paragraph>이 개인정보처리방침은 2024년 10월 3일부터 적용됩니다.</Paragraph>
+          <Paragraph>이 개인정보처리방침은 2026년 3월 1일부터 적용됩니다.</Paragraph>
         </Section>
       </Inner>
     </Container>

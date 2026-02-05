@@ -2,6 +2,7 @@
 
 import styled from "styled-components";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FiUser, FiPackage, FiSettings, FiChevronRight, FiLogOut } from "react-icons/fi";
 import { useAuth } from "@/hooks";
@@ -53,6 +54,13 @@ const Avatar = styled.div`
   justify-content: center;
   color: #ffffff;
   font-size: 2rem;
+  overflow: hidden;
+`;
+
+const AvatarImage = styled(Image)`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const UserInfo = styled.div`
@@ -229,7 +237,19 @@ export default function MyPage() {
 
         <ProfileCard>
           <ProfileInfo>
-            <Avatar>{getInitial()}</Avatar>
+            <Avatar>
+              {user.avatar_url ? (
+                <AvatarImage
+                  src={user.avatar_url}
+                  alt={user.name || "프로필"}
+                  width={80}
+                  height={80}
+                  unoptimized
+                />
+              ) : (
+                getInitial()
+              )}
+            </Avatar>
             <UserInfo>
               <UserName>{user.name || "회원"}</UserName>
               <UserEmail>{user.email}</UserEmail>

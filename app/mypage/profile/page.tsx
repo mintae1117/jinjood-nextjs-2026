@@ -3,6 +3,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import Link from "next/link";
+import Image from "next/image";
 import { FiArrowLeft, FiUser, FiMail, FiPhone, FiSave } from "react-icons/fi";
 import { useAuth } from "@/hooks";
 import { Loading } from "@/components/common/Loading";
@@ -79,6 +80,13 @@ const Avatar = styled.div`
   color: #ffffff;
   font-size: 2.5rem;
   margin-bottom: 1rem;
+  overflow: hidden;
+`;
+
+const AvatarImage = styled(Image)`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const AvatarName = styled.p`
@@ -271,7 +279,19 @@ export default function ProfilePage() {
 
         <ProfileSection>
           <AvatarSection>
-            <Avatar>{getInitial()}</Avatar>
+            <Avatar>
+              {user.avatar_url ? (
+                <AvatarImage
+                  src={user.avatar_url}
+                  alt={user.name || "프로필"}
+                  width={100}
+                  height={100}
+                  unoptimized
+                />
+              ) : (
+                getInitial()
+              )}
+            </Avatar>
             <AvatarName>{user.name || user.email}</AvatarName>
           </AvatarSection>
 

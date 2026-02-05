@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import styled from "styled-components";
 import { FiUser, FiShoppingBag, FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
 import { useAuth } from "@/hooks";
@@ -37,6 +38,13 @@ const Avatar = styled.div`
   justify-content: center;
   font-size: 0.875rem;
   font-weight: 600;
+  overflow: hidden;
+`;
+
+const AvatarImage = styled(Image)`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const UserName = styled.span`
@@ -176,7 +184,19 @@ export default function UserDropdown() {
   return (
     <DropdownContainer ref={dropdownRef}>
       <DropdownTrigger onClick={() => setIsOpen(!isOpen)}>
-        <Avatar>{initials}</Avatar>
+        <Avatar>
+          {user.avatar_url ? (
+            <AvatarImage
+              src={user.avatar_url}
+              alt={displayName}
+              width={32}
+              height={32}
+              unoptimized
+            />
+          ) : (
+            initials
+          )}
+        </Avatar>
         <UserName>{displayName}</UserName>
         <ChevronIcon $isOpen={isOpen} />
       </DropdownTrigger>

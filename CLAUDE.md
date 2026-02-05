@@ -85,11 +85,18 @@ npm run lint
 │   │   ├── register/page.tsx      # 회원가입 페이지
 │   │   └── forgot-password/page.tsx # 비밀번호 찾기
 │   │
+│   ├── (legal)/                   # ✅ 법적 문서 그룹
+│   │   ├── terms/page.tsx         # 이용약관
+│   │   └── privacy/page.tsx       # 개인정보처리방침
+│   │
 │   ├── auth/                      # ✅ OAuth 콜백
 │   │   └── callback/route.ts      # Supabase OAuth 콜백 핸들러
 │   │
 │   ├── cart/                      # ✅ 장바구니
 │   │   └── page.tsx
+│   │
+│   ├── favicon.ico                # ✅ 파비콘
+│   ├── apple-icon.png             # ✅ Apple 터치 아이콘
 │   │
 │   ├── (board)/                   # (예정) 게시판 그룹
 │   │   ├── notice/page.tsx        # 공지사항
@@ -106,8 +113,8 @@ npm run lint
 ├── src/
 │   ├── components/
 │   │   ├── common/                # 공통 컴포넌트
-│   │   │   ├── Header.tsx         # ✅ 로그인/장바구니/검색 버튼 포함
-│   │   │   ├── Footer.tsx         # ✅ 사업자정보/개발자정보 포함
+│   │   │   ├── Header.tsx         # ✅ 로고 이미지 + 로그인/장바구니/검색 버튼 포함
+│   │   │   ├── Footer.tsx         # ✅ 사업자정보/개발자정보 + 이용약관/개인정보처리방침 링크
 │   │   │   ├── SearchBar.tsx      # ✅ 상품 검색 오버레이
 │   │   │   ├── PageHeader.tsx
 │   │   │   ├── Loading.tsx        # ✅ 로딩 스피너
@@ -136,10 +143,13 @@ npm run lint
 │   │   │   ├── PaymentMethod.tsx
 │   │   │   └── OrderSummary.tsx
 │   │   ├── auth/                  # ✅ 인증
-│   │   │   ├── LoginForm.tsx      # 이메일 + 카카오 로그인
+│   │   │   ├── LoginForm.tsx      # 이메일 + 카카오 + 구글 로그인
 │   │   │   ├── RegisterForm.tsx   # 회원가입 폼
 │   │   │   ├── ForgotPasswordForm.tsx # 비밀번호 찾기
 │   │   │   └── UserDropdown.tsx   # 로그인 후 사용자 메뉴
+│   │   ├── legal/                 # ✅ 법적 문서
+│   │   │   ├── TermsContent.tsx   # 이용약관 내용
+│   │   │   └── PrivacyContent.tsx # 개인정보처리방침 내용
 │   │   └── board/                 # (예정) 게시판
 │   │       ├── PostList.tsx
 │   │       ├── PostDetail.tsx
@@ -160,7 +170,7 @@ npm run lint
 │   │
 │   ├── services/                  # API 서비스
 │   │   ├── index.ts               # 통합 export
-│   │   ├── auth.ts                # ✅ 회원가입, 로그인, 로그아웃, 카카오 OAuth
+│   │   ├── auth.ts                # ✅ 회원가입, 로그인, 로그아웃, 카카오/구글 OAuth
 │   │   ├── cart.ts                # ✅ 장바구니 CRUD
 │   │   ├── products.ts            # 상품 API
 │   │   ├── banners.ts             # 배너 API
@@ -197,6 +207,7 @@ npm run lint
 │
 └── public/
     ├── images/
+    │   ├── logo.png               # ✅ 로고 이미지
     │   └── sns/                   # SNS 이미지 (banners, menu는 Supabase Storage로 이동)
     └── videos/
         └── jinjooad.mp4           # 홍보 영상
@@ -510,12 +521,30 @@ export const authService = {
   // 이메일/비밀번호 로그인
   async signIn(data: LoginFormData) { ... },
 
-  // 카카오 OAuth 로그인
+  // 카카오 OAuth 로그인 (비즈앱: 이메일 포함)
   async signInWithKakao() {
     const supabase = createBrowserClient();
     await supabase.auth.signInWithOAuth({
       provider: "kakao",
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        scopes: "profile_nickname profile_image account_email",
+      }
+    });
+  },
+
+  // 구글 OAuth 로그인
+  async signInWithGoogle() {
+    const supabase = createBrowserClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      }
     });
   },
 
@@ -549,16 +578,32 @@ export function useAuth() {
     signIn,
     signUp,
     signInWithKakao,
+    signInWithGoogle,  // ✅ 구글 로그인 추가
     signOut,
+    resetPassword,
   };
 }
 ```
 
-### 카카오 OAuth 설정 (수동)
+### 카카오 OAuth 설정 (비즈앱 필요)
 1. [Kakao Developers](https://developers.kakao.com/)에서 앱 생성
-2. Redirect URI 설정: `https://<project-ref>.supabase.co/auth/v1/callback`
-3. Supabase Dashboard > Authentication > Providers > Kakao 활성화
-4. Client ID/Secret 입력
+2. **비즈앱 전환** (이메일 수집을 위해 필수)
+3. 카카오 로그인 > 동의항목 설정:
+   - 닉네임: 필수 동의
+   - 프로필 사진: 선택 동의
+   - 카카오계정(이메일): 필수 동의
+4. Redirect URI 설정: `https://<project-ref>.supabase.co/auth/v1/callback`
+5. Supabase Dashboard > Authentication > Providers > Kakao 활성화
+6. Client ID(REST API 키)/Client Secret 입력
+7. Scopes: `profile_nickname,profile_image,account_email`
+
+### 구글 OAuth 설정
+1. [Google Cloud Console](https://console.cloud.google.com)에서 프로젝트 생성
+2. API 및 서비스 > OAuth 동의 화면 설정 (외부)
+3. 사용자 인증 정보 > OAuth 클라이언트 ID 생성 (웹 애플리케이션)
+4. 승인된 리디렉션 URI: `https://<project-ref>.supabase.co/auth/v1/callback`
+5. Supabase Dashboard > Authentication > Providers > Google 활성화
+6. Client ID/Client Secret 입력
 
 ---
 
@@ -928,11 +973,15 @@ style(product): 상품 카드 반응형 개선
 - [x] 상품 상세 페이지 (메뉴/선물세트/이바지·답례)
 - [x] 상품 검색 기능
 - [x] 홈페이지 오시는 길 섹션
+- [x] 로고 이미지 + 파비콘 ✅
+- [x] 이용약관 페이지 (/terms) ✅
+- [x] 개인정보처리방침 페이지 (/privacy) ✅
 
 ### Phase 2: 인증 & 장바구니 ✅
 - [x] 로그인/회원가입 페이지
 - [x] 이메일 로그인
-- [x] 카카오 소셜 로그인 (OAuth 설정 필요)
+- [x] 카카오 소셜 로그인 (비즈앱 전환 필요)
+- [x] 구글 소셜 로그인 ✅
 - [x] 장바구니 기능 (로그인 필수)
 - [x] Header에 로그인/장바구니 UI
 - [x] 메뉴/선물세트 카드에 장바구니 담기 버튼
@@ -1013,6 +1062,25 @@ export const socialLinks = {
 
 ---
 
+## 법적 문서 ✅
+
+### 이용약관 (/terms)
+- 파일: `app/(legal)/terms/page.tsx`, `src/components/legal/TermsContent.tsx`
+- 내용: 목적, 정의, 약관 효력, 서비스 제공/중단, 회원가입/탈퇴, 구매신청, 결제방법, 배송, 환불/교환(떡류 특성 반영), 분쟁해결
+- 시행일: 2024년 10월 3일
+
+### 개인정보처리방침 (/privacy)
+- 파일: `app/(legal)/privacy/page.tsx`, `src/components/legal/PrivacyContent.tsx`
+- 내용: 수집 목적/항목(소셜 로그인 포함), 보유기간, 제3자 제공, 위탁업체(배송/결제), 이용자 권리, 안전성 확보 조치, 쿠키 사용, 권익침해 구제방법
+- 개인정보 보호책임자: 정창구 (대표)
+- 연락처: 051-621-5108, jea6922@naver.com
+- 시행일: 2024년 10월 3일
+
+### Footer 링크
+- `src/components/common/Footer.tsx`에서 이용약관, 개인정보처리방침 링크 연결
+
+---
+
 ## 배포
 
 - **플랫폼**: Vercel
@@ -1051,11 +1119,13 @@ git push -u origin main
 ### 3. 배포 후 테스트 체크리스트
 - [ ] 메뉴/선물세트/이바지 상품 목록 로딩
 - [ ] 상품 상세 페이지
-- [ ] 회원가입/로그인 (이메일, 카카오)
+- [ ] 회원가입/로그인 (이메일, 카카오, 구글)
 - [ ] 장바구니 담기/조회
 - [ ] 검색 기능
 - [ ] 지도 표시 (Google Maps embed)
 - [ ] 모바일 반응형
+- [ ] 이용약관/개인정보처리방침 페이지
+- [ ] 로고/파비콘 표시
 
 ---
 
@@ -1078,10 +1148,13 @@ git push -u origin main
 ### 4. DNS 전파 대기
 - 최대 48시간 (보통 몇 분~몇 시간)
 
-### 5. Supabase 설정 업데이트 (카카오 로그인)
+### 5. Supabase 설정 업데이트 (OAuth 로그인)
 - Supabase Dashboard > Authentication > URL Configuration
-- Site URL: `https://jinjood.com`
-- Redirect URLs에 `https://jinjood.com/**` 추가
+- Site URL: `https://jinjood.com` (배포 URL로 변경 필수!)
+- Redirect URLs에 추가:
+  - `https://jinjood.com/**`
+  - `http://localhost:3000/**` (개발용 유지)
+- **중요**: Site URL이 localhost로 되어있으면 배포 환경에서 로그인 후 localhost로 리다이렉트됨
 
 ### 6. 도메인 이전 전 체크리스트
 - [ ] 기존 사이트의 중요 URL이 새 사이트에도 있는지 확인

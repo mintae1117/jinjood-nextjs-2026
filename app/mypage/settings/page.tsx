@@ -3,7 +3,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import Link from "next/link";
-import { FiArrowLeft, FiBell, FiMail, FiSmartphone, FiMoon, FiSave } from "react-icons/fi";
+import { FiArrowLeft, FiBell, FiMail, FiSmartphone, FiSave } from "react-icons/fi";
 import { useAuth } from "@/hooks";
 import { Loading } from "@/components/common/Loading";
 
@@ -211,7 +211,6 @@ export default function SettingsPage() {
     pushNotification: true,
     emailNotification: true,
     smsNotification: false,
-    darkMode: false,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -323,26 +322,6 @@ export default function SettingsPage() {
             <Toggle
               $active={settings.smsNotification}
               onClick={() => handleToggle("smsNotification")}
-            />
-          </SettingItem>
-        </SettingsSection>
-
-        <SettingsSection>
-          <SectionTitle>화면 설정</SectionTitle>
-
-          <SettingItem>
-            <SettingInfo>
-              <SettingIcon>
-                <FiMoon />
-              </SettingIcon>
-              <SettingText>
-                <SettingTitle>다크 모드</SettingTitle>
-                <SettingDescription>어두운 테마 사용 (준비 중)</SettingDescription>
-              </SettingText>
-            </SettingInfo>
-            <Toggle
-              $active={settings.darkMode}
-              onClick={() => handleToggle("darkMode")}
             />
           </SettingItem>
         </SettingsSection>

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import styled from "styled-components";
-import { FiUser, FiShoppingBag, FiHeart, FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
+import { FiUser, FiShoppingBag, FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
 import { useAuth } from "@/hooks";
 
 const DropdownContainer = styled.div`
@@ -195,10 +195,6 @@ export default function UserDropdown() {
           <MenuItem href="/mypage/orders" onClick={() => setIsOpen(false)}>
             <FiShoppingBag />
             주문 내역
-          </MenuItem>
-          <MenuItem href="/mypage/wishlist" onClick={() => setIsOpen(false)}>
-            <FiHeart />
-            위시리스트
           </MenuItem>
           <MenuItem href="/mypage/settings" onClick={() => setIsOpen(false)}>
             <FiSettings />

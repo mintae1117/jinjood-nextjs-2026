@@ -3,7 +3,7 @@
 import styled from "styled-components";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FiUser, FiPackage, FiHeart, FiSettings, FiChevronRight, FiLogOut } from "react-icons/fi";
+import { FiUser, FiPackage, FiSettings, FiChevronRight, FiLogOut } from "react-icons/fi";
 import { useAuth } from "@/hooks";
 import { Loading } from "@/components/common/Loading";
 
@@ -245,19 +245,6 @@ export default function MyPage() {
             <MenuText>
               <MenuTitle>주문 내역</MenuTitle>
               <MenuDescription>주문 내역 및 배송 현황 확인</MenuDescription>
-            </MenuText>
-            <MenuArrow>
-              <FiChevronRight />
-            </MenuArrow>
-          </MenuItem>
-
-          <MenuItem href="/mypage/wishlist">
-            <MenuIcon $color="#ec4899">
-              <FiHeart />
-            </MenuIcon>
-            <MenuText>
-              <MenuTitle>위시리스트</MenuTitle>
-              <MenuDescription>찜한 상품 목록</MenuDescription>
             </MenuText>
             <MenuArrow>
               <FiChevronRight />

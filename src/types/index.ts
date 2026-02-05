@@ -10,6 +10,8 @@ export interface MenuItem {
   is_popular: boolean;
   is_recommended: boolean;
   is_best: boolean;
+  unit?: string; // 예: "1되/40개입", "2.2kg"
+  seasonal?: boolean; // 계절 메뉴 여부
   display_order?: number;
   is_active?: boolean;
   created_at?: string;
@@ -21,10 +23,15 @@ export interface GiftSet {
   id: string;
   name: string;
   price: number;
+  priceMax?: number; // 가격 범위가 있는 경우 (예: 떡케이크)
   description: string;
   image_url: string;
   category: "gift_set" | "songpyeon_set" | "baekil_dol_set";
   items: string[];
+  unit?: string; // 예: "1세트/30개입"
+  is_popular?: boolean;
+  is_recommended?: boolean;
+  is_best?: boolean;
   display_order?: number;
   is_active?: boolean;
   created_at?: string;
@@ -39,6 +46,10 @@ export interface ReciprocateItem {
   description: string;
   image_url: string;
   category: "ibaji" | "daprye";
+  unit?: string; // 예: "2구", "1세트"
+  is_popular?: boolean;
+  is_recommended?: boolean;
+  is_best?: boolean;
   display_order?: number;
   is_active?: boolean;
   created_at?: string;

@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { FiMinus, FiPlus, FiShoppingCart, FiArrowLeft, FiPhone } from "react-icons/fi";
 import { useAuth, useCart } from "@/hooks";
 import type { MenuItem, GiftSet, ReciprocateItem, ProductType } from "@/types";
-import { getImageUrl } from "@/lib/supabase";
+import { getStorageUrl } from "@/lib/supabase";
 
 type ProductItem = MenuItem | GiftSet | ReciprocateItem;
 
@@ -421,11 +421,7 @@ export default function ProductDetail({
 
   const totalPrice = product.price * quantity;
 
-  const imageUrl = product.image_url?.startsWith("http")
-    ? product.image_url
-    : product.image_url
-    ? getImageUrl("images", product.image_url)
-    : "/images/placeholder.png";
+  const imageUrl = getStorageUrl(product.image_url);
 
   const handleQuantityChange = (delta: number) => {
     setQuantity((prev) => Math.max(1, prev + delta));
@@ -478,7 +474,7 @@ export default function ProductDetail({
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <ProductImage src={imageUrl} alt={product.name} fill sizes="(max-width: 1024px) 100vw, 50vw" priority />
+          <ProductImage src={imageUrl} alt={product.name} fill sizes="(max-width: 1024px) 100vw, 50vw" priority unoptimized />
           {menuItem && (
             <TagsWrapper>
               {menuItem.is_popular && <Tag $variant="popular">인기</Tag>}

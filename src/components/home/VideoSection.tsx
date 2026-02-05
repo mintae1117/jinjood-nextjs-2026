@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import styled from "styled-components";
 import { motion, useInView } from "framer-motion";
+import { getStorageUrl } from "@/lib/supabase";
 
 const Section = styled.section`
   position: relative;
@@ -262,7 +263,7 @@ export default function VideoSection() {
           >
             <Video
               ref={videoRef}
-              poster="https://dtrkgewjilthseguqlgy.supabase.co/storage/v1/object/public/images/banners/banner001.jpeg"
+              poster={getStorageUrl("banners/banner001.jpeg")}
               muted
               playsInline
               controls

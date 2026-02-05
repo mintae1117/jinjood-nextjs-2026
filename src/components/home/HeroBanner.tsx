@@ -10,6 +10,7 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "swiper/css/effect-fade";
 import { Banner } from "@/types";
+import { getStorageUrl } from "@/lib/supabase";
 
 const BannerSection = styled.section`
   position: relative;
@@ -49,9 +50,9 @@ const SlideBackground = styled.div<{ $imageUrl: string }>`
     bottom: 0;
     background: linear-gradient(
       to right,
-      rgba(0, 0, 0, 0.7) 0%,
-      rgba(0, 0, 0, 0.4) 50%,
-      rgba(0, 0, 0, 0.2) 100%
+      rgba(0, 0, 0, 0.5) 0%,
+      rgba(0, 0, 0, 0.25) 50%,
+      rgba(0, 0, 0, 0.1) 100%
     );
   }
 `;
@@ -70,8 +71,8 @@ const SlideContent = styled.div`
 
   @media (max-width: 768px) {
     padding: 0 1.5rem;
-    text-align: center;
-    align-items: center;
+    text-align: left;
+    align-items: flex-start;
   }
 `;
 
@@ -101,6 +102,7 @@ const Title = styled(motion.h1)`
 
   @media (max-width: 768px) {
     font-size: 2.25rem;
+    word-break: keep-all;
   }
 
   @media (max-width: 480px) {
@@ -117,6 +119,7 @@ const Description = styled(motion.p)`
 
   @media (max-width: 768px) {
     font-size: 1rem;
+    word-break: keep-all;
   }
 `;
 
@@ -248,7 +251,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
         {banners.map((banner, index) => (
           <SwiperSlide key={banner.id}>
             <SlideWrapper>
-              <SlideBackground $imageUrl={banner.image_url} />
+              <SlideBackground $imageUrl={getStorageUrl(banner.image_url)} />
               <SlideContent>
                 <Subtitle
                   variants={textVariants}

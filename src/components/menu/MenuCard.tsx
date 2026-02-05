@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { FiShoppingCart, FiCheck } from "react-icons/fi";
 import { MenuItem } from "@/types";
 import { useCart, useAuth } from "@/hooks";
+import { getStorageUrl } from "@/lib/supabase";
 
 const Card = styled(motion.div)`
   background-color: #ffffff;
@@ -223,10 +224,11 @@ export default function MenuCard({ item, index = 0 }: MenuCardProps) {
     >
       <ImageWrapper>
         <Image
-          src={item.image_url}
+          src={getStorageUrl(item.image_url)}
           alt={item.name}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          unoptimized
         />
         <TagsWrapper>
           {item.is_popular && <Tag $variant="popular">인기</Tag>}

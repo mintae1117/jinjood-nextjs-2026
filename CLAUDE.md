@@ -1160,6 +1160,71 @@ export const socialLinks = {
 
 ---
 
+## Supabase Storage 구조 ✅
+
+### 버킷: `images`
+
+```
+images/
+├── placeholder.png          # 공통 대체 이미지 (이미지 없는 상품용)
+├── banners/                  # 배너 이미지
+│   ├── banner001.jpeg
+│   ├── banner002.jpeg
+│   └── banner003.jpeg
+├── menu/                     # 대표 메뉴 이미지
+│   ├── menu001.avif
+│   ├── menu002.avif
+│   └── ...
+├── giftset/                  # 선물세트 이미지
+│   ├── giftset01.avif
+│   ├── giftset02.avif
+│   └── ...
+├── daprae/                   # 이바지/답례 이미지
+│   ├── daprae02_01.avif
+│   ├── daprae03_01.avif
+│   └── ...
+└── sns/                      # SNS 섹션 이미지
+```
+
+### DB 이미지 경로 형식
+
+DB에는 **Supabase Storage 상대 경로**로 저장:
+```
+menu/menu001.avif
+giftset/giftset01.avif
+banners/banner001.jpeg
+```
+
+### 이미지 URL 헬퍼 함수
+
+```typescript
+// src/lib/supabase/index.ts
+import { getStorageUrl } from "@/lib/supabase";
+
+// 사용 예시
+<Image src={getStorageUrl(item.image_url)} alt={item.name} />
+
+// 동작 방식:
+// - null/undefined → placeholder.png 반환
+// - "ready" 포함 경로 → placeholder.png 반환 (대체 이미지)
+// - 상대 경로 → Supabase Storage URL로 변환
+// - 전체 URL → 그대로 반환
+```
+
+### 이미지 컴포넌트 사용 시 주의사항
+
+외부 이미지(Supabase Storage)는 `unoptimized` prop 필수:
+```tsx
+<Image
+  src={getStorageUrl(item.image_url)}
+  alt={item.name}
+  fill
+  unoptimized  // 필수!
+/>
+```
+
+---
+
 ## Vercel 배포 가이드
 
 ### 1. GitHub에 푸시

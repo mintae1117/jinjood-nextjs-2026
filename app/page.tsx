@@ -35,7 +35,11 @@ const ErrorContainer = styled.div`
 export default function HomePage() {
   const { banners, isLoading: bannersLoading, error: bannersError } = useBanners();
   const { items: menuItems, isLoading: menuLoading, error: menuError } = usePopularItems(9);
-  const { items: giftSets, isLoading: giftsLoading, error: giftsError } = useGiftSets();
+  const { items: allGiftSets, isLoading: giftsLoading, error: giftsError } = useGiftSets();
+
+  // 홈페이지에는 선물세트 1호, 4호, 송편세트 1호, 2호만 표시
+  const featuredGiftNames = ["선물세트 1호", "선물세트 4호", "송편세트 1호", "송편세트 2호"];
+  const giftSets = allGiftSets.filter(gift => featuredGiftNames.includes(gift.name));
 
   const isLoading = bannersLoading || menuLoading || giftsLoading;
   const error = bannersError || menuError || giftsError;

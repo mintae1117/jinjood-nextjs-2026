@@ -4,7 +4,7 @@ import styled from "styled-components";
 import Image from "next/image";
 import { FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
 import type { CartItem as CartItemType, MenuItem, GiftSet, ReciprocateItem } from "@/types";
-import { getImageUrl } from "@/lib/supabase";
+import { getStorageUrl } from "@/lib/supabase";
 
 interface CartItemProps {
   item: CartItemType;
@@ -187,11 +187,7 @@ export default function CartItem({ item, onQuantityChange, onRemove }: CartItemP
   const formattedPrice = (price * item.quantity).toLocaleString("ko-KR");
 
   // 이미지 URL 처리
-  const resolvedImageUrl = imageUrl.startsWith("http")
-    ? imageUrl
-    : imageUrl
-    ? getImageUrl("images", imageUrl)
-    : "/images/placeholder.png";
+  const resolvedImageUrl = getStorageUrl(imageUrl);
 
   return (
     <ItemWrapper>
@@ -201,6 +197,7 @@ export default function CartItem({ item, onQuantityChange, onRemove }: CartItemP
           alt={name}
           fill
           sizes="100px"
+          unoptimized
         />
       </ImageWrapper>
 

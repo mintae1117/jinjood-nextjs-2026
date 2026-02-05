@@ -7,6 +7,7 @@ import { FiSearch, FiX } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { MenuItem, GiftSet, ReciprocateItem, ProductType } from "@/types";
 import { productService } from "@/services/products";
+import { getStorageUrl } from "@/lib/supabase";
 
 interface SearchResult {
   id: string;
@@ -456,7 +457,7 @@ export default function SearchBar({ isOpen, onClose }: SearchBarProps) {
                           transition={{ delay: index * 0.05 }}
                         >
                           <ResultImage>
-                            <img src={result.image_url} alt={result.name} />
+                            <img src={getStorageUrl(result.image_url)} alt={result.name} />
                           </ResultImage>
                           <ResultInfo>
                             <ResultName>{result.name}</ResultName>

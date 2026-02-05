@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { FiShoppingCart, FiCheck } from "react-icons/fi";
 import { GiftSet } from "@/types";
 import { useCart, useAuth } from "@/hooks";
+import { getStorageUrl } from "@/lib/supabase";
 
 const Section = styled.section`
   padding: 5rem 0;
@@ -65,12 +66,10 @@ const SectionDescription = styled.p`
 
 const GiftGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -293,10 +292,11 @@ function GiftSetCard({ gift, index }: { gift: GiftSet; index: number }) {
     >
       <ImageWrapper>
         <Image
-          src={gift.image_url}
+          src={getStorageUrl(gift.image_url)}
           alt={gift.name}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          unoptimized
         />
         <Overlay>
           <ViewButton href={`/gifts/${gift.id}`}>

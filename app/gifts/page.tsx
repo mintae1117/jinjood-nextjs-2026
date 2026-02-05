@@ -9,6 +9,7 @@ import PageHeader from "@/components/common/PageHeader";
 import MenuFilter from "@/components/menu/MenuFilter";
 import { useGiftSets } from "@/hooks";
 import { GiftCategory } from "@/types";
+import { getStorageUrl } from "@/lib/supabase";
 
 const Section = styled.section`
   padding: 4rem 0;
@@ -257,10 +258,11 @@ export default function GiftsPage() {
                     >
                       <ImageWrapper>
                         <Image
-                          src={item.image_url}
+                          src={getStorageUrl(item.image_url)}
                           alt={item.name}
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          unoptimized
                         />
                         <CategoryBadge>
                           {categoryLabels[item.category]}

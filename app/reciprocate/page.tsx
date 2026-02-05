@@ -9,6 +9,7 @@ import PageHeader from "@/components/common/PageHeader";
 import MenuFilter from "@/components/menu/MenuFilter";
 import { useReciprocateItems } from "@/hooks";
 import { ReciprocateCategory } from "@/types";
+import { getStorageUrl } from "@/lib/supabase";
 
 const Section = styled.section`
   padding: 4rem 0;
@@ -337,10 +338,11 @@ export default function ReciprocatePage() {
                     >
                       <ImageWrapper>
                         <Image
-                          src={item.image_url}
+                          src={getStorageUrl(item.image_url)}
                           alt={item.name}
                           fill
                           sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          unoptimized
                         />
                         <CategoryBadge>
                           {categoryLabels[item.category]}

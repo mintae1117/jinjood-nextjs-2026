@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import styled from "styled-components";
 import { FiPhone, FiMail, FiMenu, FiX, FiSearch, FiShoppingCart, FiUser } from "react-icons/fi";
@@ -96,13 +97,24 @@ const HeaderContainer = styled.div`
 const Logo = styled(Link)`
   display: flex;
   align-items: center;
+  gap: 0.5rem;
   font-size: 1.5rem;
   font-weight: 700;
   color: #1e1e1e;
+`;
 
-  img {
-    height: 50px;
-    width: auto;
+const LogoImage = styled(Image)`
+  height: 40px;
+  width: auto;
+
+  @media (max-width: 768px) {
+    height: 36px;
+  }
+`;
+
+const LogoText = styled.span`
+  @media (max-width: 480px) {
+    font-size: 1.25rem;
   }
 `;
 
@@ -386,7 +398,16 @@ export default function Header() {
 
         <MainHeader>
           <HeaderContainer>
-            <Logo href="/">진주떡집</Logo>
+            <Logo href="/">
+              <LogoImage
+                src="/images/logo.png"
+                alt="진주떡집 로고"
+                width={40}
+                height={40}
+                priority
+              />
+              <LogoText>진주떡집</LogoText>
+            </Logo>
 
             <DesktopNav>
               {navItems.map((item) => (

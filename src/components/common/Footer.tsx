@@ -367,8 +367,8 @@ export default function Footer() {
               Copyright &copy; jinjood.com All rights reserved.
             </Copyright>
             <FooterBottomLinks>
-              <a href="#">이용약관</a>
-              <a href="#">개인정보처리방침</a>
+              <Link href="/terms">이용약관</Link>
+              <Link href="/privacy">개인정보처리방침</Link>
             </FooterBottomLinks>
           </CopyrightRow>
         </FooterBottom>

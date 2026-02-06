@@ -2,6 +2,7 @@
 
 import styled from "styled-components";
 import Image from "next/image";
+import Link from "next/link";
 import { FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
 import type { CartItem as CartItemType, MenuItem, GiftSet, ReciprocateItem } from "@/types";
 import { getStorageUrl } from "@/lib/supabase";
@@ -143,6 +144,29 @@ const RemoveButton = styled.button`
   }
 `;
 
+const ProductLink = styled(Link)`
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const getProductDetailUrl = (productType: string, productId: string): string => {
+  switch (productType) {
+    case "menu_item":
+      return `/represent/${productId}`;
+    case "gift_set":
+      return `/gifts/${productId}`;
+    case "reciprocate_item":
+      return `/reciprocate/${productId}`;
+    default:
+      return "#";
+  }
+};
+
 const getProductTypeName = (type: string): string => {
   switch (type) {
     case "menu_item":
@@ -173,6 +197,7 @@ const getProductInfo = (
 export default function CartItem({ item, onQuantityChange, onRemove }: CartItemProps) {
   const { name, price, imageUrl } = getProductInfo(item.product);
   const typeName = getProductTypeName(item.product_type);
+  const detailUrl = getProductDetailUrl(item.product_type, item.product_id);
 
   const handleDecrease = () => {
     if (item.quantity > 1) {
@@ -191,19 +216,23 @@ export default function CartItem({ item, onQuantityChange, onRemove }: CartItemP
 
   return (
     <ItemWrapper>
-      <ImageWrapper>
-        <ProductImage
-          src={resolvedImageUrl}
-          alt={name}
-          fill
-          sizes="100px"
-          unoptimized
-        />
-      </ImageWrapper>
+      <ProductLink href={detailUrl}>
+        <ImageWrapper>
+          <ProductImage
+            src={resolvedImageUrl}
+            alt={name}
+            fill
+            sizes="100px"
+            unoptimized
+          />
+        </ImageWrapper>
+      </ProductLink>
 
       <InfoWrapper>
         <ProductType>{typeName}</ProductType>
-        <ProductName>{name}</ProductName>
+        <ProductLink href={detailUrl}>
+          <ProductName>{name}</ProductName>
+        </ProductLink>
         <Price>{formattedPrice}원</Price>
       </InfoWrapper>
 

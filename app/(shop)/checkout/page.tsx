@@ -80,6 +80,74 @@ export default function CheckoutPage() {
           장바구니로 돌아가기
         </a>
       </section>
+
+      <section
+        style={{
+          maxWidth: "600px",
+          margin: "0 auto",
+          padding: "0 1rem 4rem",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "#f8f8f8",
+            borderRadius: "12px",
+            padding: "1.5rem",
+            border: "1px solid #eeeeee",
+          }}
+        >
+          <h3
+            style={{
+              fontSize: "1rem",
+              fontWeight: 700,
+              color: "#1e1e1e",
+              marginBottom: "1rem",
+            }}
+          >
+            환불/교환 정책 안내
+          </h3>
+          <ul
+            style={{
+              listStyle: "none",
+              padding: 0,
+              margin: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+            }}
+          >
+            <li style={{ fontSize: "0.875rem", color: "#666666", lineHeight: 1.6 }}>
+              • 떡류는 신선식품으로 단순 변심에 의한 반품이 불가합니다.
+            </li>
+            <li style={{ fontSize: "0.875rem", color: "#666666", lineHeight: 1.6 }}>
+              • 상품 하자(파손, 변질) 또는 오배송의 경우에만 교환/환불이 가능합니다.
+            </li>
+            <li style={{ fontSize: "0.875rem", color: "#666666", lineHeight: 1.6 }}>
+              • 수령 후 24시간 이내에 연락 바랍니다.
+            </li>
+            <li style={{ fontSize: "0.875rem", color: "#666666", lineHeight: 1.6 }}>
+              • 상품 상태를 확인할 수 있는 사진이 필요합니다.
+            </li>
+          </ul>
+          <p
+            style={{
+              fontSize: "0.8125rem",
+              color: "#999999",
+              marginTop: "1rem",
+              lineHeight: 1.5,
+            }}
+          >
+            자세한 내용은{" "}
+            <a
+              href="/terms"
+              style={{ color: "#f35525", textDecoration: "underline" }}
+            >
+              이용약관 제11조
+            </a>
+            를 참고해 주세요.
+          </p>
+        </div>
+      </section>
     </>
   );
 }

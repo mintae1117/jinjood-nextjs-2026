@@ -135,10 +135,10 @@ npm run lint
 │   │   │   └── ProductDetail.tsx  # 통합 상품 상세 컴포넌트 (모든 상품 타입 지원)
 │   │   ├── cart/                  # ✅ 장바구니
 │   │   │   ├── CartContent.tsx    # 메인 컨텐츠 (로그인 체크)
-│   │   │   ├── CartItem.tsx       # 개별 아이템 카드
+│   │   │   ├── CartItem.tsx       # ✅ 개별 아이템 카드 (상품 상세 링크 포함)
 │   │   │   ├── CartSummary.tsx    # 요약 및 결제 버튼
 │   │   │   └── CartEmpty.tsx      # 빈 장바구니 안내
-│   │   ├── checkout/              # (예정) 결제
+│   │   ├── checkout/              # (예정) 결제 - 환불/교환 정책 안내 표시 중
 │   │   │   ├── CheckoutForm.tsx
 │   │   │   ├── PaymentMethod.tsx
 │   │   │   └── OrderSummary.tsx
@@ -542,7 +542,6 @@ export const authService = {
         redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
           access_type: "offline",
-          prompt: "consent",
         },
       }
     });
@@ -983,6 +982,7 @@ style(product): 상품 카드 반응형 개선
 - [x] 카카오 소셜 로그인 (비즈앱 전환 필요)
 - [x] 구글 소셜 로그인 ✅
 - [x] 장바구니 기능 (로그인 필수)
+- [x] 장바구니 상품 클릭 시 상세 페이지 이동 링크 ✅
 - [x] Header에 로그인/장바구니 UI
 - [x] 메뉴/선물세트 카드에 장바구니 담기 버튼
 
@@ -993,8 +993,9 @@ style(product): 상품 카드 반응형 개선
 - [x] 프로필 설정 (/mypage/profile)
 - [x] 알림/테마 설정 (/mypage/settings)
 
-### Phase 4: 결제 (예정)
-- [ ] 결제 페이지
+### Phase 4: 결제 (진행중)
+- [x] 결제 페이지 플레이스홀더 + 환불/교환 정책 안내 ✅
+- [ ] 결제 기능 구현
 - [ ] Toss Payments 연동
 - [ ] 주문 완료 페이지
 - [ ] 주문 상태 추적

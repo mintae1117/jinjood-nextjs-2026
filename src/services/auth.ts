@@ -88,7 +88,6 @@ export const authService = {
         redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
           access_type: "offline",
-          prompt: "consent",
         },
       },
     });

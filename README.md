@@ -13,7 +13,7 @@
 - **Language**: TypeScript
 - **Styling**: Styled Components + Tailwind CSS
 - **Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth (이메일 + 카카오)
+- **Auth**: Supabase Auth (이메일 + 카카오 + 구글)
 - **State**: Zustand
 - **Animation**: Framer Motion
 
@@ -71,10 +71,11 @@ git push -u origin main
 ### 3. 배포 후 테스트 체크리스트
 - [ ] 메뉴/선물세트/이바지 상품 목록 로딩
 - [ ] 상품 상세 페이지
-- [ ] 회원가입/로그인 (이메일, 카카오)
-- [ ] 장바구니 담기/조회
+- [ ] 회원가입/로그인 (이메일, 카카오, 구글)
+- [ ] 장바구니 담기/조회 (상품 클릭 시 상세 페이지 이동)
 - [ ] 검색 기능
 - [ ] 지도 표시 (Google Maps embed)
+- [ ] 결제 페이지 환불/교환 정책 안내 표시
 - [ ] 모바일 반응형
 
 ---
@@ -98,7 +99,7 @@ git push -u origin main
 ### 4. DNS 전파 대기
 - 최대 48시간 (보통 몇 분~몇 시간)
 
-### 5. Supabase 설정 업데이트 (카카오 로그인)
+### 5. Supabase 설정 업데이트 (카카오/구글 로그인)
 - Supabase Dashboard > Authentication > URL Configuration
 - Site URL: `https://jinjood.com`
 - Redirect URLs에 `https://jinjood.com/**` 추가
@@ -120,6 +121,12 @@ Supabase SQL Editor에서 `supabase/cart_items.sql` 실행 필요
 2. Redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
 3. Supabase Dashboard > Authentication > Providers > Kakao 활성화
 
+### 구글 OAuth 설정
+1. [Google Cloud Console](https://console.cloud.google.com)에서 프로젝트 생성
+2. OAuth 클라이언트 ID 생성 (웹 애플리케이션)
+3. 승인된 리디렉션 URI: `https://<project-ref>.supabase.co/auth/v1/callback`
+4. Supabase Dashboard > Authentication > Providers > Google 활성화
+
 ---
 
 ## 프로젝트 구조
@@ -132,6 +139,7 @@ app/                    # Next.js App Router 페이지
 ├── reciprocate/        # 이바지 & 답례
 ├── contact/            # 오시는 길
 ├── cart/               # 장바구니
+├── (shop)/checkout/    # 결제 (환불정책 안내 포함)
 ├── mypage/             # 마이페이지
 └── (auth)/             # 로그인/회원가입
 

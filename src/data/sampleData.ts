@@ -25,8 +25,8 @@ export const contactInfo = {
   },
   call_hours: "매일 07시-21시 통화가능",
   map_coordinates: {
-    lat: 35.1595454,
-    lng: 129.1017891,
+    lat: 35.1391379,
+    lng: 129.1074524,
   },
   // 사업자 정보
   business_number: "452-23-00331",

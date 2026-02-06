@@ -12,9 +12,13 @@ import {
 import { FaInstagram } from "react-icons/fa";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { SiNaver } from "react-icons/si";
+import dynamic from "next/dynamic";
 import PageHeader from "@/components/common/PageHeader";
-import KakaoMap from "@/components/common/KakaoMap";
 import { contactInfo, socialLinks } from "@/data/sampleData";
+
+const KakaoMap = dynamic(() => import("@/components/common/KakaoMap"), {
+  ssr: false,
+});
 
 const Section = styled.section`
   padding: 4rem 0;

@@ -3,8 +3,12 @@
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import { FiPhone, FiMail, FiMapPin, FiClock, FiCreditCard } from "react-icons/fi";
+import dynamic from "next/dynamic";
 import { contactInfo } from "@/data/sampleData";
-import KakaoMap from "@/components/common/KakaoMap";
+
+const KakaoMap = dynamic(() => import("@/components/common/KakaoMap"), {
+  ssr: false,
+});
 
 const Section = styled.section`
   padding: 5rem 0;

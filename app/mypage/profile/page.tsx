@@ -211,7 +211,7 @@ const LoginButton = styled(Link)`
 `;
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, isInitialized } = useAuth();
+  const { user, isAuthenticated, isInitialized, updateProfile } = useAuth();
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -254,10 +254,13 @@ export default function ProfilePage() {
     setIsSaving(true);
     setMessage(null);
 
-    // TODO: 실제 API 연동
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const result = await updateProfile({ name, phone });
 
-    setMessage({ type: "success", text: "프로필이 저장되었습니다." });
+    if (result.success) {
+      setMessage({ type: "success", text: "프로필이 저장되었습니다." });
+    } else {
+      setMessage({ type: "error", text: result.error || "프로필 저장에 실패했습니다." });
+    }
     setIsSaving(false);
   };
 

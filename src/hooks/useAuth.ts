@@ -4,7 +4,7 @@ import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore, selectIsAuthenticated } from "@/stores";
 import { authService } from "@/services";
-import type { LoginFormData, RegisterFormData } from "@/types";
+import type { LoginFormData, RegisterFormData, User } from "@/types";
 
 export function useAuth() {
   const router = useRouter();
@@ -158,6 +158,26 @@ export function useAuth() {
     }
   }, [setLoading]);
 
+  // 프로필 업데이트
+  const updateProfile = useCallback(
+    async (data: Partial<Pick<User, "name" | "phone" | "avatar_url">>) => {
+      try {
+        const updatedUser = await authService.updateProfile(data);
+        if (updatedUser) {
+          setUser(updatedUser);
+        }
+        return { success: true, user: updatedUser };
+      } catch (error) {
+        console.error("Update profile error:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "프로필 업데이트에 실패했습니다.",
+        };
+      }
+    },
+    [setUser]
+  );
+
   return {
     user,
     isLoading,
@@ -169,5 +189,6 @@ export function useAuth() {
     signInWithGoogle,
     signOut,
     resetPassword,
+    updateProfile,
   };
 }

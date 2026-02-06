@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import styled from "styled-components";
 import Link from "next/link";
 import Image from "next/image";
-import { FiArrowLeft, FiUser, FiMail, FiPhone, FiSave } from "react-icons/fi";
+import { FiArrowLeft, FiUser, FiMail, FiPhone, FiSave, FiCamera } from "react-icons/fi";
 import { useAuth } from "@/hooks";
 import { Loading } from "@/components/common/Loading";
 
@@ -69,6 +69,16 @@ const AvatarSection = styled.div`
   border-bottom: 1px solid #f0f0f0;
 `;
 
+const AvatarWrapper = styled.div`
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 1rem;
+
+  &:hover > div:last-child {
+    opacity: 1;
+  }
+`;
+
 const Avatar = styled.div`
   width: 100px;
   height: 100px;
@@ -79,8 +89,20 @@ const Avatar = styled.div`
   justify-content: center;
   color: #ffffff;
   font-size: 2.5rem;
-  margin-bottom: 1rem;
   overflow: hidden;
+`;
+
+const AvatarOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 `;
 
 const AvatarImage = styled(Image)`
@@ -89,10 +111,20 @@ const AvatarImage = styled(Image)`
   object-fit: cover;
 `;
 
+const HiddenInput = styled.input`
+  display: none;
+`;
+
 const AvatarName = styled.p`
   font-size: 1.125rem;
   font-weight: 600;
   color: #1e1e1e;
+`;
+
+const AvatarHint = styled.p`
+  font-size: 0.75rem;
+  color: #999999;
+  margin-top: 0.25rem;
 `;
 
 const Form = styled.form`
@@ -211,11 +243,13 @@ const LoginButton = styled(Link)`
 `;
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, isInitialized, updateProfile } = useAuth();
+  const { user, isAuthenticated, isInitialized, updateProfile, uploadAvatar } = useAuth();
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isInitialized) {
     return (
@@ -264,6 +298,42 @@ export default function ProfilePage() {
     setIsSaving(false);
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 이미지 파일 검증
+    if (!file.type.startsWith("image/")) {
+      setMessage({ type: "error", text: "이미지 파일만 업로드할 수 있습니다." });
+      return;
+    }
+
+    // 5MB 제한
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: "error", text: "파일 크기는 5MB 이하여야 합니다." });
+      return;
+    }
+
+    setIsUploading(true);
+    setMessage(null);
+
+    const result = await uploadAvatar(file);
+
+    if (result.success) {
+      setMessage({ type: "success", text: "프로필 이미지가 변경되었습니다." });
+    } else {
+      setMessage({ type: "error", text: result.error || "이미지 업로드에 실패했습니다." });
+    }
+    setIsUploading(false);
+
+    // input 초기화
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const getInitial = () => {
     if (user.name) return user.name.charAt(0).toUpperCase();
     if (user.email) return user.email.charAt(0).toUpperCase();
@@ -282,20 +352,32 @@ export default function ProfilePage() {
 
         <ProfileSection>
           <AvatarSection>
-            <Avatar>
-              {user.avatar_url ? (
-                <AvatarImage
-                  src={user.avatar_url}
-                  alt={user.name || "프로필"}
-                  width={100}
-                  height={100}
-                  unoptimized
-                />
-              ) : (
-                getInitial()
-              )}
-            </Avatar>
+            <AvatarWrapper onClick={handleAvatarClick}>
+              <Avatar>
+                {user.avatar_url ? (
+                  <AvatarImage
+                    src={user.avatar_url}
+                    alt={user.name || "프로필"}
+                    width={100}
+                    height={100}
+                    unoptimized
+                  />
+                ) : (
+                  getInitial()
+                )}
+              </Avatar>
+              <AvatarOverlay>
+                {isUploading ? "..." : <FiCamera size={24} />}
+              </AvatarOverlay>
+            </AvatarWrapper>
+            <HiddenInput
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
             <AvatarName>{user.name || user.email}</AvatarName>
+            <AvatarHint>클릭하여 프로필 사진 변경</AvatarHint>
           </AvatarSection>
 
           {message && <Message $type={message.type}>{message.text}</Message>}

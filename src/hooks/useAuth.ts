@@ -178,6 +178,27 @@ export function useAuth() {
     [setUser]
   );
 
+  // 프로필 이미지 업로드
+  const uploadAvatar = useCallback(
+    async (file: File) => {
+      if (!user) return { success: false, error: "로그인이 필요합니다." };
+      try {
+        const updatedUser = await authService.uploadAvatar(user.id, file);
+        if (updatedUser) {
+          setUser(updatedUser);
+        }
+        return { success: true, user: updatedUser };
+      } catch (error) {
+        console.error("Upload avatar error:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "이미지 업로드에 실패했습니다.",
+        };
+      }
+    },
+    [user, setUser]
+  );
+
   return {
     user,
     isLoading,
@@ -190,5 +211,6 @@ export function useAuth() {
     signOut,
     resetPassword,
     updateProfile,
+    uploadAvatar,
   };
 }

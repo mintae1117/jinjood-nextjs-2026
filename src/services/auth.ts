@@ -163,6 +163,38 @@ export const authService = {
     return user ? mapSupabaseUser(user) : null;
   },
 
+  // 프로필 이미지 업로드
+  async uploadAvatar(userId: string, file: File) {
+    const supabase = createBrowserClient();
+
+    const ext = file.name.split(".").pop();
+    const filePath = `avatars/${userId}.${ext}`;
+
+    // 기존 파일 덮어쓰기 (upsert)
+    const { error: uploadError } = await supabase.storage
+      .from("images")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    // public URL 가져오기
+    const { data: { publicUrl } } = supabase.storage
+      .from("images")
+      .getPublicUrl(filePath);
+
+    // 캐시 방지용 타임스탬프 추가
+    const avatarUrl = `${publicUrl}?t=${Date.now()}`;
+
+    // user_metadata에 avatar_url 업데이트
+    const { data: { user }, error: updateError } = await supabase.auth.updateUser({
+      data: { avatar_url: avatarUrl },
+    });
+
+    if (updateError) throw updateError;
+
+    return user ? mapSupabaseUser(user) : null;
+  },
+
   // Auth 상태 변경 구독
   onAuthStateChange(callback: (user: User | null) => void) {
     const supabase = createBrowserClient();

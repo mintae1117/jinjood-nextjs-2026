@@ -2,7 +2,10 @@ import { createBrowserClient } from "@/lib/supabase";
 import type { LoginFormData, RegisterFormData, User } from "@/types";
 
 // Supabase Auth 사용자를 앱 User 타입으로 변환
-function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metadata?: Record<string, unknown> }): User {
+function mapSupabaseUser(
+  supabaseUser: { id: string; email?: string; user_metadata?: Record<string, unknown> },
+  dbAvatarUrl?: string | null,
+): User {
   const metadata = supabaseUser.user_metadata || {};
 
   // 이름: name > full_name > nickname (카카오) 순으로 확인
@@ -11,8 +14,9 @@ function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metada
                (metadata.nickname as string) ||
                "";
 
-  // 프로필 이미지: avatar_url > picture (구글) > profile_image (카카오) 순으로 확인
-  const avatar_url = (metadata.avatar_url as string) ||
+  // 프로필 이미지: DB 저장 값 > auth metadata > OAuth 제공자 순으로 확인
+  const avatar_url = dbAvatarUrl ||
+                     (metadata.avatar_url as string) ||
                      (metadata.picture as string) ||
                      (metadata.profile_image as string) ||
                      "";
@@ -24,6 +28,36 @@ function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metada
     phone: (metadata.phone as string) || "",
     avatar_url,
   };
+}
+
+// user_profiles 테이블에서 커스텀 avatar_url 조회
+async function getDbAvatarUrl(userId: string): Promise<string | null> {
+  try {
+    const supabase = createBrowserClient();
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("avatar_url")
+      .eq("user_id", userId)
+      .single();
+    return data?.avatar_url || null;
+  } catch {
+    return null;
+  }
+}
+
+// user_profiles 테이블에 avatar_url 저장 (upsert)
+async function saveDbAvatarUrl(userId: string, avatarUrl: string): Promise<void> {
+  try {
+    const supabase = createBrowserClient();
+    await supabase
+      .from("user_profiles")
+      .upsert(
+        { user_id: userId, avatar_url: avatarUrl, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+  } catch {
+    // 테이블이 없으면 무시
+  }
 }
 
 export const authService = {
@@ -114,7 +148,10 @@ export const authService = {
 
     if (error || !user) return null;
 
-    return mapSupabaseUser(user);
+    // DB에서 커스텀 avatar_url 조회 (OAuth 덮어쓰기 방지)
+    const dbAvatarUrl = await getDbAvatarUrl(user.id);
+
+    return mapSupabaseUser(user, dbAvatarUrl);
   },
 
   // 세션 가져오기
@@ -167,10 +204,20 @@ export const authService = {
   async uploadAvatar(userId: string, file: File) {
     const supabase = createBrowserClient();
 
+    // 기존 아바타 파일 삭제 (확장자가 달라도 모두 제거)
+    const { data: existingFiles } = await supabase.storage
+      .from("images")
+      .list("avatars", { search: userId });
+
+    if (existingFiles && existingFiles.length > 0) {
+      const filesToDelete = existingFiles.map((f) => `avatars/${f.name}`);
+      await supabase.storage.from("images").remove(filesToDelete);
+    }
+
     const ext = file.name.split(".").pop();
     const filePath = `avatars/${userId}.${ext}`;
 
-    // 기존 파일 덮어쓰기 (upsert)
+    // 새 파일 업로드
     const { error: uploadError } = await supabase.storage
       .from("images")
       .upload(filePath, file, { upsert: true });
@@ -192,7 +239,10 @@ export const authService = {
 
     if (updateError) throw updateError;
 
-    return user ? mapSupabaseUser(user) : null;
+    // DB에도 저장 (OAuth 재로그인 시에도 유지)
+    await saveDbAvatarUrl(userId, avatarUrl);
+
+    return user ? mapSupabaseUser(user, avatarUrl) : null;
   },
 
   // Auth 상태 변경 구독

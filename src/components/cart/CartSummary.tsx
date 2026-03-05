@@ -4,6 +4,7 @@ import styled from "styled-components";
 import Link from "next/link";
 import { useCart } from "@/hooks";
 
+
 const SummaryWrapper = styled.div`
   background-color: #ffffff;
   border-radius: 16px;
@@ -68,22 +69,19 @@ const TotalValue = styled.span`
   color: #f35525;
 `;
 
-const CheckoutButton = styled(Link)`
+const CheckoutButton = styled.button`
   display: block;
   width: 100%;
   padding: 1rem;
   margin-top: 1.5rem;
-  background-color: #f35525;
+  background-color: #cccccc;
   color: #ffffff;
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
   border-radius: 12px;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: #d94820;
-  }
+  border: none;
+  cursor: pointer;
 `;
 
 const ContinueShopping = styled(Link)`
@@ -115,16 +113,15 @@ const Notice = styled.p`
 `;
 
 const DELIVERY_FEE = 3000;
-const FREE_DELIVERY_THRESHOLD = 50000;
 
 export default function CartSummary() {
   const { totalPrice, totalItems } = useCart();
 
-  const isDeliveryFree = totalPrice >= FREE_DELIVERY_THRESHOLD;
-  const deliveryFee = isDeliveryFree ? 0 : DELIVERY_FEE;
-  const finalTotal = totalPrice + deliveryFee;
+  const finalTotal = totalPrice + DELIVERY_FEE;
 
-  const amountForFreeDelivery = FREE_DELIVERY_THRESHOLD - totalPrice;
+  const handleCheckoutClick = () => {
+    alert("결제 기능은 아직 준비중입니다. 전화 주문을 이용해 주세요. (051-621-5108)");
+  };
 
   return (
     <SummaryWrapper>
@@ -142,22 +139,8 @@ export default function CartSummary() {
 
       <SummaryRow>
         <SummaryLabel>배송비</SummaryLabel>
-        <SummaryValue>
-          {isDeliveryFree ? (
-            <span style={{ color: "#16a34a" }}>무료</span>
-          ) : (
-            `${deliveryFee.toLocaleString("ko-KR")}원`
-          )}
-        </SummaryValue>
+        <SummaryValue>{DELIVERY_FEE.toLocaleString("ko-KR")}원</SummaryValue>
       </SummaryRow>
-
-      {!isDeliveryFree && amountForFreeDelivery > 0 && (
-        <SummaryRow>
-          <SummaryLabel style={{ fontSize: "0.75rem", color: "#f35525" }}>
-            {amountForFreeDelivery.toLocaleString("ko-KR")}원 더 담으면 무료배송!
-          </SummaryLabel>
-        </SummaryRow>
-      )}
 
       <Divider />
 
@@ -166,13 +149,13 @@ export default function CartSummary() {
         <TotalValue>{finalTotal.toLocaleString("ko-KR")}원</TotalValue>
       </TotalRow>
 
-      <CheckoutButton href="/checkout">주문하기</CheckoutButton>
+      <CheckoutButton onClick={handleCheckoutClick}>주문하기</CheckoutButton>
       <ContinueShopping href="/represent">계속 쇼핑하기</ContinueShopping>
 
       <Notice>
-        * 배송비는 {FREE_DELIVERY_THRESHOLD.toLocaleString("ko-KR")}원 이상 구매 시 무료입니다.
+        * 배송비 {DELIVERY_FEE.toLocaleString("ko-KR")}원이 별도로 부과됩니다.
         <br />
-        * 실제 결제 금액은 결제 단계에서 확인하실 수 있습니다.
+        * 결제 기능 준비중입니다. 전화 주문: 051-621-5108
       </Notice>
     </SummaryWrapper>
   );

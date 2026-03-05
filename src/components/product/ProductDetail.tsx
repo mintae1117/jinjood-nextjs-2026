@@ -443,21 +443,8 @@ export default function ProductDetail({
     }
   };
 
-  const handleBuyNow = async () => {
-    if (!isAuthenticated) {
-      router.push(`/login?redirectTo=${encodeURIComponent(window.location.pathname)}`);
-      return;
-    }
-
-    const result = await addToCart({
-      product_id: product.id,
-      product_type: productType,
-      quantity,
-    });
-
-    if (result.success) {
-      router.push("/cart");
-    }
+  const handleBuyNow = () => {
+    alert("결제 기능은 아직 준비중입니다. 전화 주문을 이용해 주세요. (051-621-5108)");
   };
 
   return (
@@ -567,10 +554,10 @@ export default function ProductDetail({
                 </AddToCartButton>
                 <BuyNowButton
                   onClick={handleBuyNow}
-                  disabled={cartLoading}
                   whileTap={{ scale: 0.98 }}
+                  style={{ backgroundColor: "#cccccc", cursor: "pointer" }}
                 >
-                  바로 구매하기
+                  바로 구매하기 (준비중)
                 </BuyNowButton>
               </ButtonGroup>
             </>

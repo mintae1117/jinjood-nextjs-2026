@@ -156,6 +156,88 @@ export default function RootLayout({
             }),
           }}
         />
+        {/* SiteNavigationElement - 사이트링크 최적화 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              itemListElement: [
+                {
+                  "@type": "SiteNavigationElement",
+                  position: 1,
+                  name: "대표 메뉴",
+                  description: "찹쌀떡, 멥쌀떡, 떡국떡 등 진주떡집의 대표 메뉴",
+                  url: "https://jinjood.com/represent",
+                },
+                {
+                  "@type": "SiteNavigationElement",
+                  position: 2,
+                  name: "선물세트",
+                  description: "명절 선물, 송편 세트, 백일·돌 세트",
+                  url: "https://jinjood.com/gifts",
+                },
+                {
+                  "@type": "SiteNavigationElement",
+                  position: 3,
+                  name: "이바지·답례",
+                  description: "결혼 이바지떡, 감사 답례떡",
+                  url: "https://jinjood.com/reciprocate",
+                },
+                {
+                  "@type": "SiteNavigationElement",
+                  position: 4,
+                  name: "오시는 길",
+                  description: "부산 수영구 남천동 진주떡집 위치 안내",
+                  url: "https://jinjood.com/contact",
+                },
+              ],
+            }),
+          }}
+        />
+        {/* BreadcrumbList - 페이지 계층 구조 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "홈",
+                  item: "https://jinjood.com",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: "대표 메뉴",
+                  item: "https://jinjood.com/represent",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: "선물세트",
+                  item: "https://jinjood.com/gifts",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 4,
+                  name: "이바지·답례",
+                  item: "https://jinjood.com/reciprocate",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 5,
+                  name: "오시는 길",
+                  item: "https://jinjood.com/contact",
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body className={notoSansKR.variable}>
         <StyledComponentsRegistry>

@@ -52,7 +52,7 @@ app/
 ├── contact/                    # 오시는 길
 ├── cart/                       # 장바구니
 ├── (shop)/checkout/            # 결제 (현재 준비중 플레이스홀더)
-├── mypage/                     # 마이페이지 (orders, wishlist, profile, settings)
+├── mypage/                     # 마이페이지 (orders[빈 상태 UI], profile, settings) — wishlist 미구현
 ├── (auth)/                     # 로그인, 회원가입, 비밀번호 찾기
 ├── (legal)/                    # 이용약관, 개인정보처리방침
 ├── auth/callback/route.ts      # OAuth 콜백
@@ -103,7 +103,10 @@ cart_items (id, user_id FK, product_id, product_type, quantity, options JSONB, c
   -- RLS: 본인 장바구니만 접근 가능
 banners (id, title, subtitle, image_url, link, display_order, is_active)
 site_settings (key, value JSONB)
+user_profiles (id, user_id FK→auth.users UNIQUE, avatar_url, created_at, updated_at)
 ```
+
+> **미생성(결제 도입 시 필요)**: `orders`, `order_items`, `payments` — README.md 결제 가이드 §4 참고
 
 ---
 
@@ -203,8 +206,10 @@ export const productService = {
 
 - [x] **Phase 1**: 홈페이지, 상품 목록/상세, 검색, 지도, 이용약관/개인정보처리방침
 - [x] **Phase 2**: 인증 (이메일, 카카오, 구글), 장바구니
-- [x] **Phase 3**: 마이페이지 (주문내역, 위시리스트, 프로필, 설정)
-- [ ] **Phase 4**: 결제 (PG사 연동, 주문 관리) - **README.md에 상세 기획 문서 있음**
+- [~] **Phase 3**: 마이페이지 (일부) — 프로필·설정 완료
+  - ⚠️ 주문내역(`/mypage/orders`): **빈 상태 UI만** 존재. 실제 조회 로직·`orders` 테이블·`orderService` 없음 → Phase 4에서 연결
+  - ❌ 위시리스트: **미구현** (코드/마이페이지 메뉴 링크 없음)
+- [ ] **Phase 4**: 결제 (PG사 연동, 주문 관리) - **README.md에 상세 기획 문서 있음**. 코드 0% (checkout은 "준비중" 플레이스홀더, 구매 버튼 disable)
 - [ ] **Phase 5**: 관리자 대시보드
 - [ ] **Phase 6**: 커뮤니티 (리뷰, 공지, Q&A)
 

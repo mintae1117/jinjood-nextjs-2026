@@ -14,6 +14,27 @@
 
 ---
 
+### 0. 현재 구현 상태 (코드 검증 기준)
+
+| 영역 | 상태 | 비고 |
+|------|------|------|
+| 홈/상품 목록·상세/검색/지도/법적문서 | ✅ 완료 | Phase 1 |
+| 인증(이메일·카카오·구글)/장바구니 | ✅ 완료 | `cart_items` 테이블 + RLS 존재 (Phase 2) |
+| 마이페이지 프로필·설정 | ✅ 완료 | `user_profiles` 테이블 존재 |
+| 마이페이지 주문내역(`/mypage/orders`) | ⚠️ **빈 상태 UI만** | 실제 조회 로직·`orderService`·`orders` 테이블 없음 |
+| 위시리스트 | ❌ 미구현 | 코드/메뉴 링크 없음 |
+| **결제(checkout)** | ❌ **플레이스홀더** | `checkout/page.tsx`는 "🔧 준비중" 화면, 구매 버튼은 disable(alert) |
+
+**결제 관련 미보유(아래 가이드대로 신규 생성 필요):**
+- 결제 SDK 미설치 (`@tosspayments/*` 등 없음)
+- DB 테이블 없음: `orders`, `order_items`, `payments`
+- 서비스 없음: `src/services/orders.ts`, `src/services/payments.ts`
+- 구매 버튼 disable 위치: `src/components/product/ProductDetail.tsx`, `src/components/cart/CartSummary.tsx` (오픈 시 해제)
+
+> 즉 "탐색/장바구니"까지는 동작하나 "주문·결제"는 코드 착수 전 단계입니다.
+
+---
+
 ### 1. 사업자 등록 / 인허가 (법적 필수 - 최우선)
 
 #### 1-1. 통신판매업 신고
@@ -346,7 +367,7 @@
 
 #### Phase D: 주문 관리 (1주)
 
-1. 마이페이지 주문 내역 (`/mypage/orders` - 이미 페이지 존재)
+1. 마이페이지 주문 내역 (`/mypage/orders` - 페이지는 존재하나 **현재 빈 상태 UI만** → `orderService` 연결 필요)
 2. 주문 상세 페이지
 3. 주문 취소 기능
 4. 관리자용 주문 상태 변경 (간단한 수준)

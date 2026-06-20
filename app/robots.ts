@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/mypage/", "/cart", "/checkout", "/auth/"],
     },
-    sitemap: "https://jinjood.com/sitemap.xml",
+    sitemap: "https://www.jinjood.com/sitemap.xml",
   };
 }

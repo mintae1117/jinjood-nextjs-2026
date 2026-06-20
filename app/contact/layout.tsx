@@ -8,10 +8,10 @@ export const metadata: Metadata = {
     title: "오시는 길 | 진주떡집",
     description:
       "부산 수영구 남천동 진주떡집 위치 안내입니다. 황령대로 481번길 10-3, 전화 051-621-5108.",
-    url: "https://jinjood.com/contact",
+    url: "https://www.jinjood.com/contact",
   },
   alternates: {
-    canonical: "https://jinjood.com/contact",
+    canonical: "https://www.jinjood.com/contact",
   },
 };
 

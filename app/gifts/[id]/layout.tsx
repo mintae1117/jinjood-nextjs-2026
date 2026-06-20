@@ -30,11 +30,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: `https://jinjood.com/gifts/${id}`,
+      url: `https://www.jinjood.com/gifts/${id}`,
       images: [{ url: imageUrl, alt: data.name }],
     },
     alternates: {
-      canonical: `https://jinjood.com/gifts/${id}`,
+      canonical: `https://www.jinjood.com/gifts/${id}`,
     },
   };
 }

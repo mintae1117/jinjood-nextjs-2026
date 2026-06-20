@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://jinjood.com";
+  const baseUrl = "https://www.jinjood.com";
 
   // 정적 페이지
   const staticPages: MetadataRoute.Sitemap = [

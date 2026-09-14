@@ -109,7 +109,10 @@ function normalize(value: unknown): unknown {
   return typeof value === "string" ? value.trim() : value;
 }
 
-function isSameValue(a: unknown, b: unknown): boolean {
+function isSameValue(field: EditableField, a: unknown, b: unknown): boolean {
+  // is_active는 프로젝트 전체에서 "false가 아니면 켜짐"으로 읽는다(toForm, formatFieldValue와 동일).
+  // DB NULL(기본값 미설정)과 true를 다르다고 보면 안 건드린 필드가 "변경"으로 잡힌다.
+  if (field === "is_active") return (a !== false) === (b !== false);
   if (Array.isArray(a) || Array.isArray(b)) {
     return JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
   }
@@ -123,7 +126,7 @@ export function diffEditable(
   after: Record<string, unknown>,
 ): FieldChange[] {
   return editableFieldsFor(productType)
-    .filter((field) => !isSameValue(before[field], after[field]))
+    .filter((field) => !isSameValue(field, before[field], after[field]))
     .map((field) => ({
       field,
       label: FIELD_LABELS[field],

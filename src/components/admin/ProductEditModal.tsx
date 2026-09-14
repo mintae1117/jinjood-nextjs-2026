@@ -495,22 +495,24 @@ export default function ProductEditModal({
       setError(null);
 
       const patch = pickEditablePatch(productType, fromForm(nextForm));
-      const validationError = validatePatch(patch);
-      if (validationError) {
-        setError(validationError);
-        return;
-      }
 
+      // 바뀐 필드만 골라낸다 — 검증도 바뀐 필드에만 건다.
+      // (전체 패치를 검증하면 구성품이 비어 있는 선물세트는 가격만 고쳐도 "구성품 1개 이상"에 막힌다)
       const fieldChanges = diffEditable(productType, productRecord, { ...productRecord, ...patch });
       if (fieldChanges.length === 0) {
         setError("변경된 내용이 없습니다.");
         return;
       }
 
-      // 바뀐 필드만 전송 — 값이 같은 컬럼을 굳이 UPDATE에 싣지 않는다
       const changedPatch: EditableProductPatch = {};
       for (const change of fieldChanges) {
         (changedPatch as Record<string, unknown>)[change.field] = patch[change.field];
+      }
+
+      const validationError = validatePatch(changedPatch);
+      if (validationError) {
+        setError(validationError);
+        return;
       }
 
       setPendingPatch(changedPatch);
@@ -691,7 +693,16 @@ export default function ProductEditModal({
                   {changes.map((change) => (
                     <tr key={change.field}>
                       <th>{change.label}</th>
-                      <td className="before">{formatFieldValue(change.field, change.before)}</td>
+                      <td className="before">
+                        {formatFieldValue(change.field, change.before)}
+                        {change.field === "items" && Array.isArray(change.before) && (
+                          <ItemsDiff>
+                            {(change.before as string[]).map((it, i) => (
+                              <li key={i}>{it}</li>
+                            ))}
+                          </ItemsDiff>
+                        )}
+                      </td>
                       <td className="arrow">→</td>
                       <td className="after">
                         {formatFieldValue(change.field, change.after)}

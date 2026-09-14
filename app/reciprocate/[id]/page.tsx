@@ -59,7 +59,7 @@ const BackLink = styled.a`
 export default function ReciprocateItemDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : null;
-  const { item, isLoading, error } = useReciprocateItem(id);
+  const { item, isLoading, error, refetch } = useReciprocateItem(id);
 
   if (isLoading) {
     return (
@@ -90,6 +90,7 @@ export default function ReciprocateItemDetailPage() {
       productType="reciprocate_item"
       backLink="/reciprocate"
       backLabel="이바지/답례 목록"
+      onSaved={refetch}
     />
   );
 }

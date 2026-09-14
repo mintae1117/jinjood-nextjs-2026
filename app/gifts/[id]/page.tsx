@@ -59,7 +59,7 @@ const BackLink = styled.a`
 export default function GiftSetDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : null;
-  const { item, isLoading, error } = useGiftSet(id);
+  const { item, isLoading, error, refetch } = useGiftSet(id);
 
   if (isLoading) {
     return (
@@ -90,6 +90,7 @@ export default function GiftSetDetailPage() {
       productType="gift_set"
       backLink="/gifts"
       backLabel="선물세트 목록"
+      onSaved={refetch}
     />
   );
 }

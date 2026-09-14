@@ -10,6 +10,7 @@ import { FiMinus, FiPlus, FiShoppingCart, FiArrowLeft, FiPhone } from "react-ico
 import { useAuth, useCart } from "@/hooks";
 import type { MenuItem, GiftSet, ReciprocateItem, ProductType } from "@/types";
 import { getStorageUrl } from "@/lib/supabase";
+import AdminEditButton from "@/components/admin/AdminEditButton";
 
 type ProductItem = MenuItem | GiftSet | ReciprocateItem;
 
@@ -18,6 +19,7 @@ interface ProductDetailProps {
   productType: ProductType;
   backLink: string;
   backLabel: string;
+  onSaved?: () => void; // 관리자 수정 후 상세 재조회 (부모 훅의 refetch)
 }
 
 const Container = styled.div`
@@ -405,6 +407,7 @@ export default function ProductDetail({
   productType,
   backLink,
   backLabel,
+  onSaved,
 }: ProductDetailProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -479,6 +482,12 @@ export default function ProductDetail({
         >
           <Category>{getCategoryLabel(product.category, productType)}</Category>
           <ProductName>{product.name}</ProductName>
+          <AdminEditButton
+            productType={productType}
+            product={product}
+            onSaved={onSaved ?? (() => {})}
+            variant="detail"
+          />
           <Price>
             {product.price.toLocaleString("ko-KR")}원
             {isReciprocate && <span> ~</span>}

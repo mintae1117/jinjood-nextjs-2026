@@ -59,7 +59,7 @@ const BackLink = styled.a`
 export default function MenuItemDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : null;
-  const { item, isLoading, error } = useMenuItem(id);
+  const { item, isLoading, error, refetch } = useMenuItem(id);
 
   if (isLoading) {
     return (
@@ -90,6 +90,7 @@ export default function MenuItemDetailPage() {
       productType="menu_item"
       backLink="/represent"
       backLabel="메뉴 목록"
+      onSaved={refetch}
     />
   );
 }

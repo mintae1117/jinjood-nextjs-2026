@@ -2,12 +2,19 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { productService } from '@/services';
+import { useAuthStore, selectIsAdmin } from '@/stores';
 import { MenuItem, GiftSet, ReciprocateItem } from '@/types';
+
+// 관리자는 노출 off 상품도 본다. useAuth()는 초기화 부수효과가 있어 훅 안에서는 store 셀렉터로 읽는다.
+function useIncludeInactive() {
+  return useAuthStore(selectIsAdmin);
+}
 
 /**
  * 메뉴 아이템 목록 조회 훅
  */
 export function useMenuItems(category?: string) {
+  const includeInactive = useIncludeInactive();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -16,14 +23,14 @@ export function useMenuItems(category?: string) {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await productService.getMenuItems(category);
+      const data = await productService.getMenuItems(category, { includeInactive });
       setItems(data);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
     } finally {
       setIsLoading(false);
     }
-  }, [category]);
+  }, [category, includeInactive]);
 
   useEffect(() => {
     fetchItems();
@@ -36,74 +43,75 @@ export function useMenuItems(category?: string) {
  * 단일 메뉴 아이템 조회 훅
  */
 export function useMenuItem(id: string | null) {
+  const includeInactive = useIncludeInactive();
   const [item, setItem] = useState<MenuItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  const fetchItem = useCallback(async () => {
     if (!id) {
       setItem(null);
       setIsLoading(false);
       return;
     }
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await productService.getMenuItem(id, { includeInactive });
+      setItem(data);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id, includeInactive]);
 
-    const fetchItem = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await productService.getMenuItem(id);
-        setItem(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchItem();
-  }, [id]);
+  }, [fetchItem]);
 
-  return { item, isLoading, error };
+  return { item, isLoading, error, refetch: fetchItem };
 }
 
 /**
  * 단일 선물세트 조회 훅
  */
 export function useGiftSet(id: string | null) {
+  const includeInactive = useIncludeInactive();
   const [item, setItem] = useState<GiftSet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  const fetchItem = useCallback(async () => {
     if (!id) {
       setItem(null);
       setIsLoading(false);
       return;
     }
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await productService.getGiftSet(id, { includeInactive });
+      setItem(data);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id, includeInactive]);
 
-    const fetchItem = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await productService.getGiftSet(id);
-        setItem(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchItem();
-  }, [id]);
+  }, [fetchItem]);
 
-  return { item, isLoading, error };
+  return { item, isLoading, error, refetch: fetchItem };
 }
 
 /**
  * 선물세트 목록 조회 훅
  */
 export function useGiftSets(category?: string) {
+  const includeInactive = useIncludeInactive();
   const [items, setItems] = useState<GiftSet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -112,14 +120,14 @@ export function useGiftSets(category?: string) {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await productService.getGiftSets(category);
+      const data = await productService.getGiftSets(category, { includeInactive });
       setItems(data);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
     } finally {
       setIsLoading(false);
     }
-  }, [category]);
+  }, [category, includeInactive]);
 
   useEffect(() => {
     fetchItems();
@@ -132,40 +140,41 @@ export function useGiftSets(category?: string) {
  * 단일 이바지/답례 아이템 조회 훅
  */
 export function useReciprocateItem(id: string | null) {
+  const includeInactive = useIncludeInactive();
   const [item, setItem] = useState<ReciprocateItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  const fetchItem = useCallback(async () => {
     if (!id) {
       setItem(null);
       setIsLoading(false);
       return;
     }
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await productService.getReciprocateItem(id, { includeInactive });
+      setItem(data);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id, includeInactive]);
 
-    const fetchItem = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await productService.getReciprocateItem(id);
-        setItem(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchItem();
-  }, [id]);
+  }, [fetchItem]);
 
-  return { item, isLoading, error };
+  return { item, isLoading, error, refetch: fetchItem };
 }
 
 /**
  * 이바지/답례 아이템 목록 조회 훅
  */
 export function useReciprocateItems(category?: string) {
+  const includeInactive = useIncludeInactive();
   const [items, setItems] = useState<ReciprocateItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -174,14 +183,14 @@ export function useReciprocateItems(category?: string) {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await productService.getReciprocateItems(category);
+      const data = await productService.getReciprocateItems(category, { includeInactive });
       setItems(data);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
     } finally {
       setIsLoading(false);
     }
-  }, [category]);
+  }, [category, includeInactive]);
 
   useEffect(() => {
     fetchItems();
@@ -191,7 +200,7 @@ export function useReciprocateItems(category?: string) {
 }
 
 /**
- * 인기 메뉴 조회 훅
+ * 인기 메뉴 조회 훅 (홈 — 관리자 편집 범위 밖, 기존 그대로)
  */
 export function usePopularItems(limit: number = 9) {
   const [items, setItems] = useState<MenuItem[]>([]);

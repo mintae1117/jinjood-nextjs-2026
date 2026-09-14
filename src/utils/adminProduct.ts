@@ -102,9 +102,11 @@ export interface FieldChange {
   after: unknown;
 }
 
-// null/undefined와 빈 문자열은 같은 값으로 본다(description이 NULL인 행 편집 시 가짜 변경 방지)
+// null/undefined와 빈 문자열은 같은 값으로 본다(description이 NULL인 행 편집 시 가짜 변경 방지).
+// 문자열은 trim해서 비교 — pickEditablePatch가 저장 시 trim하므로 비교 규칙도 맞춘다.
 function normalize(value: unknown): unknown {
-  return value === null || value === undefined ? "" : value;
+  if (value === null || value === undefined) return "";
+  return typeof value === "string" ? value.trim() : value;
 }
 
 function isSameValue(a: unknown, b: unknown): boolean {

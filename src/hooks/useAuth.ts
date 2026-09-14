@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore, selectIsAuthenticated } from "@/stores";
+import { useAuthStore, selectIsAuthenticated, selectIsAdmin } from "@/stores";
 import { authService } from "@/services";
 import type { LoginFormData, RegisterFormData, User } from "@/types";
 
@@ -10,6 +10,7 @@ export function useAuth() {
   const router = useRouter();
   const { user, isLoading, isInitialized, setUser, setLoading, setInitialized } = useAuthStore();
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const isAdmin = useAuthStore(selectIsAdmin);
 
   // 초기화 및 세션 구독
   useEffect(() => {
@@ -203,6 +204,7 @@ export function useAuth() {
     user,
     isLoading,
     isAuthenticated,
+    isAdmin,
     isInitialized,
     signIn,
     signUp,

@@ -1,2 +1,2 @@
-export { useAuthStore, selectIsAuthenticated, selectUserName } from "./authStore";
+export { useAuthStore, selectIsAuthenticated, selectUserName, selectIsAdmin } from "./authStore";
 export { useCartStore, selectCartItemCount, selectCartTotal } from "./cartStore";

@@ -114,6 +114,9 @@ export type ReciprocateCategory = "all" | "ibaji" | "daprye";
 
 // ==================== Auth Types ====================
 
+// 사용자 권한 (user_profiles.role)
+export type UserRole = "user" | "admin";
+
 // 사용자 타입
 export interface User {
   id: string;
@@ -121,6 +124,7 @@ export interface User {
   name?: string;
   phone?: string;
   avatar_url?: string;
+  role?: UserRole; // user_profiles.role — UI 힌트일 뿐, 실제 권한은 RLS가 결정
   created_at?: string;
   updated_at?: string;
 }
@@ -185,4 +189,25 @@ export interface AddToCartData {
   product_type: ProductType;
   quantity: number;
   options?: Record<string, unknown>;
+}
+
+// ==================== Admin Types ====================
+
+// 관리자가 수정할 수 있는 상품 컬럼 (이 네 개가 전부. items는 gift_sets만)
+export type EditableProductPatch = {
+  price?: number;
+  description?: string;
+  is_active?: boolean;
+  items?: string[];
+};
+
+// product_revisions 행 (DB 트리거가 적재)
+export interface ProductRevision {
+  id: string;
+  table_name: "menu_items" | "gift_sets" | "reciprocate_items";
+  record_id: string;
+  changed_by: string | null; // NULL = SQL Editor 등 세션 없는 수정
+  changed_at: string;
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
 }

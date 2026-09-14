@@ -48,3 +48,4 @@ export const useAuthStore = create<AuthStore>()(
 // 파생 상태 셀렉터
 export const selectIsAuthenticated = (state: AuthStore) => !!state.user;
 export const selectUserName = (state: AuthStore) => state.user?.name || state.user?.email || "";
+export const selectIsAdmin = (state: AuthStore) => state.user?.role === "admin";

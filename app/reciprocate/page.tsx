@@ -10,6 +10,7 @@ import MenuFilter from "@/components/menu/MenuFilter";
 import { useReciprocateItems } from "@/hooks";
 import { ReciprocateCategory } from "@/types";
 import { getStorageUrl } from "@/lib/supabase";
+import AdminEditButton from "@/components/admin/AdminEditButton";
 
 const Section = styled.section`
   padding: 4rem 0;
@@ -271,7 +272,7 @@ const categoryLabels: Record<string, string> = {
 
 export default function ReciprocatePage() {
   const [activeFilter, setActiveFilter] = useState<ReciprocateCategory>("all");
-  const { items, isLoading, error } = useReciprocateItems(activeFilter === "all" ? undefined : activeFilter);
+  const { items, isLoading, error, refetch } = useReciprocateItems(activeFilter === "all" ? undefined : activeFilter);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price);
@@ -352,6 +353,7 @@ export default function ReciprocatePage() {
                             자세히 보기
                           </ViewButton>
                         </Overlay>
+                        <AdminEditButton productType="reciprocate_item" product={item} onSaved={refetch} />
                       </ImageWrapper>
                       <CardContent>
                         <ReciprocateName>{item.name}</ReciprocateName>

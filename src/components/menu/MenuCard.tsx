@@ -10,6 +10,7 @@ import { FiShoppingCart, FiCheck } from "react-icons/fi";
 import { MenuItem } from "@/types";
 import { useCart, useAuth } from "@/hooks";
 import { getStorageUrl } from "@/lib/supabase";
+import AdminEditButton from "@/components/admin/AdminEditButton";
 
 const Card = styled(motion.div)`
   background-color: #ffffff;
@@ -177,9 +178,10 @@ const categoryLabels: Record<string, string> = {
 interface MenuCardProps {
   item: MenuItem;
   index?: number;
+  onSaved?: () => void; // 관리자 수정 후 목록 갱신 (부모 훅의 refetch)
 }
 
-export default function MenuCard({ item, index = 0 }: MenuCardProps) {
+export default function MenuCard({ item, index = 0, onSaved }: MenuCardProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
@@ -235,6 +237,7 @@ export default function MenuCard({ item, index = 0 }: MenuCardProps) {
           {item.is_best && <Tag $variant="best">베스트</Tag>}
           {item.is_recommended && <Tag $variant="recommended">추천</Tag>}
         </TagsWrapper>
+        <AdminEditButton productType="menu_item" product={item} onSaved={onSaved ?? (() => {})} />
       </ImageWrapper>
       <CardContent>
         <CategoryBadge>

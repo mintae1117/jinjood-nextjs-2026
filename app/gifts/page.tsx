@@ -10,6 +10,7 @@ import MenuFilter from "@/components/menu/MenuFilter";
 import { useGiftSets } from "@/hooks";
 import { GiftCategory } from "@/types";
 import { getStorageUrl } from "@/lib/supabase";
+import AdminEditButton from "@/components/admin/AdminEditButton";
 
 const Section = styled.section`
   padding: 4rem 0;
@@ -214,7 +215,7 @@ const categoryLabels: Record<string, string> = {
 
 export default function GiftsPage() {
   const [activeFilter, setActiveFilter] = useState<GiftCategory>("all");
-  const { items, isLoading, error } = useGiftSets(activeFilter === "all" ? undefined : activeFilter);
+  const { items, isLoading, error, refetch } = useGiftSets(activeFilter === "all" ? undefined : activeFilter);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price);
@@ -267,6 +268,7 @@ export default function GiftsPage() {
                         <CategoryBadge>
                           {categoryLabels[item.category]}
                         </CategoryBadge>
+                        <AdminEditButton productType="gift_set" product={item} onSaved={refetch} />
                       </ImageWrapper>
                       <CardContent>
                         <GiftName>{item.name}</GiftName>

@@ -94,7 +94,7 @@ const filterOptions = [
 
 export default function MenuPage() {
   const [activeFilter, setActiveFilter] = useState<MenuCategory>("all");
-  const { items, isLoading, error } = useMenuItems(activeFilter === "all" ? undefined : activeFilter);
+  const { items, isLoading, error, refetch } = useMenuItems(activeFilter === "all" ? undefined : activeFilter);
 
   return (
     <>
@@ -124,7 +124,7 @@ export default function MenuPage() {
               <AnimatePresence mode="wait">
                 {items.length > 0 ? (
                   items.map((item, index) => (
-                    <MenuCard key={item.id} item={item} index={index} />
+                    <MenuCard key={item.id} item={item} index={index} onSaved={refetch} />
                   ))
                 ) : (
                   <EmptyState>

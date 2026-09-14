@@ -105,11 +105,14 @@ cart_items (id, user_id FK, product_id, product_type, quantity, options JSONB, c
   -- RLS: 본인 장바구니만 접근 가능
 banners (id, title, subtitle, image_url, link, display_order, is_active)
 site_settings (key, value JSONB)
-user_profiles (id, user_id FK→auth.users UNIQUE, avatar_url, created_at, updated_at)
+user_profiles (id, user_id FK→auth.users UNIQUE, avatar_url, role 'user'|'admin', created_at, updated_at)
+  -- role은 SQL Editor에서만 변경 가능(protect_user_profiles_role 트리거). 브라우저 세션은 변경 불가
+product_revisions (id, table_name, record_id, changed_by FK→auth.users SET NULL, changed_at, before JSONB, after JSONB)
+  -- 상품 3테이블 AFTER UPDATE 트리거가 자동 적재. 관리자만 SELECT, 사람이 INSERT/DELETE 불가
 ```
 
 > **미생성(결제 도입 시 필요)**: `orders`(fulfillment_method·desired_date·운송장 컬럼·waiting_for_deposit 상태 포함), `order_items`(가격+options 스냅샷), `payments`(raw_response·가상계좌 정보) — README.md 결제 가이드 §4 참고. 작성 시 `supabase/schema.sql`의 기존 패턴(uuid_generate_v4, updated_at 트리거)과 `cart_items.sql`의 RLS 패턴 준용, 주문번호는 DB에서 생성(§4-4 레이스 컨디션)
-> ⚠️ 단, `orders.user_id`는 `cart_items`와 달리 **ON DELETE SET NULL** (탈퇴해도 법정 5년 보관, README §5.5-12). `user_profiles`에는 `role` 컬럼 추가 예정(관리자 판별, §5.5-13)
+> ⚠️ 단, `orders.user_id`는 `cart_items`와 달리 **ON DELETE SET NULL** (탈퇴해도 법정 5년 보관, README §5.5-12). `user_profiles.role`은 2026-09-14 관리자 상품 편집에서 추가 완료 — Phase 4-D는 `public.is_admin()`을 재사용
 
 ---
 
@@ -195,6 +198,14 @@ export const productService = {
 // 인증: useAuth() → { user, isAuthenticated, signIn, signUp, signInWithKakao, signInWithGoogle, signOut }
 // 장바구니: useCart() → { items, totalItems, totalPrice, addToCart, updateQuantity, removeFromCart }
 ```
+
+### 관리자 상품 편집
+- 판별: `useAuthStore(selectIsAdmin)` (`user.role === 'admin'`). 데이터 훅 안에서는 `useAuth()`를 부르지 않는다(초기화 부수효과).
+- 버튼: `src/components/admin/AdminEditButton.tsx` — 관리자가 아니면 `null` 반환. 카드 3곳 + `ProductDetail` 1곳.
+- 쓰기: `adminService.updateProduct(productType, id, patch)` — 브라우저에서 바로 UPDATE, **RLS가 유일한 보안 경계**. 화이트리스트 4컬럼(`price`, `description`, `is_active`, `items`)만 통과.
+- 조회: 관리자는 `productService.get*(…, { includeInactive: true })`로 노출 off 상품도 본다.
+- 이력: `product_revisions`는 DB 트리거가 적재. 되돌리기는 `before`의 4컬럼을 폼에 얹어 `updateProduct`를 다시 타는 것(별도 API 없음).
+- 리포의 `seed_data.sql`/`cleanup_and_reseed.sql`은 초기 스냅샷 — 실 데이터와 동기화하지 않는다.
 
 ---
 

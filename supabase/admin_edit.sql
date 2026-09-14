@@ -98,6 +98,22 @@ CREATE POLICY "Admins can update reciprocate_items"
   USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- -----------------------------------------------------
+-- 3b. 컬럼 단위 쓰기 권한 — 정책은 "누가"만 보고 "어느 컬럼"은 안 본다
+--  RLS 정책은 관리자 여부만 판정하므로, 관리자 세션으로 요청을 편집하면
+--  name·category·image_url 같은 편집 대상 아닌 컬럼까지 바꿀 수 있다.
+--  Postgres 컬럼 GRANT로 편집 가능 4컬럼 밖을 DB가 직접 거부하게 만든다.
+--  (브라우저에서 바로 UPDATE 하는 구조라 클라이언트 화이트리스트만으로는 부족)
+--  참고: 상품 추가/삭제는 정책 부재로 이미 막히지만, 권한도 함께 회수해 의도를 명시한다.
+-- -----------------------------------------------------
+REVOKE INSERT, UPDATE, DELETE ON menu_items         FROM anon, authenticated;
+REVOKE INSERT, UPDATE, DELETE ON gift_sets          FROM anon, authenticated;
+REVOKE INSERT, UPDATE, DELETE ON reciprocate_items  FROM anon, authenticated;
+
+GRANT UPDATE (price, description, is_active)        ON menu_items        TO authenticated;
+GRANT UPDATE (price, description, is_active, items) ON gift_sets         TO authenticated;
+GRANT UPDATE (price, description, is_active)        ON reciprocate_items TO authenticated;
+
+-- -----------------------------------------------------
 -- 4. 가격 범위 CHECK — 브라우저 검증이 우회돼도 DB가 거부
 --  (실패하면 SELECT name, price FROM <table> WHERE price <= 0 OR price > 1000000 로 위반 행 확인)
 -- -----------------------------------------------------
@@ -132,6 +148,9 @@ CREATE INDEX IF NOT EXISTS idx_product_revisions_record
   ON product_revisions(table_name, record_id, changed_at DESC);
 
 ALTER TABLE product_revisions ENABLE ROW LEVEL SECURITY;
+
+-- 이력 테이블은 SECURITY DEFINER 트리거만 쓴다(소유자 권한으로 실행되므로 영향 없음). 3b 참고.
+REVOKE INSERT, UPDATE, DELETE ON product_revisions FROM anon, authenticated;
 
 DROP POLICY IF EXISTS "Admins can view product_revisions" ON product_revisions;
 CREATE POLICY "Admins can view product_revisions"

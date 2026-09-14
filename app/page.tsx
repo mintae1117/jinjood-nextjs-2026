@@ -34,8 +34,8 @@ const ErrorContainer = styled.div`
 
 export default function HomePage() {
   const { banners, isLoading: bannersLoading, error: bannersError } = useBanners();
-  const { items: menuItems, isLoading: menuLoading, error: menuError } = usePopularItems(9);
-  const { items: allGiftSets, isLoading: giftsLoading, error: giftsError } = useGiftSets();
+  const { items: menuItems, isLoading: menuLoading, error: menuError, refetch: refetchMenu } = usePopularItems(9);
+  const { items: allGiftSets, isLoading: giftsLoading, error: giftsError, refetch: refetchGifts } = useGiftSets();
 
   // 홈페이지에는 선물세트 1호, 4호, 송편세트 1호, 2호만 표시
   const featuredGiftNames = ["선물세트 1호", "선물세트 4호", "송편세트 1호", "송편세트 2호"];
@@ -60,8 +60,8 @@ export default function HomePage() {
   return (
     <>
       <HeroBanner banners={banners} />
-      <FeaturedMenu menuItems={menuItems} />
-      <GiftSets giftSets={giftSets} />
+      <FeaturedMenu menuItems={menuItems} onSaved={refetchMenu} />
+      <GiftSets giftSets={giftSets} onSaved={refetchGifts} />
       <VideoSection />
       <SNSSection />
       <LocationSection />

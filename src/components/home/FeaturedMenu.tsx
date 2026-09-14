@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { MenuItem } from "@/types";
 import { getStorageUrl } from "@/lib/supabase";
+import AdminEditButton from "@/components/admin/AdminEditButton";
 
 const Section = styled.section`
   padding: 5rem 0;
@@ -212,9 +213,10 @@ const ViewAllButton = styled(Link)`
 
 interface FeaturedMenuProps {
   menuItems: MenuItem[];
+  onSaved?: () => void; // 관리자 수정 후 목록 갱신 (부모 훅의 refetch)
 }
 
-export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
+export default function FeaturedMenu({ menuItems, onSaved }: FeaturedMenuProps) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price);
   };
@@ -269,6 +271,7 @@ export default function FeaturedMenu({ menuItems }: FeaturedMenuProps) {
                     <Tag $variant="recommended">추천</Tag>
                   )}
                 </TagsWrapper>
+                <AdminEditButton productType="menu_item" product={item} onSaved={onSaved ?? (() => {})} />
               </ImageWrapper>
               <CardContent>
                 <MenuName>{item.name}</MenuName>

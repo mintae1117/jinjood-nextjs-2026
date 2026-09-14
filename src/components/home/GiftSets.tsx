@@ -10,6 +10,7 @@ import { FiShoppingCart, FiCheck } from "react-icons/fi";
 import { GiftSet } from "@/types";
 import { useCart, useAuth } from "@/hooks";
 import { getStorageUrl } from "@/lib/supabase";
+import AdminEditButton from "@/components/admin/AdminEditButton";
 
 const Section = styled.section`
   padding: 5rem 0;
@@ -233,9 +234,10 @@ const ViewAllButton = styled(Link)`
 
 interface GiftSetsProps {
   giftSets: GiftSet[];
+  onSaved?: () => void; // 관리자 수정 후 목록 갱신 (부모 훅의 refetch)
 }
 
-function GiftSetCard({ gift, index }: { gift: GiftSet; index: number }) {
+function GiftSetCard({ gift, index, onSaved }: { gift: GiftSet; index: number; onSaved: () => void }) {
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
@@ -303,6 +305,7 @@ function GiftSetCard({ gift, index }: { gift: GiftSet; index: number }) {
             자세히 보기
           </ViewButton>
         </Overlay>
+        <AdminEditButton productType="gift_set" product={gift} onSaved={onSaved} />
       </ImageWrapper>
       <CardContent>
         <GiftName>{gift.name}</GiftName>
@@ -332,7 +335,7 @@ function GiftSetCard({ gift, index }: { gift: GiftSet; index: number }) {
   );
 }
 
-export default function GiftSets({ giftSets }: GiftSetsProps) {
+export default function GiftSets({ giftSets, onSaved }: GiftSetsProps) {
   return (
     <Section>
       <Container>
@@ -346,7 +349,7 @@ export default function GiftSets({ giftSets }: GiftSetsProps) {
 
         <GiftGrid>
           {giftSets.map((gift, index) => (
-            <GiftSetCard key={gift.id} gift={gift} index={index} />
+            <GiftSetCard key={gift.id} gift={gift} index={index} onSaved={onSaved ?? (() => {})} />
           ))}
         </GiftGrid>
 

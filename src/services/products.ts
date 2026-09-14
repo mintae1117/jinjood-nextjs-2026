@@ -163,11 +163,16 @@ export const productService = {
   /**
    * 인기 메뉴 조회
    */
-  async getPopularItems(limit: number = 9): Promise<MenuItem[]> {
-    const { data, error } = await supabase
+  async getPopularItems(limit: number = 9, options: ProductQueryOptions = {}): Promise<MenuItem[]> {
+    let query = supabase
       .from('menu_items')
-      .select('*')
-      .eq('is_active', true)
+      .select('*');
+
+    if (!options.includeInactive) {
+      query = query.eq('is_active', true);
+    }
+
+    const { data, error } = await query
       .or('is_popular.eq.true,is_recommended.eq.true,is_best.eq.true')
       .order('display_order')
       .limit(limit);

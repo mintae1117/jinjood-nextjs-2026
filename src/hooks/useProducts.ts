@@ -200,29 +200,30 @@ export function useReciprocateItems(category?: string) {
 }
 
 /**
- * 인기 메뉴 조회 훅 (홈 — 관리자 편집 범위 밖, 기존 그대로)
+ * 인기 메뉴 조회 훅 (홈)
  */
 export function usePopularItems(limit: number = 9) {
+  const includeInactive = useIncludeInactive();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const fetchItems = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await productService.getPopularItems(limit, { includeInactive });
+      setItems(data);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [limit, includeInactive]);
+
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await productService.getPopularItems(limit);
-        setItems(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('알 수 없는 오류가 발생했습니다'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchItems();
-  }, [limit]);
+  }, [fetchItems]);
 
-  return { items, isLoading, error };
+  return { items, isLoading, error, refetch: fetchItems };
 }

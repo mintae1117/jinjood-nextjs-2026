@@ -190,13 +190,17 @@ export const adminService = {
 
 ## 7. UI
 
-### 7-1. 수정 버튼 (4곳)
+### 7-1. 수정 버튼 (6곳)
 | 위치 | 파일 | 비고 |
 |---|---|---|
 | 대표 메뉴 카드 | `src/components/menu/MenuCard.tsx` | 컴포넌트 |
 | 선물세트 카드 | `app/gifts/page.tsx` 내 `GiftCard` | 인라인 카드 |
 | 이바지·답례 카드 | `app/reciprocate/page.tsx` 내 `ReciprocateCard` | 인라인 카드 |
 | 상세 (3타입 공통) | `src/components/product/ProductDetail.tsx` | `productType` prop 있음 |
+| 홈 대표 메뉴 카드 | `src/components/home/FeaturedMenu.tsx` | props로 데이터 받음, `app/page.tsx`가 `refetch` 전달 |
+| 홈 선물세트 카드 | `src/components/home/GiftSets.tsx` 내 `GiftSetCard` | `</Overlay>` 뒤 삽입, `onSaved` 한 단계 더 내림 |
+
+> 홈 2곳은 처음 설계에서 의도적으로 제외(4곳)했으나 2026-09-15 사용자 요청으로 추가. `usePopularItems`도 다른 훅과 같이 `includeInactive` + `refetch`를 갖는다.
 
 - `isAdmin`이 false면 버튼이 **렌더되지 않는다**(disabled가 아님).
 - 카드에서는 `Link` 클릭과 겹치지 않게 `e.preventDefault(); e.stopPropagation()`.
@@ -283,7 +287,7 @@ ROLLBACK;
 `<uuid>`는 `SELECT id, email FROM auth.users`로 확인해서 채운다.
 
 ### 10-2. 수동 시나리오 (브라우저)
-1. 비관리자 로그인 → 4곳 어디에도 수정 버튼 없음, 노출 off 상품 안 보임
+1. 비관리자 로그인 → 6곳 어디에도 수정 버튼 없음, 노출 off 상품 안 보임
 2. 관리자 로그인 → 버튼 보임, 숨김 배지 보임
 3. 가격만 변경 → 확인 대조표에 가격 한 줄만 → 수정 → 카드 즉시 갱신
 4. 선물세트 구성 항목 추가/삭제 → 대조표 → 수정 → 상세에서 반영 확인

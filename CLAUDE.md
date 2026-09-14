@@ -202,7 +202,7 @@ export const productService = {
 ### 관리자 상품 편집
 - DB: `supabase/admin_edit.sql` (1회 실행, idempotent, **코드 배포보다 먼저**). 검증은 `supabase/admin_edit_verify.sql`. 관리자 지정은 `INSERT … ON CONFLICT`(README 참고 — 로그인만으로는 `user_profiles` 행이 안 생김).
 - 판별: `useAuthStore(selectIsAdmin)` (`user.role === 'admin'`). 데이터 훅 안에서는 `useAuth()`를 부르지 않는다(초기화 부수효과).
-- 버튼: `src/components/admin/AdminEditButton.tsx` — 관리자가 아니면 `null` 반환. 카드 3곳 + `ProductDetail` 1곳.
+- 버튼: `src/components/admin/AdminEditButton.tsx` — 관리자가 아니면 `null` 반환. 목록 카드 3곳 + 홈 카드 2곳(`FeaturedMenu`·`GiftSets`) + `ProductDetail` 1곳.
 - 쓰기: `adminService.updateProduct(productType, id, patch)` — 브라우저에서 바로 UPDATE, **RLS가 유일한 보안 경계**. 화이트리스트 4컬럼(`price`, `description`, `is_active`, `items`)만 통과.
 - 조회: 관리자는 `productService.get*(…, { includeInactive: true })`로 노출 off 상품도 본다.
 - 이력: `product_revisions`는 DB 트리거가 적재. 되돌리기는 `before`의 4컬럼을 폼에 얹어 `updateProduct`를 다시 타는 것(별도 API 없음).

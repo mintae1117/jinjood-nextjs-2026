@@ -613,21 +613,34 @@ PG 수수료는 "카드 한 종류"가 아니라 **결제수단마다 다릅니�
 
 사장님이 사이트에서 직접 가격·설명·구성품·노출 여부를 고칠 수 있다. 설계: `docs/superpowers/specs/2026-09-14-admin-product-edit-design.md`
 
+### 0. DB 마이그레이션 (1회, 배포 전에 먼저)
+1. Supabase 대시보드 → SQL Editor → `supabase/admin_edit.sql` 전체를 붙여 실행. 재실행 안전(idempotent)하게 작성돼 있어 두 번 돌려도 무해.
+2. `supabase/admin_edit_verify.sql`로 검증 — `<일반 유저 uuid>`, `<관리자 uuid>`를 `SELECT id, email FROM auth.users;`로 채운 뒤 (A)(B)(C) 블록을 각각 실행. 각 줄 주석의 기대값과 비교. 전부 `BEGIN … ROLLBACK`이라 실 데이터는 바뀌지 않는다.
+
+> ⚠️ **배포 순서: 마이그레이션이 코드보다 먼저.** 이 브랜치의 `auth.ts`는 `user_profiles.role` 컬럼을 조회한다. 컬럼이 없는 DB에 코드가 먼저 배포되면 프로필 조회 전체가 실패해 로그인 사용자의 커스텀 아바타가 OAuth 기본 이미지로 되돌아간다(role은 안전하게 'user'로 접힘). Vercel은 머지 시 자동 배포되므로 **머지 전에** 1번을 끝낼 것.
+
 ### 관리자 지정 (1회)
-1. 사장님이 사이트에서 로그인(카카오/구글/이메일)을 한 번 한다 → `user_profiles` 행이 생긴다.
-2. Supabase 대시보드 → SQL Editor:
+`user_profiles` 행은 로그인만으로는 생기지 않는다(프로필 이미지 업로드 시에만 생성). 그래서 UPDATE가 아니라 **INSERT … ON CONFLICT**로 지정한다 — 행이 있든 없든 한 번에 된다.
+
+1. 사장님 로그인 이메일 확인: Supabase SQL Editor에서
    ```sql
-   UPDATE user_profiles SET role = 'admin'
-   WHERE user_id = (SELECT id FROM auth.users WHERE email = '<사장님 이메일>');
+   SELECT id, email, created_at FROM auth.users ORDER BY created_at DESC;
    ```
-   행이 없다고 나오면(이메일 가입 직후 등):
+2. 관리자 지정:
    ```sql
    INSERT INTO user_profiles (user_id, role)
-   VALUES ((SELECT id FROM auth.users WHERE email = '<사장님 이메일>'), 'admin');
+   SELECT id, 'admin' FROM auth.users WHERE email = '<사장님 이메일>'
+   ON CONFLICT (user_id) DO UPDATE SET role = 'admin';
    ```
-3. 사장님이 사이트를 새로고침하면 상품 카드 우상단과 상세 페이지에 "수정" 버튼이 보인다.
+3. 확인:
+   ```sql
+   SELECT u.email, p.role
+   FROM user_profiles p JOIN auth.users u ON u.id = p.user_id
+   WHERE u.email = '<사장님 이메일>';
+   ```
+   `admin`이 나오면 끝. 사장님이 사이트에서 **로그아웃 후 다시 로그인**하면 상품 카드 우상단과 상세 페이지에 "수정" 버튼이 보인다.
 
-> role은 SQL Editor에서만 바꿀 수 있다(브라우저 세션은 트리거가 차단). 관리자 해제는 `role = 'user'`로 UPDATE.
+> role은 SQL Editor에서만 바꿀 수 있다(브라우저 세션은 `protect_user_profiles_role` 트리거가 차단). 관리자 해제는 `UPDATE user_profiles SET role = 'user' WHERE user_id = …`.
 
 ### 사용법
 - 카드/상세의 수정 버튼 → 가격·설명·(선물세트) 구성품·노출 토글 → **저장** → 전/후 대조표 확인 → **확인하고 수정**.
@@ -638,3 +651,4 @@ PG 수수료는 "카드 한 종류"가 아니라 **결제수단마다 다릅니�
 ### 복구
 - 잘못 고쳤으면 모달의 수정 이력에서 되돌리기. 이력은 `product_revisions` 테이블(관리자만 조회, 삭제 불가).
 - `supabase/seed_data.sql`은 초기 스냅샷이며 실 데이터와 동기화되지 않는다 — 복구용으로 쓰지 말 것.
+- **마이그레이션 롤백**: 코드는 `git revert`로 돌아가지만 DB 변경은 수동이다. `supabase/admin_edit.sql` 맨 아래의 주석 처리된 롤백 블록을 참고. `role` 컬럼과 `product_revisions` 테이블은 데이터가 있으니 DROP하지 말 것.

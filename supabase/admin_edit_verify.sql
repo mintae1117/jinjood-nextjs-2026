@@ -7,18 +7,24 @@
 
 -- (A) 비관리자 시뮬레이션
 BEGIN;
+-- 픽스처: 일반 유저의 user_profiles 행이 없으면 아래 role 변경 검사가 WHERE 0행으로 공회전한다
+-- (트리거가 아예 안 돌아 에러 없이 UPDATE 0 → 권한 상승 방어를 검증하지 못함)
+INSERT INTO user_profiles (user_id, role)
+VALUES ('<일반 유저 uuid>', 'user')
+ON CONFLICT (user_id) DO NOTHING;
+
 -- 픽스처: 비활성 행이 0개면 아래 "비활성 안 보임" 검사가 공회전한다(정책이 깨져도 0이 나옴)
 UPDATE menu_items SET is_active = false WHERE name = '백설기';
-SELECT count(*) FROM menu_items WHERE is_active = false;              -- 1 (기본 역할, RLS 우회)
+SELECT count(*) FROM menu_items WHERE name = '백설기' AND is_active = false;              -- 1 (기본 역할, RLS 우회)
 
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims', '{"sub":"<일반 유저 uuid>","role":"authenticated"}', true);
 
 SELECT public.is_admin();                                              -- false
 UPDATE menu_items SET price = 99999 WHERE name = '모찌';               -- UPDATE 0
-SELECT count(*) FROM menu_items WHERE is_active = false;              -- 0  ← 관리자 SELECT 정책이 비관리자에게 새면 1이 나온다
+SELECT count(*) FROM menu_items WHERE name = '백설기' AND is_active = false;              -- 0  ← 관리자 SELECT 정책이 비관리자에게 새면 1이 나온다
 SELECT count(*) FROM product_revisions;                               -- 0 (이력 안 보임)
-UPDATE user_profiles SET role = 'admin' WHERE user_id = auth.uid();   -- ERROR 42501 "role은 변경할 수 없습니다"
+UPDATE user_profiles SET role = 'admin' WHERE user_id = auth.uid();   -- ERROR 42501 "role은 변경할 수 없습니다"  ← "UPDATE 0"이 나오면 픽스처 실패, 검사 무효
 ROLLBACK;
 
 -- (B) 관리자 시뮬레이션 — 실행 전 관리자 uuid에 role='admin'이 이미 지정돼 있어야 한다
@@ -38,7 +44,7 @@ SELECT changed_by, before->>'price', after->>'price'
 UPDATE menu_items SET price = 99999 WHERE name = '모찌';               -- UPDATE 1 이지만 아래 count 그대로 (값 동일 → 이력 없음)
 SELECT count(*) FROM product_revisions WHERE table_name = 'menu_items'
    AND record_id = (SELECT id FROM menu_items WHERE name = '모찌');    -- 1
-SELECT count(*) FROM menu_items WHERE is_active = false;              -- 1 (관리자는 비활성도 보임)
+SELECT count(*) FROM menu_items WHERE name = '백설기' AND is_active = false;              -- 1 (관리자는 비활성도 보임)
 INSERT INTO menu_items (name, price, category) VALUES ('검증용', 1000, 'others'); -- ERROR 42501 (INSERT 정책 없음)
 ROLLBACK;
 
@@ -66,5 +72,7 @@ ROLLBACK;
 -- (C) SQL Editor(auth.uid() IS NULL) 직접 수정도 이력에 남는지
 BEGIN;
 UPDATE gift_sets SET price = price + 1 WHERE name = '떡국세트 1호';
-SELECT changed_by, table_name FROM product_revisions ORDER BY changed_at DESC LIMIT 1; -- NULL, gift_sets
+SELECT changed_by, table_name FROM product_revisions
+ WHERE table_name = 'gift_sets' AND record_id = (SELECT id FROM gift_sets WHERE name = '떡국세트 1호')
+ ORDER BY changed_at DESC LIMIT 1;                                    -- NULL, gift_sets
 ROLLBACK;

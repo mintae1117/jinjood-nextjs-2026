@@ -23,7 +23,7 @@ ALTER TABLE user_profiles
 CREATE OR REPLACE FUNCTION public.protect_user_profiles_role()
 RETURNS TRIGGER
 LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 BEGIN
   IF auth.uid() IS NOT NULL THEN
@@ -50,7 +50,7 @@ CREATE TRIGGER protect_user_profiles_role
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM user_profiles
@@ -162,7 +162,7 @@ CREATE POLICY "Admins can view product_revisions"
 CREATE OR REPLACE FUNCTION public.log_product_revision()
 RETURNS TRIGGER
 LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 BEGIN
   IF (to_jsonb(OLD) - 'updated_at') IS DISTINCT FROM (to_jsonb(NEW) - 'updated_at') THEN
@@ -190,10 +190,40 @@ CREATE TRIGGER log_reciprocate_items_revision
 
 -- -----------------------------------------------------
 -- 6. (운영 절차, 1회) 사장님 계정을 관리자로 지정 — README "관리자 상품 편집" 참고
---  사장님이 사이트에서 로그인을 한 번 하면 user_profiles 행이 생긴다. 그 뒤:
---   UPDATE user_profiles SET role = 'admin'
---   WHERE user_id = (SELECT id FROM auth.users WHERE email = '<사장님 이메일>');
---  행이 아직 없으면:
+--  user_profiles 행은 로그인만으로는 생기지 않는다(프로필 이미지 업로드 시 saveDbAvatarUrl이 upsert).
+--  그래서 UPDATE가 아니라 INSERT … ON CONFLICT로 지정한다(행이 있든 없든 한 번에 됨).
+--  SQL Editor는 auth.uid()가 NULL이라 protect_user_profiles_role 트리거를 통과한다.
+--
 --   INSERT INTO user_profiles (user_id, role)
---   VALUES ((SELECT id FROM auth.users WHERE email = '<사장님 이메일>'), 'admin');
+--   SELECT id, 'admin' FROM auth.users WHERE email = '<사장님 이메일>'
+--   ON CONFLICT (user_id) DO UPDATE SET role = 'admin';
 -- -----------------------------------------------------
+
+-- =====================================================
+-- 롤백 (필요 시 주석 해제 후 실행). 코드는 git revert, DB는 이 블록.
+-- role 컬럼과 product_revisions 테이블은 데이터가 있으므로 DROP하지 않는다.
+-- =====================================================
+-- DROP TRIGGER IF EXISTS log_menu_items_revision ON menu_items;
+-- DROP TRIGGER IF EXISTS log_gift_sets_revision ON gift_sets;
+-- DROP TRIGGER IF EXISTS log_reciprocate_items_revision ON reciprocate_items;
+-- DROP FUNCTION IF EXISTS public.log_product_revision();
+--
+-- DROP POLICY IF EXISTS "Admins can view product_revisions" ON product_revisions;
+-- DROP POLICY IF EXISTS "Admins can view all menu_items" ON menu_items;
+-- DROP POLICY IF EXISTS "Admins can update menu_items" ON menu_items;
+-- DROP POLICY IF EXISTS "Admins can view all gift_sets" ON gift_sets;
+-- DROP POLICY IF EXISTS "Admins can update gift_sets" ON gift_sets;
+-- DROP POLICY IF EXISTS "Admins can view all reciprocate_items" ON reciprocate_items;
+-- DROP POLICY IF EXISTS "Admins can update reciprocate_items" ON reciprocate_items;
+--
+-- ALTER TABLE menu_items DROP CONSTRAINT IF EXISTS menu_items_price_range;
+-- ALTER TABLE gift_sets DROP CONSTRAINT IF EXISTS gift_sets_price_range;
+-- ALTER TABLE reciprocate_items DROP CONSTRAINT IF EXISTS reciprocate_items_price_range;
+--
+-- -- 컬럼 GRANT 되돌리기: 마이그레이션 전 상태(테이블 전체 권한)로 복원
+-- GRANT INSERT, UPDATE, DELETE ON menu_items, gift_sets, reciprocate_items TO anon, authenticated;
+--
+-- DROP FUNCTION IF EXISTS public.is_admin();
+-- DROP TRIGGER IF EXISTS protect_user_profiles_role ON user_profiles;
+-- DROP FUNCTION IF EXISTS public.protect_user_profiles_role();
+-- -- (role 컬럼, product_revisions 테이블은 유지)

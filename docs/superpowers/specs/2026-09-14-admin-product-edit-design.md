@@ -146,12 +146,13 @@ CREATE TRIGGER log_menu_items_revision
 - `changed_by`: 콘솔 직접 수정 시 `auth.uid()`가 NULL → 누가 콘솔에서 고쳤는지 구분 가능.
 
 ### 4-6. 사장님 계정 지정 (운영 절차, 1회)
-사장님이 사이트에서 로그인(카카오/구글/이메일)을 한 번 하면 `user_profiles` 행이 생긴다(OAuth 콜백 시 upsert). 그 뒤 Supabase SQL Editor에서:
+`user_profiles` 행은 로그인만으로는 생기지 않는다(프로필 이미지 업로드 시 `saveDbAvatarUrl`이 upsert). 그래서 UPDATE가 아니라 INSERT … ON CONFLICT로 지정한다. SQL Editor는 `auth.uid()`가 NULL이라 `protect_user_profiles_role` 트리거를 통과한다:
 ```sql
-UPDATE user_profiles SET role = 'admin'
-WHERE user_id = (SELECT id FROM auth.users WHERE email = '<사장님 이메일>');
+INSERT INTO user_profiles (user_id, role)
+SELECT id, 'admin' FROM auth.users WHERE email = '<사장님 이메일>'
+ON CONFLICT (user_id) DO UPDATE SET role = 'admin';
 ```
-이메일 로그인이라 `user_profiles` 행이 아직 없으면 `INSERT ... (user_id, role)`로 만든다. README에 절차를 남긴다.
+README에 절차를 남긴다. **마이그레이션(`admin_edit.sql`)은 코드 배포보다 먼저 실행해야 한다** — `auth.ts`가 `role` 컬럼을 조회하므로 컬럼 없는 DB에 코드가 먼저 가면 프로필 조회가 실패해 커스텀 아바타가 폴백된다.
 
 ## 5. 인증 — role을 `User`에 싣기
 

@@ -271,7 +271,13 @@ export const authService = {
         const supabaseUser = session.user;
         // supabase-js 잠금 회피: 콜백 안에서 Supabase 호출을 직접 await 하지 않고 다음 틱에서 프로필 조회
         setTimeout(() => {
-          buildUser(supabaseUser).then(callback);
+          buildUser(supabaseUser)
+            .then(callback)
+            .catch((error) => {
+              // 프로필 조회가 실패해도 세션은 유효하다 — role 없는 User로 폴백(role은 'user'로 접힘)
+              console.error("Auth state profile load error:", error);
+              callback(mapSupabaseUser(supabaseUser));
+            });
         }, 0);
       }
     );

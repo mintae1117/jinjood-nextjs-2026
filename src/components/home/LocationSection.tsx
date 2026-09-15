@@ -169,7 +169,8 @@ const BankDetails = styled.p`
 
 export default function LocationSection() {
   const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
+    // opacity를 빼 서버 렌더 HTML에서도 내용이 읽히게 한다(이동 애니메이션은 유지)
+    hidden: { y: 20 },
     visible: (i: number) => ({
       opacity: 1,
       y: 0,

@@ -13,11 +13,14 @@ function useIncludeInactive() {
 /**
  * 메뉴 아이템 목록 조회 훅
  */
-export function useMenuItems(category?: string) {
+export function useMenuItems(category?: string, initialItems?: MenuItem[]) {
   const includeInactive = useIncludeInactive();
-  const [items, setItems] = useState<MenuItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<MenuItem[]>(initialItems ?? []);
+  const [isLoading, setIsLoading] = useState(!initialItems);
   const [error, setError] = useState<Error | null>(null);
+  // 서버가 전체 목록을 넘겨줬으면 하이드레이션 직후의 첫 조회는 건너뛴다.
+  // 카테고리를 바꾸거나 관리자로 includeInactive가 필요해지면 그때 다시 조회한다.
+  const skipFirstFetch = useRef(!!initialItems && !includeInactive);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -33,6 +36,10 @@ export function useMenuItems(category?: string) {
   }, [category, includeInactive]);
 
   useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     fetchItems();
   }, [fetchItems]);
 
@@ -128,11 +135,14 @@ export function useGiftSet(id: string | null, initialItem?: GiftSet | null) {
 /**
  * 선물세트 목록 조회 훅
  */
-export function useGiftSets(category?: string) {
+export function useGiftSets(category?: string, initialItems?: GiftSet[]) {
   const includeInactive = useIncludeInactive();
-  const [items, setItems] = useState<GiftSet[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<GiftSet[]>(initialItems ?? []);
+  const [isLoading, setIsLoading] = useState(!initialItems);
   const [error, setError] = useState<Error | null>(null);
+  // 서버가 전체 목록을 넘겨줬으면 하이드레이션 직후의 첫 조회는 건너뛴다.
+  // 카테고리를 바꾸거나 관리자로 includeInactive가 필요해지면 그때 다시 조회한다.
+  const skipFirstFetch = useRef(!!initialItems && !includeInactive);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -148,6 +158,10 @@ export function useGiftSets(category?: string) {
   }, [category, includeInactive]);
 
   useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     fetchItems();
   }, [fetchItems]);
 
@@ -200,11 +214,14 @@ export function useReciprocateItem(id: string | null, initialItem?: ReciprocateI
 /**
  * 이바지/답례 아이템 목록 조회 훅
  */
-export function useReciprocateItems(category?: string) {
+export function useReciprocateItems(category?: string, initialItems?: ReciprocateItem[]) {
   const includeInactive = useIncludeInactive();
-  const [items, setItems] = useState<ReciprocateItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<ReciprocateItem[]>(initialItems ?? []);
+  const [isLoading, setIsLoading] = useState(!initialItems);
   const [error, setError] = useState<Error | null>(null);
+  // 서버가 전체 목록을 넘겨줬으면 하이드레이션 직후의 첫 조회는 건너뛴다.
+  // 카테고리를 바꾸거나 관리자로 includeInactive가 필요해지면 그때 다시 조회한다.
+  const skipFirstFetch = useRef(!!initialItems && !includeInactive);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -220,6 +237,10 @@ export function useReciprocateItems(category?: string) {
   }, [category, includeInactive]);
 
   useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     fetchItems();
   }, [fetchItems]);
 
@@ -229,11 +250,12 @@ export function useReciprocateItems(category?: string) {
 /**
  * 인기 메뉴 조회 훅 (홈)
  */
-export function usePopularItems(limit: number = 9) {
+export function usePopularItems(limit: number = 9, initialItems?: MenuItem[]) {
   const includeInactive = useIncludeInactive();
-  const [items, setItems] = useState<MenuItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<MenuItem[]>(initialItems ?? []);
+  const [isLoading, setIsLoading] = useState(!initialItems);
   const [error, setError] = useState<Error | null>(null);
+  const skipFirstFetch = useRef(!!initialItems && !includeInactive);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -249,6 +271,10 @@ export function usePopularItems(limit: number = 9) {
   }, [limit, includeInactive]);
 
   useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     fetchItems();
   }, [fetchItems]);
 

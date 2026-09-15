@@ -7,12 +7,15 @@ import { Banner } from '@/types';
 /**
  * 배너 목록 조회 훅
  */
-export function useBanners() {
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function useBanners(initialBanners?: Banner[]) {
+  const [banners, setBanners] = useState<Banner[]>(initialBanners ?? []);
+  const [isLoading, setIsLoading] = useState(!initialBanners);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // 서버가 이미 넘겨준 배너가 있으면 같은 걸 또 조회하지 않는다
+    if (initialBanners) return;
+
     const fetchBanners = async () => {
       try {
         setIsLoading(true);
@@ -27,7 +30,7 @@ export function useBanners() {
     };
 
     fetchBanners();
-  }, []);
+  }, [initialBanners]);
 
   return { banners, isLoading, error };
 }

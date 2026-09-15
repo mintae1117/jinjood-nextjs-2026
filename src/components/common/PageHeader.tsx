@@ -119,7 +119,7 @@ export default function PageHeader({
       <Container>
         <ContentWrapper>
           <Title
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
@@ -127,7 +127,7 @@ export default function PageHeader({
           </Title>
           {description && (
             <Description
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
@@ -136,7 +136,7 @@ export default function PageHeader({
           )}
           {breadcrumbs && breadcrumbs.length > 0 && (
             <Breadcrumb
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >

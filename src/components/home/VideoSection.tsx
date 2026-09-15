@@ -183,7 +183,7 @@ export default function VideoSection() {
         <ContentWrapper>
           <TextContent>
             <SectionSubtitle
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
@@ -191,7 +191,7 @@ export default function VideoSection() {
               About Us
             </SectionSubtitle>
             <SectionTitle
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
@@ -201,7 +201,7 @@ export default function VideoSection() {
               진주떡집입니다
             </SectionTitle>
             <Description
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -211,7 +211,7 @@ export default function VideoSection() {
               사용하여 매일 아침 신선하게 만드는 정성이 담긴 떡을 제공합니다.
             </Description>
             <FeatureList
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.3 }}
@@ -256,7 +256,7 @@ export default function VideoSection() {
           </TextContent>
 
           <VideoWrapper
-            initial={{ opacity: 0, x: 50 }}
+            initial={{ x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -274,7 +274,7 @@ export default function VideoSection() {
         </ContentWrapper>
 
         <StatsWrapper
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}

@@ -431,7 +431,11 @@ export default function Header() {
 
               <CartButton href="/cart" aria-label="장바구니">
                 <FiShoppingCart />
-                {totalItems > 0 && <CartBadge>{totalItems > 99 ? "99+" : totalItems}</CartBadge>}
+                {/* cartStore.items는 localStorage에 persist되어 클라이언트 첫 렌더엔 있지만
+                    서버엔 없다. isInitialized(persist 대상 아님)로 함께 막아야 불일치가 없다. */}
+                {isInitialized && totalItems > 0 && (
+                  <CartBadge>{totalItems > 99 ? "99+" : totalItems}</CartBadge>
+                )}
               </CartButton>
 
               {isInitialized && (

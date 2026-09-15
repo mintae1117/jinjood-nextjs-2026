@@ -70,14 +70,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 메뉴 아이템
     const { data: menuItems } = await supabase
       .from("menu_items")
-      .select("id")
+      .select("id, updated_at")
       .eq("is_active", true);
 
     if (menuItems) {
       menuItems.forEach((item) => {
         dynamicPages.push({
           url: `${baseUrl}/represent/${item.id}`,
-          lastModified: new Date(),
+          // 실제 수정 시각을 쓴다 — 매번 현재 시각을 넣으면 모든 URL이 늘 갱신됐다고 주장하게 된다
+          lastModified: item.updated_at ? new Date(item.updated_at) : new Date(),
           changeFrequency: "weekly",
           priority: 0.7,
         });
@@ -87,14 +88,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 선물세트
     const { data: giftSets } = await supabase
       .from("gift_sets")
-      .select("id")
+      .select("id, updated_at")
       .eq("is_active", true);
 
     if (giftSets) {
       giftSets.forEach((item) => {
         dynamicPages.push({
           url: `${baseUrl}/gifts/${item.id}`,
-          lastModified: new Date(),
+          // 실제 수정 시각을 쓴다 — 매번 현재 시각을 넣으면 모든 URL이 늘 갱신됐다고 주장하게 된다
+          lastModified: item.updated_at ? new Date(item.updated_at) : new Date(),
           changeFrequency: "weekly",
           priority: 0.7,
         });
@@ -104,14 +106,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 이바지/답례
     const { data: reciprocateItems } = await supabase
       .from("reciprocate_items")
-      .select("id")
+      .select("id, updated_at")
       .eq("is_active", true);
 
     if (reciprocateItems) {
       reciprocateItems.forEach((item) => {
         dynamicPages.push({
           url: `${baseUrl}/reciprocate/${item.id}`,
-          lastModified: new Date(),
+          // 실제 수정 시각을 쓴다 — 매번 현재 시각을 넣으면 모든 URL이 늘 갱신됐다고 주장하게 된다
+          lastModified: item.updated_at ? new Date(item.updated_at) : new Date(),
           changeFrequency: "weekly",
           priority: 0.7,
         });

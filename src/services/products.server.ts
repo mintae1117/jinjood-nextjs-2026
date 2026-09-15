@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { GiftSet, MenuItem, ReciprocateItem } from "@/types";
+import type { Banner, GiftSet, MenuItem, ReciprocateItem } from "@/types";
 
 /**
  * 서버 전용 상품 조회 (상세 페이지 SSR + generateMetadata)
@@ -55,3 +55,65 @@ export const getReciprocateItemServer = cache(
     return (data as ReciprocateItem) ?? null;
   }
 );
+
+/**
+ * 목록 조회 (목록 페이지·홈 SSR)
+ *
+ * 카테고리 필터는 클라이언트 상태라 서버는 항상 전체를 가져온다. 필터를 건드리기 전까지
+ * 첫 화면이 곧 전체 목록이므로 이걸로 충분하고, 필터를 바꾸면 클라이언트가 다시 조회한다.
+ */
+
+export const getMenuItemsServer = cache(async (): Promise<MenuItem[]> => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("menu_items")
+    .select("*")
+    .eq("is_active", true)
+    .order("display_order");
+  return (data as MenuItem[]) ?? [];
+});
+
+export const getGiftSetsServer = cache(async (): Promise<GiftSet[]> => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("gift_sets")
+    .select("*")
+    .eq("is_active", true)
+    .order("display_order");
+  return (data as GiftSet[]) ?? [];
+});
+
+export const getReciprocateItemsServer = cache(async (): Promise<ReciprocateItem[]> => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("reciprocate_items")
+    .select("*")
+    .eq("is_active", true)
+    .order("display_order");
+  return (data as ReciprocateItem[]) ?? [];
+});
+
+/** 홈 대표 메뉴 — 인기/추천/베스트 중 상위 limit개 */
+export const getPopularItemsServer = cache(
+  async (limit: number = 9): Promise<MenuItem[]> => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("menu_items")
+      .select("*")
+      .eq("is_active", true)
+      .or("is_popular.eq.true,is_recommended.eq.true,is_best.eq.true")
+      .order("display_order")
+      .limit(limit);
+    return (data as MenuItem[]) ?? [];
+  }
+);
+
+export const getBannersServer = cache(async (): Promise<Banner[]> => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("banners")
+    .select("*")
+    .eq("is_active", true)
+    .order("display_order");
+  return (data as Banner[]) ?? [];
+});

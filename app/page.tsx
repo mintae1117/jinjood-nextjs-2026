@@ -1,71 +1,29 @@
-"use client";
+import {
+  getBannersServer,
+  getGiftSetsServer,
+  getPopularItemsServer,
+} from "@/services/products.server";
+import HomeClient from "@/components/home/HomeClient";
 
-import styled from "styled-components";
-import HeroBanner from "@/components/home/HeroBanner";
-import FeaturedMenu from "@/components/home/FeaturedMenu";
-import GiftSets from "@/components/home/GiftSets";
-import VideoSection from "@/components/home/VideoSection";
-import SNSSection from "@/components/home/SNSSection";
-import LocationSection from "@/components/home/LocationSection";
-import { Loading } from "@/components/common/Loading";
-import { useBanners, usePopularItems, useGiftSets } from "@/hooks";
+/**
+ * 서버 컴포넌트. 배너·대표메뉴·선물세트를 서버에서 조회해 넘긴다.
+ *
+ * 이게 없으면 서버 렌더 시점에 세 훅이 모두 로딩 상태라 페이지 전체가 스피너로 대체되고,
+ * 크롤러가 받는 홈에는 h1도 상품명도 남지 않는다(예전 618자 문제).
+ * 보이는 화면은 로딩이 끝난 뒤와 같다 — 로딩 분기가 서버에서 false가 될 뿐이다.
+ */
+export default async function HomePage() {
+  const [banners, menuItems, giftSets] = await Promise.all([
+    getBannersServer(),
+    getPopularItemsServer(9),
+    getGiftSetsServer(),
+  ]);
 
-const ErrorContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  text-align: center;
-  padding: 2rem;
-
-  h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1e1e1e;
-    margin-bottom: 1rem;
-  }
-
-  p {
-    color: #666666;
-    font-size: 1rem;
-  }
-`;
-
-export default function HomePage() {
-  const { banners, isLoading: bannersLoading, error: bannersError } = useBanners();
-  const { items: menuItems, isLoading: menuLoading, error: menuError, refetch: refetchMenu } = usePopularItems(9);
-  const { items: allGiftSets, isLoading: giftsLoading, error: giftsError, refetch: refetchGifts } = useGiftSets();
-
-  // 홈페이지에는 선물세트 1호, 4호, 송편세트 1호, 2호만 표시
-  const featuredGiftNames = ["선물세트 1호", "선물세트 4호", "송편세트 1호", "송편세트 2호"];
-  const giftSets = allGiftSets.filter(gift => featuredGiftNames.includes(gift.name));
-
-  const isLoading = bannersLoading || menuLoading || giftsLoading;
-  const error = bannersError || menuError || giftsError;
-
-  // 배너·메뉴·선물세트만 데이터에 의존한다. 나머지 섹션은 로딩/에러와 무관하게 항상 렌더해
-  // 서버 렌더 HTML에 본문이 남게 한다(useEffect는 서버에서 돌지 않으므로, 예전처럼 페이지
-  // 전체를 로딩으로 감싸면 크롤러가 받는 HTML이 헤더·푸터만 남는다).
   return (
-    <>
-      {isLoading ? (
-        <Loading fullScreen />
-      ) : error ? (
-        <ErrorContainer>
-          <h2>데이터를 불러오는데 실패했습니다</h2>
-          <p>{error.message}</p>
-        </ErrorContainer>
-      ) : (
-        <>
-          <HeroBanner banners={banners} />
-          <FeaturedMenu menuItems={menuItems} onSaved={refetchMenu} />
-          <GiftSets giftSets={giftSets} onSaved={refetchGifts} />
-        </>
-      )}
-      <VideoSection />
-      <SNSSection />
-      <LocationSection />
-    </>
+    <HomeClient
+      initialBanners={banners}
+      initialMenuItems={menuItems}
+      initialGiftSets={giftSets}
+    />
   );
 }

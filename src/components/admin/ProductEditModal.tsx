@@ -278,6 +278,12 @@ const SmallButton = styled.button`
   }
 `;
 
+// 되돌리기 전용: 아이콘만. 요약 텍스트가 길어도 찌그러지지 않게 flex-shrink를 끈다
+const RevertButton = styled(SmallButton)`
+  flex-shrink: 0;
+  padding: 0.5rem;
+`;
+
 const ErrorText = styled.p`
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
@@ -663,10 +669,14 @@ export default function ProductEditModal({
                               </time>
                               <p>{summary || "(편집 항목 외 변경)"}</p>
                             </div>
-                            <SmallButton type="button" onClick={() => handleRevert(revision)}>
-                              <FiRotateCcw size={14} />
-                              이 값으로
-                            </SmallButton>
+                            <RevertButton
+                              type="button"
+                              onClick={() => handleRevert(revision)}
+                              aria-label="이 값으로 되돌리기"
+                              title="이 값으로 되돌리기"
+                            >
+                              <FiRotateCcw size={16} />
+                            </RevertButton>
                           </RevisionItem>
                         );
                       })}

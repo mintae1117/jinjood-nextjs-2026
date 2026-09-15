@@ -7,6 +7,7 @@ import GiftSets from "@/components/home/GiftSets";
 import VideoSection from "@/components/home/VideoSection";
 import SNSSection from "@/components/home/SNSSection";
 import LocationSection from "@/components/home/LocationSection";
+import AboutSection from "@/components/home/AboutSection";
 import { Loading } from "@/components/common/Loading";
 import { useBanners, usePopularItems, useGiftSets } from "@/hooks";
 
@@ -44,24 +45,26 @@ export default function HomePage() {
   const isLoading = bannersLoading || menuLoading || giftsLoading;
   const error = bannersError || menuError || giftsError;
 
-  if (isLoading) {
-    return <Loading fullScreen />;
-  }
-
-  if (error) {
-    return (
-      <ErrorContainer>
-        <h2>데이터를 불러오는데 실패했습니다</h2>
-        <p>{error.message}</p>
-      </ErrorContainer>
-    );
-  }
-
+  // 배너·메뉴·선물세트만 데이터에 의존한다. 나머지 섹션은 로딩/에러와 무관하게 항상 렌더해
+  // 서버 렌더 HTML에 본문이 남게 한다(useEffect는 서버에서 돌지 않으므로, 예전처럼 페이지
+  // 전체를 로딩으로 감싸면 크롤러가 받는 HTML이 헤더·푸터만 남는다).
   return (
     <>
-      <HeroBanner banners={banners} />
-      <FeaturedMenu menuItems={menuItems} onSaved={refetchMenu} />
-      <GiftSets giftSets={giftSets} onSaved={refetchGifts} />
+      {isLoading ? (
+        <Loading fullScreen />
+      ) : error ? (
+        <ErrorContainer>
+          <h2>데이터를 불러오는데 실패했습니다</h2>
+          <p>{error.message}</p>
+        </ErrorContainer>
+      ) : (
+        <>
+          <HeroBanner banners={banners} />
+          <FeaturedMenu menuItems={menuItems} onSaved={refetchMenu} />
+          <GiftSets giftSets={giftSets} onSaved={refetchGifts} />
+        </>
+      )}
+      <AboutSection />
       <VideoSection />
       <SNSSection />
       <LocationSection />

@@ -42,12 +42,15 @@ export function useMenuItems(category?: string) {
 /**
  * 단일 메뉴 아이템 조회 훅
  */
-export function useMenuItem(id: string | null) {
+export function useMenuItem(id: string | null, initialItem?: MenuItem | null) {
   const includeInactive = useIncludeInactive();
-  const [item, setItem] = useState<MenuItem | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // 서버가 미리 조회해 넘겨준 값으로 시작한다 — 첫 HTML에 상품 내용이 실리게 하려는 것.
+  const [item, setItem] = useState<MenuItem | null>(initialItem ?? null);
+  const [isLoading, setIsLoading] = useState(!initialItem);
   const [error, setError] = useState<Error | null>(null);
 
+  // fetchItem 안에서 setIsLoading(true)를 하지 않는다. 서버 값으로 이미 그려 둔 화면을
+  // 로딩 스피너로 되돌리면 깜빡이고, 관리자 수정 후 refetch에서도 마찬가지다.
   const fetchItem = useCallback(async () => {
     if (!id) {
       setItem(null);
@@ -55,7 +58,6 @@ export function useMenuItem(id: string | null) {
       return;
     }
     try {
-      setIsLoading(true);
       setError(null);
       const data = await productService.getMenuItem(id, { includeInactive });
       setItem(data);
@@ -76,12 +78,15 @@ export function useMenuItem(id: string | null) {
 /**
  * 단일 선물세트 조회 훅
  */
-export function useGiftSet(id: string | null) {
+export function useGiftSet(id: string | null, initialItem?: GiftSet | null) {
   const includeInactive = useIncludeInactive();
-  const [item, setItem] = useState<GiftSet | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // 서버가 미리 조회해 넘겨준 값으로 시작한다 — 첫 HTML에 상품 내용이 실리게 하려는 것.
+  const [item, setItem] = useState<GiftSet | null>(initialItem ?? null);
+  const [isLoading, setIsLoading] = useState(!initialItem);
   const [error, setError] = useState<Error | null>(null);
 
+  // fetchItem 안에서 setIsLoading(true)를 하지 않는다. 서버 값으로 이미 그려 둔 화면을
+  // 로딩 스피너로 되돌리면 깜빡이고, 관리자 수정 후 refetch에서도 마찬가지다.
   const fetchItem = useCallback(async () => {
     if (!id) {
       setItem(null);
@@ -89,7 +94,6 @@ export function useGiftSet(id: string | null) {
       return;
     }
     try {
-      setIsLoading(true);
       setError(null);
       const data = await productService.getGiftSet(id, { includeInactive });
       setItem(data);
@@ -139,12 +143,15 @@ export function useGiftSets(category?: string) {
 /**
  * 단일 이바지/답례 아이템 조회 훅
  */
-export function useReciprocateItem(id: string | null) {
+export function useReciprocateItem(id: string | null, initialItem?: ReciprocateItem | null) {
   const includeInactive = useIncludeInactive();
-  const [item, setItem] = useState<ReciprocateItem | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // 서버가 미리 조회해 넘겨준 값으로 시작한다 — 첫 HTML에 상품 내용이 실리게 하려는 것.
+  const [item, setItem] = useState<ReciprocateItem | null>(initialItem ?? null);
+  const [isLoading, setIsLoading] = useState(!initialItem);
   const [error, setError] = useState<Error | null>(null);
 
+  // fetchItem 안에서 setIsLoading(true)를 하지 않는다. 서버 값으로 이미 그려 둔 화면을
+  // 로딩 스피너로 되돌리면 깜빡이고, 관리자 수정 후 refetch에서도 마찬가지다.
   const fetchItem = useCallback(async () => {
     if (!id) {
       setItem(null);
@@ -152,7 +159,6 @@ export function useReciprocateItem(id: string | null) {
       return;
     }
     try {
-      setIsLoading(true);
       setError(null);
       const data = await productService.getReciprocateItem(id, { includeInactive });
       setItem(data);

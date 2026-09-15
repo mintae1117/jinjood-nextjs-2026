@@ -1,96 +1,43 @@
-"use client";
+import JsonLd from "@/components/common/JsonLd";
+import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
+import { getReciprocateItemServer } from "@/services/products.server";
+import { getStorageUrl } from "@/lib/supabase";
+import ReciprocateItemDetailClient from "./ReciprocateItemDetailClient";
 
-import { useParams } from "next/navigation";
-import { useReciprocateItem } from "@/hooks";
-import ProductDetail from "@/components/product/ProductDetail";
-import styled from "styled-components";
-import { motion } from "framer-motion";
+interface Props {
+  params: Promise<{ id: string }>;
+}
 
-const LoadingContainer = styled.div`
-  min-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const Spinner = styled(motion.div)`
-  width: 48px;
-  height: 48px;
-  border: 3px solid #f8f8f8;
-  border-top-color: #f35525;
-  border-radius: 50%;
-`;
-
-const ErrorContainer = styled.div`
-  min-height: 60vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 2rem;
-  text-align: center;
-`;
-
-const ErrorTitle = styled.h1`
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e1e1e;
-`;
-
-const ErrorMessage = styled.p`
-  font-size: 1rem;
-  color: #666666;
-`;
-
-const BackLink = styled.a`
-  padding: 0.75rem 1.5rem;
-  background-color: #f35525;
-  color: #ffffff;
-  font-weight: 600;
-  border-radius: 8px;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: #d94820;
-  }
-`;
-
-export default function ReciprocateItemDetailPage() {
-  const params = useParams();
-  const id = typeof params.id === "string" ? params.id : null;
-  const { item, isLoading, error, refetch } = useReciprocateItem(id);
-
-  if (isLoading) {
-    return (
-      <LoadingContainer>
-        <Spinner
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        />
-      </LoadingContainer>
-    );
-  }
-
-  if (error || !item) {
-    return (
-      <ErrorContainer>
-        <ErrorTitle>상품을 찾을 수 없습니다</ErrorTitle>
-        <ErrorMessage>
-          요청하신 이바지/답례 상품이 존재하지 않거나 현재 판매 중이 아닙니다.
-        </ErrorMessage>
-        <BackLink href="/reciprocate">이바지/답례 목록으로 돌아가기</BackLink>
-      </ErrorContainer>
-    );
-  }
+/**
+ * 서버 컴포넌트다. 상품을 서버에서 미리 조회해 클라이언트 컴포넌트에 넘기고,
+ * 구조화 데이터(빵부스러기·상품)를 첫 HTML에 실어 준다.
+ * 조회는 같은 layout의 generateMetadata와 react cache()로 합쳐져 요청당 1회만 나간다.
+ */
+export default async function ReciprocateItemDetailPage({ params }: Props) {
+  const { id } = await params;
+  const item = await getReciprocateItemServer(id);
 
   return (
-    <ProductDetail
-      product={item}
-      productType="reciprocate_item"
-      backLink="/reciprocate"
-      backLabel="이바지/답례 목록"
-      onSaved={refetch}
-    />
+    <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "이바지 & 답례", path: "/reciprocate" },
+          ...(item ? [{ name: item.name }] : []),
+        ])}
+      />
+      {item && (
+        <JsonLd
+          data={productJsonLd({
+            name: item.name,
+            description: item.description,
+            image: getStorageUrl(item.image_url),
+            path: `/reciprocate/${id}`,
+            price: item.price,
+            priceFrom: true,
+          })}
+        />
+      )}
+      <ReciprocateItemDetailClient id={id} initialItem={item} />
+    </>
   );
 }

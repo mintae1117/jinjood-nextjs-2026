@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import { FiMinus, FiPlus, FiShoppingCart, FiArrowLeft, FiPhone } from "react-icons/fi";
@@ -410,6 +410,8 @@ export default function ProductDetail({
   onSaved,
 }: ProductDetailProps) {
   const router = useRouter();
+  // 서버 렌더에서도 그려지므로 window.location을 쓰면 안 된다(ReferenceError)
+  const pathname = usePathname();
   const { isAuthenticated } = useAuth();
   const { addToCart, isLoading: cartLoading } = useCart();
 
@@ -535,7 +537,7 @@ export default function ProductDetail({
               {!isAuthenticated && (
                 <LoginPrompt>
                   장바구니 및 구매를 이용하시려면{" "}
-                  <Link href={`/login?redirectTo=${encodeURIComponent(window.location.pathname)}`}>
+                  <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`}>
                     로그인
                   </Link>
                   해주세요.

@@ -12,7 +12,7 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "진주떡집 | 1995년부터 이어온 부산 전통 떡집",
+  title: "남천동 떡집 진주떡집 | 부산 수영구 전통떡·이바지·답례떡",
   description:
     "부산 수영구 남천동 진주떡집. 1995년부터 국내산 쌀로 만든 백설기·인절미·송편·이바지떡 등 전통 떡 전문점입니다.",
   keywords: [
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "진주떡집" }],
   openGraph: {
-    title: "진주떡집 | 1995년부터 이어온 부산 전통 떡집",
+    title: "남천동 떡집 진주떡집 | 부산 수영구 전통떡·이바지·답례떡",
     description:
       "부산 수영구 남천동에 위치한 진주떡집입니다. 1995년부터 국내산 쌀과 엄선된 재료로 정성껏 만든 전통 떡을 제공합니다.",
     url: "https://www.jinjood.com",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "진주떡집 | 1995년부터 이어온 부산 전통 떡집",
+    title: "남천동 떡집 진주떡집 | 부산 수영구 전통떡·이바지·답례떡",
     description:
       "부산 수영구 남천동에 위치한 진주떡집입니다. 1995년부터 국내산 쌀과 엄선된 재료로 정성껏 만든 전통 떡을 제공합니다.",
     images: ["https://dtrkgewjilthseguqlgy.supabase.co/storage/v1/object/public/images/banners/banner003.jpeg"],
@@ -111,6 +111,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Bakery",
               name: "진주떡집",
+              alternateName: ["남천동 진주떡집", "남천동떡집", "남천동 떡집"],
               image: "https://dtrkgewjilthseguqlgy.supabase.co/storage/v1/object/public/images/banners/banner003.jpeg",
               url: "https://www.jinjood.com",
               telephone: "051-621-5108",
@@ -145,7 +146,18 @@ export default function RootLayout({
                   opens: "07:00",
                   closes: "17:00",
                 },
+                {
+                  // 일요일 정기휴무 — opens/closes를 같은 값으로 두는 것이 schema.org의 "휴무" 표기
+                  "@type": "OpeningHoursSpecification",
+                  dayOfWeek: "Sunday",
+                  opens: "00:00",
+                  closes: "00:00",
+                },
               ],
+              areaServed: {
+                "@type": "City",
+                name: "부산광역시 수영구",
+              },
               sameAs: [
                 "https://www.instagram.com/busan_jinjoods_rice_cake",
                 "https://m.blog.naver.com/jinjoo_ricecake",

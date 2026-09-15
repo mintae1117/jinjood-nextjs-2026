@@ -89,7 +89,9 @@ const Subtitle = styled(motion.span)`
   }
 `;
 
-const Title = styled(motion.h1)`
+// 홈의 h1은 AboutSection이 담당한다(배너는 데이터 의존이라 서버 렌더 HTML에 없음).
+// 페이지당 h1은 하나여야 하므로 여기는 h2 — 글자 크기·스타일은 그대로다.
+const Title = styled(motion.h2)`
   font-size: 4rem;
   font-weight: 700;
   line-height: 1.2;

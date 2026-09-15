@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { getMenuItemServer } from "@/services/products.server";
 import { getStorageUrl } from "@/lib/supabase";
 
 interface Props {
@@ -8,13 +8,8 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("menu_items")
-    .select("name, description, image_url, price")
-    .eq("id", id)
-    .eq("is_active", true)
-    .single();
+  // page.tsx와 같은 cache()된 조회를 써서 요청당 DB 왕복을 1회로 합친다
+  const data = await getMenuItemServer(id);
 
   if (!data) {
     return { title: "메뉴 상세 | 진주떡집" };

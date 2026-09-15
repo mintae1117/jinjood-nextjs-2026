@@ -208,6 +208,14 @@ export const productService = {
 - 이력: `product_revisions`는 DB 트리거가 적재. 되돌리기는 `before`의 4컬럼을 폼에 얹어 `updateProduct`를 다시 타는 것(별도 API 없음).
 - 리포의 `seed_data.sql`/`cleanup_and_reseed.sql`은 초기 스냅샷 — 실 데이터와 동기화하지 않는다.
 
+### SEO — 크롤러가 읽는 HTML
+- **함정**: 데이터를 `useEffect`로 받는 페이지는 서버 렌더 HTML이 비어 있다. 예전엔 홈이 `isLoading`일 때 페이지 전체를 `<Loading />`으로 감싸 크롤러가 받는 본문이 헤더·푸터뿐(618자)이었다. 구글은 JS를 실행해주지만 네이버 Yeti는 거의 안 한다.
+- **원칙**: 데이터 의존 섹션만 로딩 게이트 안에 두고, 정적 섹션(`AboutSection`·`VideoSection`·`SNSSection`·`LocationSection`)은 항상 렌더한다.
+- **상세 페이지**: `[id]/page.tsx`는 서버 컴포넌트다. `src/services/products.server.ts`의 `cache()`된 조회로 상품을 받아 `initialItem`으로 클라이언트에 넘긴다(같은 요청의 `generateMetadata`와 DB 왕복이 합쳐진다). 훅은 `useMenuItem(id, initialItem)`처럼 초기값을 받는다.
+- **h1은 페이지당 하나**: 홈은 `AboutSection`, 목록은 `PageHeader`, 상세는 `ProductDetail`의 `ProductName`. `HeroBanner`는 h2다.
+- **구조화 데이터**: 전역(`Bakery`·`SiteNavigationElement`)은 `app/layout.tsx`, 페이지별(`BreadcrumbList`·`Product`)은 `src/lib/seo.ts` + `src/components/common/JsonLd.tsx`.
+- ⚠️ 서버에서도 렌더되므로 컴포넌트 **렌더 경로에서 `window`·`document`를 읽지 말 것**. 경로가 필요하면 `usePathname()`.
+
 ---
 
 ## Git 커밋 규칙

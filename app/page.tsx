@@ -7,7 +7,6 @@ import GiftSets from "@/components/home/GiftSets";
 import VideoSection from "@/components/home/VideoSection";
 import SNSSection from "@/components/home/SNSSection";
 import LocationSection from "@/components/home/LocationSection";
-import AboutSection from "@/components/home/AboutSection";
 import { Loading } from "@/components/common/Loading";
 import { useBanners, usePopularItems, useGiftSets } from "@/hooks";
 
@@ -64,7 +63,6 @@ export default function HomePage() {
           <GiftSets giftSets={giftSets} onSaved={refetchGifts} />
         </>
       )}
-      <AboutSection />
       <VideoSection />
       <SNSSection />
       <LocationSection />

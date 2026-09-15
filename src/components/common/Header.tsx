@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { FiPhone, FiMail, FiMenu, FiX, FiSearch, FiShoppingCart, FiUser } from "react-icons/fi";
 import { FaInstagram } from "react-icons/fa";
 import { RiKakaoTalkFill } from "react-icons/ri";
@@ -237,6 +237,61 @@ const CartBadge = styled.span`
   padding: 0 4px;
 `;
 
+const shimmer = keyframes`
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+`;
+
+/**
+ * 인증 상태를 확인하는 동안 자리를 채우는 표시.
+ *
+ * useAuth의 초기화는 supabase.auth.getUser()와 user_profiles 조회 두 번의 왕복을 거친다.
+ * 그동안 이 자리가 비어 있으면 로그인 직후에도 헤더에 아무것도 없어 멈춘 것처럼 보인다.
+ * 크기는 UserDropdown의 트리거에 맞춰 두어 실제 내용이 들어올 때 덜 흔들리게 했다.
+ */
+const AuthPlaceholder = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #eeeeee;
+  border-radius: 8px;
+`;
+
+const shimmerSurface = `
+  background-image: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 37%, #f0f0f0 63%);
+  background-size: 300% 100%;
+`;
+
+const PlaceholderAvatar = styled.span`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  ${shimmerSurface}
+  animation: ${shimmer} 1.4s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
+const PlaceholderName = styled.span`
+  width: 56px;
+  height: 12px;
+  border-radius: 4px;
+  ${shimmerSurface}
+  animation: ${shimmer} 1.4s ease-in-out infinite;
+
+  /* UserName과 같은 지점에서 숨겨 모바일 폭이 달라지지 않게 한다 */
+  @media (max-width: 768px) {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
 const LoginButton = styled(Link)`
   display: flex;
   align-items: center;
@@ -441,7 +496,7 @@ export default function Header() {
                 )}
               </CartButton>
 
-              {isInitialized && (
+              {isInitialized ? (
                 isAuthenticated ? (
                   <UserDropdown />
                 ) : (
@@ -450,6 +505,11 @@ export default function Header() {
                     <span>로그인</span>
                   </LoginButton>
                 )
+              ) : (
+                <AuthPlaceholder role="status" aria-label="로그인 상태 확인 중">
+                  <PlaceholderAvatar />
+                  <PlaceholderName />
+                </AuthPlaceholder>
               )}
 
               <MenuButton

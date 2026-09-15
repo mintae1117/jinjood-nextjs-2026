@@ -216,7 +216,7 @@ export const productService = {
 - **구조화 데이터**: 전역(`Bakery`·`SiteNavigationElement`)은 `app/layout.tsx`, 페이지별(`BreadcrumbList`·`Product`)은 `src/lib/seo.ts` + `src/components/common/JsonLd.tsx`.
 - ⚠️ 서버에서도 렌더되므로 컴포넌트 **렌더 경로에서 `window`·`document`를 읽지 말 것**. 경로가 필요하면 `usePathname()`.
 - ⚠️ **persist된 상태로 화면을 가르지 말 것**: `authStore.user`·`cartStore`는 sessionStorage/localStorage에 저장돼 클라이언트 첫 렌더엔 있지만 서버엔 없다. 그대로 쓰면 하이드레이션이 어긋난다. `selectIsAuthReady`(= `isInitialized`, persist 대상 아님)로 함께 막는다 — `Header.tsx`와 `AdminEditButton.tsx` 참고.
-- ⚠️ **서버 렌더되는 곳의 framer-motion 등장 애니메이션은 `initial={false}`**. `initial={{ opacity: 0 }}`은 SSR HTML에 그대로 박혀 하이드레이션 전까지 화면이 투명해진다.
+- framer-motion 등장 애니메이션(`initial={{ opacity: 0 }}`)은 SSR HTML에 그대로 나간다. 의도된 연출이라 유지한다. 대신 **하이드레이션 전까지 그 영역은 투명**하므로, 화면 전체를 덮는 요소에 쓰면 느린 회선에서 백지로 보인다는 점을 감안할 것.
 
 ---
 

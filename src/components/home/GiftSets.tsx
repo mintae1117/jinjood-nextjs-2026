@@ -273,8 +273,7 @@ function GiftSetCard({ gift, index, onSaved }: { gift: GiftSet; index: number; o
   };
 
   const cardVariants = {
-    // opacity를 빼 서버 렌더 HTML에서도 내용이 읽히게 한다(이동 애니메이션은 유지)
-    hidden: { y: 20 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,

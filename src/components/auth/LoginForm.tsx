@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
@@ -104,6 +104,32 @@ const PasswordToggle = styled.button`
   }
 `;
 
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+// 버튼 안에 들어가는 작은 스피너. 로그인은 인증 왕복 + 페이지 이동까지 걸려
+// 글자만 바뀌면 멈춘 것처럼 보인다.
+const ButtonSpinner = styled.span`
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: ${spin} 0.7s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 2s;
+  }
+`;
+
+// 소셜 버튼은 배경이 밝아 테두리 색을 따로 준다
+const DarkButtonSpinner = styled(ButtonSpinner)`
+  border-color: rgba(0, 0, 0, 0.2);
+  border-top-color: #1e1e1e;
+`;
+
 const SubmitButton = styled.button`
   width: 100%;
   padding: 0.875rem;
@@ -115,6 +141,10 @@ const SubmitButton = styled.button`
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 
   &:hover:not(:disabled) {
     background-color: #d94820;
@@ -251,6 +281,11 @@ function LoginFormInner() {
   const redirectTo = searchParams.get("redirectTo") || "/";
 
   const { signIn, signInWithKakao, signInWithGoogle, isLoading } = useAuth();
+  // useAuth의 isLoading은 인증 왕복이 끝나면 곧바로 false가 된다. 그런데 그 뒤로
+  // router.push(이동)와 대상 페이지 로딩이 남아 있어, 그 구간에 아무 표시가 없으면
+  // 화면이 멈춘 것처럼 보인다. 이동이 시작되면 컴포넌트가 사라질 때까지 켜 둔다.
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const busy = isLoading || isRedirecting;
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -279,6 +314,7 @@ function LoginFormInner() {
     const result = await signIn(formData);
 
     if (result.success) {
+      setIsRedirecting(true);
       router.push(redirectTo);
     } else {
       setError(result.error || "로그인에 실패했습니다.");
@@ -287,18 +323,22 @@ function LoginFormInner() {
 
   const handleKakaoLogin = async () => {
     setError(null);
+    setIsRedirecting(true);
     const result = await signInWithKakao();
 
     if (!result.success) {
+      setIsRedirecting(false);
       setError(result.error || "카카오 로그인에 실패했습니다.");
     }
   };
 
   const handleGoogleLogin = async () => {
     setError(null);
+    setIsRedirecting(true);
     const result = await signInWithGoogle();
 
     if (!result.success) {
+      setIsRedirecting(false);
       setError(result.error || "구글 로그인에 실패했습니다.");
     }
   };
@@ -323,7 +363,7 @@ function LoginFormInner() {
               placeholder="이메일"
               value={formData.email}
               onChange={handleChange}
-              disabled={isLoading}
+              disabled={busy}
               autoComplete="email"
             />
           </InputGroup>
@@ -338,7 +378,7 @@ function LoginFormInner() {
               placeholder="비밀번호"
               value={formData.password}
               onChange={handleChange}
-              disabled={isLoading}
+              disabled={busy}
               autoComplete="current-password"
             />
             <PasswordToggle
@@ -350,21 +390,28 @@ function LoginFormInner() {
             </PasswordToggle>
           </InputGroup>
 
-          <SubmitButton type="submit" disabled={isLoading}>
-            {isLoading ? "로그인 중..." : "로그인"}
+          <SubmitButton type="submit" disabled={busy}>
+            {busy ? (
+              <>
+                <ButtonSpinner aria-hidden="true" />
+                {isRedirecting ? "이동 중..." : "로그인 중..."}
+              </>
+            ) : (
+              "로그인"
+            )}
           </SubmitButton>
         </Form>
 
         <Divider>또는</Divider>
 
         <SocialButtonGroup>
-          <KakaoButton onClick={handleKakaoLogin} disabled={isLoading}>
-            <RiKakaoTalkFill />
+          <KakaoButton onClick={handleKakaoLogin} disabled={busy}>
+            {busy ? <DarkButtonSpinner aria-hidden="true" /> : <RiKakaoTalkFill />}
             카카오로 시작하기
           </KakaoButton>
 
-          <GoogleButton onClick={handleGoogleLogin} disabled={isLoading}>
-            <FcGoogle />
+          <GoogleButton onClick={handleGoogleLogin} disabled={busy}>
+            {busy ? <DarkButtonSpinner aria-hidden="true" /> : <FcGoogle />}
             Google로 시작하기
           </GoogleButton>
         </SocialButtonGroup>

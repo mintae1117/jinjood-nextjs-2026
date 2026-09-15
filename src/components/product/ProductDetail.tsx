@@ -463,9 +463,7 @@ export default function ProductDetail({
 
       <ProductWrapper>
         <ImageSection
-          // initial={false}: 서버 렌더에 opacity:0이 박히면 하이드레이션 전까지 본문이 투명해진다.
-          // 예전엔 서버가 스피너를 그려서 드러나지 않았지만 지금은 흰 화면으로 보인다.
-          initial={false}
+          initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
@@ -480,7 +478,7 @@ export default function ProductDetail({
         </ImageSection>
 
         <InfoSection
-          initial={false}
+          initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >

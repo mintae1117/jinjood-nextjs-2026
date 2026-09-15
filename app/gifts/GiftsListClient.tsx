@@ -261,7 +261,7 @@ export default function GiftsListClient({ initialItems }: GiftsListClientProps) 
                   items.map((item, index) => (
                     <GiftCard
                       key={item.id}
-                      initial={{ y: 20 }}
+                      initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 20 }}
                       transition={{ duration: 0.4, delay: index * 0.05 }}

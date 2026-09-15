@@ -43,7 +43,7 @@ export interface ProductJsonLdInput {
   /** SITE_URL 기준 경로 (예: /represent/<id>) */
   path: string;
   price: number;
-  /** 이바지·답례처럼 가격이 "~원부터"인 경우 true */
+  /** 이바지·답례처럼 화면에 "45,000원 ~"로 표시되는 맞춤 주문 상품 */
   priceFrom?: boolean;
 }
 
@@ -70,18 +70,25 @@ export function productJsonLd({
       "@type": "Brand",
       name: "진주떡집",
     },
-    offers: {
-      "@type": "Offer",
-      url: `${SITE_URL}${path}`,
-      priceCurrency: "KRW",
-      price: String(price),
-      availability: "https://schema.org/InStock",
-      // 맞춤 주문이라 가격이 변동될 수 있는 품목은 하한가로 표기
-      ...(priceFrom ? { priceValidUntil: undefined } : {}),
-      seller: {
-        "@type": "Bakery",
-        name: "진주떡집",
-      },
-    },
+    // 화면이 "45,000원 ~"로 시작가를 보여주는 상품에 Offer로 확정가를 단언하면
+    // 검색 결과에 뜨는 가격이 페이지와 달라진다. AggregateOffer의 lowPrice가 맞다.
+    offers: priceFrom
+      ? {
+          "@type": "AggregateOffer",
+          url: `${SITE_URL}${path}`,
+          priceCurrency: "KRW",
+          lowPrice: String(price),
+          offerCount: 1,
+          availability: "https://schema.org/InStock",
+          seller: { "@type": "Bakery", name: "진주떡집" },
+        }
+      : {
+          "@type": "Offer",
+          url: `${SITE_URL}${path}`,
+          priceCurrency: "KRW",
+          price: String(price),
+          availability: "https://schema.org/InStock",
+          seller: { "@type": "Bakery", name: "진주떡집" },
+        },
   };
 }

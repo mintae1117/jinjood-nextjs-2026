@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { productService } from '@/services';
 import { useAuthStore, selectIsAdmin } from '@/stores';
 import { MenuItem, GiftSet, ReciprocateItem } from '@/types';
@@ -48,6 +48,9 @@ export function useMenuItem(id: string | null, initialItem?: MenuItem | null) {
   const [item, setItem] = useState<MenuItem | null>(initialItem ?? null);
   const [isLoading, setIsLoading] = useState(!initialItem);
   const [error, setError] = useState<Error | null>(null);
+  // 서버가 이미 조회해 넘긴 값이 있으면 하이드레이션 직후의 첫 조회는 건너뛴다(같은 행을 두 번 읽는다).
+  // 관리자라 includeInactive가 true면 숨긴 상품까지 봐야 하므로 건너뛰지 않는다.
+  const skipFirstFetch = useRef(!!initialItem && !includeInactive);
 
   // fetchItem 안에서 setIsLoading(true)를 하지 않는다. 서버 값으로 이미 그려 둔 화면을
   // 로딩 스피너로 되돌리면 깜빡이고, 관리자 수정 후 refetch에서도 마찬가지다.
@@ -69,6 +72,10 @@ export function useMenuItem(id: string | null, initialItem?: MenuItem | null) {
   }, [id, includeInactive]);
 
   useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     fetchItem();
   }, [fetchItem]);
 
@@ -84,6 +91,9 @@ export function useGiftSet(id: string | null, initialItem?: GiftSet | null) {
   const [item, setItem] = useState<GiftSet | null>(initialItem ?? null);
   const [isLoading, setIsLoading] = useState(!initialItem);
   const [error, setError] = useState<Error | null>(null);
+  // 서버가 이미 조회해 넘긴 값이 있으면 하이드레이션 직후의 첫 조회는 건너뛴다(같은 행을 두 번 읽는다).
+  // 관리자라 includeInactive가 true면 숨긴 상품까지 봐야 하므로 건너뛰지 않는다.
+  const skipFirstFetch = useRef(!!initialItem && !includeInactive);
 
   // fetchItem 안에서 setIsLoading(true)를 하지 않는다. 서버 값으로 이미 그려 둔 화면을
   // 로딩 스피너로 되돌리면 깜빡이고, 관리자 수정 후 refetch에서도 마찬가지다.
@@ -105,6 +115,10 @@ export function useGiftSet(id: string | null, initialItem?: GiftSet | null) {
   }, [id, includeInactive]);
 
   useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     fetchItem();
   }, [fetchItem]);
 
@@ -149,6 +163,9 @@ export function useReciprocateItem(id: string | null, initialItem?: ReciprocateI
   const [item, setItem] = useState<ReciprocateItem | null>(initialItem ?? null);
   const [isLoading, setIsLoading] = useState(!initialItem);
   const [error, setError] = useState<Error | null>(null);
+  // 서버가 이미 조회해 넘긴 값이 있으면 하이드레이션 직후의 첫 조회는 건너뛴다(같은 행을 두 번 읽는다).
+  // 관리자라 includeInactive가 true면 숨긴 상품까지 봐야 하므로 건너뛰지 않는다.
+  const skipFirstFetch = useRef(!!initialItem && !includeInactive);
 
   // fetchItem 안에서 setIsLoading(true)를 하지 않는다. 서버 값으로 이미 그려 둔 화면을
   // 로딩 스피너로 되돌리면 깜빡이고, 관리자 수정 후 refetch에서도 마찬가지다.
@@ -170,6 +187,10 @@ export function useReciprocateItem(id: string | null, initialItem?: ReciprocateI
   }, [id, includeInactive]);
 
   useEffect(() => {
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     fetchItem();
   }, [fetchItem]);
 

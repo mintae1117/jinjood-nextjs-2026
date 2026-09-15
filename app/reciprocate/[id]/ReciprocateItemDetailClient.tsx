@@ -63,7 +63,9 @@ interface ReciprocateItemDetailClientProps {
 }
 
 export default function ReciprocateItemDetailClient({ id, initialItem }: ReciprocateItemDetailClientProps) {
-  const { item, isLoading, error, refetch } = useReciprocateItem(id, initialItem);
+  // error는 일부러 받지 않는다 — 서버가 준 상품이 있는데 재조회가 실패했다고
+  // 멀쩡한 화면을 에러로 갈아엎으면 안 된다. 화면 분기는 item 유무로만 한다.
+  const { item, isLoading, refetch } = useReciprocateItem(id, initialItem);
 
   if (isLoading) {
     return (
@@ -76,7 +78,7 @@ export default function ReciprocateItemDetailClient({ id, initialItem }: Recipro
     );
   }
 
-  if (error || !item) {
+  if (!item) {
     return (
       <ErrorContainer>
         <ErrorTitle>상품을 찾을 수 없습니다</ErrorTitle>

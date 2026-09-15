@@ -4,7 +4,7 @@ import { useState, type MouseEvent } from "react";
 import styled from "styled-components";
 import { FiEdit2 } from "react-icons/fi";
 import type { ProductType } from "@/types";
-import { useAuthStore, selectIsAdmin } from "@/stores";
+import { useAuthStore, selectIsAdmin, selectIsAuthReady } from "@/stores";
 import type { EditableProduct } from "@/utils/adminProduct";
 import ProductEditModal from "./ProductEditModal";
 
@@ -94,9 +94,11 @@ export default function AdminEditButton({
   variant = "card",
 }: AdminEditButtonProps) {
   const isAdmin = useAuthStore(selectIsAdmin);
+  // 서버에는 세션이 없고 클라이언트 첫 렌더에는 이미 복원돼 있어 그대로 두면 하이드레이션이 어긋난다.
+  const isAuthReady = useAuthStore(selectIsAuthReady);
   const [open, setOpen] = useState(false);
 
-  if (!isAdmin) return null;
+  if (!isAuthReady || !isAdmin) return null;
 
   const isHidden = product.is_active === false;
 

@@ -49,3 +49,8 @@ export const useAuthStore = create<AuthStore>()(
 export const selectIsAuthenticated = (state: AuthStore) => !!state.user;
 export const selectUserName = (state: AuthStore) => state.user?.name || state.user?.email || "";
 export const selectIsAdmin = (state: AuthStore) => state.user?.role === "admin";
+
+// 하이드레이션 가드용. user는 sessionStorage에 persist되어 클라이언트 첫 렌더에 이미 들어 있지만
+// 서버에는 없다. isInitialized는 partialize에서 빠져 서버·클라이언트 첫 렌더 모두 false이므로,
+// user에 의존해 화면이 갈리는 곳은 이 값으로 함께 막아야 불일치가 생기지 않는다.
+export const selectIsAuthReady = (state: AuthStore) => state.isInitialized;

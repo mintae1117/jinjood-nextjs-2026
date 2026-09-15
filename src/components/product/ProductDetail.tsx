@@ -412,7 +412,7 @@ export default function ProductDetail({
   const router = useRouter();
   // 서버 렌더에서도 그려지므로 window.location을 쓰면 안 된다(ReferenceError)
   const pathname = usePathname();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isInitialized } = useAuth();
   const { addToCart, isLoading: cartLoading } = useCart();
 
   const [quantity, setQuantity] = useState(1);
@@ -463,7 +463,9 @@ export default function ProductDetail({
 
       <ProductWrapper>
         <ImageSection
-          initial={{ opacity: 0, x: -20 }}
+          // initial={false}: 서버 렌더에 opacity:0이 박히면 하이드레이션 전까지 본문이 투명해진다.
+          // 예전엔 서버가 스피너를 그려서 드러나지 않았지만 지금은 흰 화면으로 보인다.
+          initial={false}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
@@ -478,7 +480,7 @@ export default function ProductDetail({
         </ImageSection>
 
         <InfoSection
-          initial={{ opacity: 0, x: 20 }}
+          initial={false}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
@@ -534,7 +536,7 @@ export default function ProductDetail({
                 <TotalValue>{totalPrice.toLocaleString("ko-KR")}원</TotalValue>
               </TotalPrice>
 
-              {!isAuthenticated && (
+              {isInitialized && !isAuthenticated && (
                 <LoginPrompt>
                   장바구니 및 구매를 이용하시려면{" "}
                   <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`}>
@@ -557,7 +559,7 @@ export default function ProductDetail({
               <ButtonGroup>
                 <AddToCartButton
                   onClick={handleAddToCart}
-                  disabled={!isAuthenticated || cartLoading}
+                  disabled={!isInitialized || !isAuthenticated || cartLoading}
                   whileTap={{ scale: 0.98 }}
                 >
                   <FiShoppingCart />

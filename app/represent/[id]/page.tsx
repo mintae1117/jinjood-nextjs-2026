@@ -19,12 +19,15 @@ export default async function MenuItemDetailPage({ params }: Props) {
 
   return (
     <>
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "대표 메뉴", path: "/represent" },
-          ...(item ? [{ name: item.name }] : []),
-        ])}
-      />
+      {/* 없는 상품(soft 404)에 빵부스러기를 붙이면 존재하지 않는 URL이 목록 페이지인 척하게 된다 */}
+      {item && (
+        <JsonLd
+          data={breadcrumbJsonLd([
+            { name: "대표 메뉴", path: "/represent" },
+            { name: item.name },
+          ])}
+        />
+      )}
       {item && (
         <JsonLd
           data={productJsonLd({

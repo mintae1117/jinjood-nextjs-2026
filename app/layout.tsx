@@ -155,7 +155,7 @@ export default function RootLayout({
                 },
               ],
               areaServed: {
-                "@type": "City",
+                "@type": "AdministrativeArea",
                 name: "부산광역시 수영구",
               },
               sameAs: [

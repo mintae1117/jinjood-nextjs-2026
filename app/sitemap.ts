@@ -1,5 +1,18 @@
 import { MetadataRoute } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
+
+/**
+ * 사이트맵은 공개 상품 목록(is_active = true)만 필요하고 로그인 세션과 무관하다.
+ * cookies()를 쓰는 서버 클라이언트를 쓰면 정적 생성이 불가능해져 매 요청 DB를 때리고,
+ * 빌드 로그에도 Dynamic server usage 경고가 남았다. anon 키 클라이언트로 충분하다.
+ */
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// 한 시간마다 재생성. 정적으로 굳혀 버리면 상품을 추가해도 다음 배포까지 반영되지 않는다.
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.jinjood.com";
@@ -54,8 +67,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const dynamicPages: MetadataRoute.Sitemap = [];
 
   try {
-    const supabase = await createClient();
-
     // 메뉴 아이템
     const { data: menuItems } = await supabase
       .from("menu_items")

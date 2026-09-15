@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import JsonLd from "@/components/common/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "대표 메뉴 | 남천동 떡집 진주떡집",
@@ -22,10 +20,5 @@ export default function RepresentLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <JsonLd data={breadcrumbJsonLd([{ name: "대표 메뉴" }])} />
-      {children}
-    </>
-  );
+  return children;
 }

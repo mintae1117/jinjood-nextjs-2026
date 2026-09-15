@@ -211,48 +211,6 @@ export default function RootLayout({
             }),
           }}
         />
-        {/* BreadcrumbList - 페이지 계층 구조 */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "BreadcrumbList",
-              itemListElement: [
-                {
-                  "@type": "ListItem",
-                  position: 1,
-                  name: "홈",
-                  item: "https://www.jinjood.com",
-                },
-                {
-                  "@type": "ListItem",
-                  position: 2,
-                  name: "대표 메뉴",
-                  item: "https://www.jinjood.com/represent",
-                },
-                {
-                  "@type": "ListItem",
-                  position: 3,
-                  name: "선물세트",
-                  item: "https://www.jinjood.com/gifts",
-                },
-                {
-                  "@type": "ListItem",
-                  position: 4,
-                  name: "이바지·답례",
-                  item: "https://www.jinjood.com/reciprocate",
-                },
-                {
-                  "@type": "ListItem",
-                  position: 5,
-                  name: "오시는 길",
-                  item: "https://www.jinjood.com/contact",
-                },
-              ],
-            }),
-          }}
-        />
       </head>
       <body className={notoSansKR.variable}>
         <StyledComponentsRegistry>

@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import JsonLd from "@/components/common/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "이바지떡·답례떡 주문 | 남천동 진주떡집",
@@ -22,10 +20,5 @@ export default function ReciprocateLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <JsonLd data={breadcrumbJsonLd([{ name: "이바지 & 답례" }])} />
-      {children}
-    </>
-  );
+  return children;
 }

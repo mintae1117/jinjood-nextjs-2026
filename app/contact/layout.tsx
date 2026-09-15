@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import JsonLd from "@/components/common/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "오시는 길 | 남천동 진주떡집 (수영구 황령대로481번길)",
@@ -22,10 +20,5 @@ export default function ContactLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <JsonLd data={breadcrumbJsonLd([{ name: "오시는 길" }])} />
-      {children}
-    </>
-  );
+  return children;
 }

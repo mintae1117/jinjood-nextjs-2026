@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/common/PageHeader";
 import MenuFilter from "@/components/menu/MenuFilter";
 import { useGiftSets } from "@/hooks";
+import JsonLd from "@/components/common/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { GiftCategory } from "@/types";
 import { getStorageUrl } from "@/lib/supabase";
 import AdminEditButton from "@/components/admin/AdminEditButton";
@@ -223,6 +225,8 @@ export default function GiftsPage() {
 
   return (
     <>
+      {/* 페이지별 빵부스러기 — layout에 두면 상세 페이지까지 감싸 중복된다 */}
+      <JsonLd data={breadcrumbJsonLd([{ name: "선물 & 세트" }])} />
       <PageHeader
         title="선물 & 세트"
         description="소중한 분께 마음을 전하는 특별한 선물 세트를 준비했습니다."

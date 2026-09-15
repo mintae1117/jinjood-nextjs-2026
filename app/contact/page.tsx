@@ -1,6 +1,8 @@
 "use client";
 
 import styled from "styled-components";
+import JsonLd from "@/components/common/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { motion } from "framer-motion";
 import {
   FiPhone,
@@ -296,6 +298,8 @@ export default function ContactPage() {
 
   return (
     <>
+      {/* 페이지별 빵부스러기 — layout에 두면 하위 라우트까지 감싸 중복된다 */}
+      <JsonLd data={breadcrumbJsonLd([{ name: "오시는 길" }])} />
       <PageHeader
         title="오시는 길"
         description="진주떡집을 방문해 주셔서 감사합니다. 아래 정보를 참고해 주세요."

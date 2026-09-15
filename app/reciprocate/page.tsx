@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/common/PageHeader";
 import MenuFilter from "@/components/menu/MenuFilter";
 import { useReciprocateItems } from "@/hooks";
+import JsonLd from "@/components/common/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { ReciprocateCategory } from "@/types";
 import { getStorageUrl } from "@/lib/supabase";
 import AdminEditButton from "@/components/admin/AdminEditButton";
@@ -293,6 +295,8 @@ export default function ReciprocatePage() {
 
   return (
     <>
+      {/* 페이지별 빵부스러기 — layout에 두면 상세 페이지까지 감싸 중복된다 */}
+      <JsonLd data={breadcrumbJsonLd([{ name: "이바지 & 답례" }])} />
       <PageHeader
         title="이바지 & 답례"
         description="특별한 날을 더욱 의미있게 만드는 전통 이바지떡과 답례떡을 준비했습니다."

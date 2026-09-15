@@ -7,6 +7,8 @@ import PageHeader from "@/components/common/PageHeader";
 import MenuFilter from "@/components/menu/MenuFilter";
 import MenuCard from "@/components/menu/MenuCard";
 import { useMenuItems } from "@/hooks";
+import JsonLd from "@/components/common/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { MenuCategory } from "@/types";
 
 const Section = styled.section`
@@ -98,6 +100,8 @@ export default function MenuPage() {
 
   return (
     <>
+      {/* 페이지별 빵부스러기 — layout에 두면 상세 페이지까지 감싸 중복된다 */}
+      <JsonLd data={breadcrumbJsonLd([{ name: "대표 메뉴" }])} />
       <PageHeader
         title="대표 메뉴"
         description="1995년부터 이어온 전통의 맛, 정성을 담아 만든 진주떡집의 메뉴를 소개합니다."

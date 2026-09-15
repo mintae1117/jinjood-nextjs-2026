@@ -63,57 +63,85 @@ export const getReciprocateItemServer = cache(
  * 첫 화면이 곧 전체 목록이므로 이걸로 충분하고, 필터를 바꾸면 클라이언트가 다시 조회한다.
  */
 
-export const getMenuItemsServer = cache(async (): Promise<MenuItem[]> => {
+export const getMenuItemsServer = cache(async (): Promise<MenuItem[] | null> => {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("menu_items")
     .select("*")
     .eq("is_active", true)
     .order("display_order");
+  // 실패를 빈 배열로 삼키면 화면이 "상품이 하나도 없는 가게"가 된다.
+  // null을 돌려 클라이언트가 평소대로 조회하고 에러 화면까지 갈 수 있게 한다.
+  if (error) {
+    console.error("SSR menu_items 조회 실패:", error);
+    return null;
+  }
   return (data as MenuItem[]) ?? [];
 });
 
-export const getGiftSetsServer = cache(async (): Promise<GiftSet[]> => {
+export const getGiftSetsServer = cache(async (): Promise<GiftSet[] | null> => {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("gift_sets")
     .select("*")
     .eq("is_active", true)
     .order("display_order");
+  // 실패를 빈 배열로 삼키면 화면이 "상품이 하나도 없는 가게"가 된다.
+  // null을 돌려 클라이언트가 평소대로 조회하고 에러 화면까지 갈 수 있게 한다.
+  if (error) {
+    console.error("SSR gift_sets 조회 실패:", error);
+    return null;
+  }
   return (data as GiftSet[]) ?? [];
 });
 
-export const getReciprocateItemsServer = cache(async (): Promise<ReciprocateItem[]> => {
+export const getReciprocateItemsServer = cache(async (): Promise<ReciprocateItem[] | null> => {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("reciprocate_items")
     .select("*")
     .eq("is_active", true)
     .order("display_order");
+  // 실패를 빈 배열로 삼키면 화면이 "상품이 하나도 없는 가게"가 된다.
+  // null을 돌려 클라이언트가 평소대로 조회하고 에러 화면까지 갈 수 있게 한다.
+  if (error) {
+    console.error("SSR reciprocate_items 조회 실패:", error);
+    return null;
+  }
   return (data as ReciprocateItem[]) ?? [];
 });
 
 /** 홈 대표 메뉴 — 인기/추천/베스트 중 상위 limit개 */
 export const getPopularItemsServer = cache(
-  async (limit: number = 9): Promise<MenuItem[]> => {
+  async (limit: number = 9): Promise<MenuItem[] | null> => {
     const supabase = await createClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("menu_items")
       .select("*")
       .eq("is_active", true)
       .or("is_popular.eq.true,is_recommended.eq.true,is_best.eq.true")
       .order("display_order")
       .limit(limit);
+    if (error) {
+      console.error("SSR 인기 메뉴 조회 실패:", error);
+      return null;
+    }
     return (data as MenuItem[]) ?? [];
   }
 );
 
-export const getBannersServer = cache(async (): Promise<Banner[]> => {
+export const getBannersServer = cache(async (): Promise<Banner[] | null> => {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("banners")
     .select("*")
     .eq("is_active", true)
     .order("display_order");
+  // 실패를 빈 배열로 삼키면 화면이 "상품이 하나도 없는 가게"가 된다.
+  // null을 돌려 클라이언트가 평소대로 조회하고 에러 화면까지 갈 수 있게 한다.
+  if (error) {
+    console.error("SSR banners 조회 실패:", error);
+    return null;
+  }
   return (data as Banner[]) ?? [];
 });

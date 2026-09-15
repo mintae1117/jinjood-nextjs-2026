@@ -14,7 +14,8 @@ export default async function ReciprocateListPage() {
   return (
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: "이바지 & 답례" }])} />
-      <ReciprocateListClient initialItems={items} />
+      {/* 조회 실패(null)면 prop을 비워 클라이언트가 평소대로 조회하고 에러 화면까지 가게 한다 */}
+      <ReciprocateListClient initialItems={items ?? undefined} />
     </>
   );
 }

@@ -35,9 +35,9 @@ const ErrorContainer = styled.div`
 
 interface HomeClientProps {
   /** 서버가 미리 조회한 값들. 첫 렌더에 배너 헤드라인(h1)과 상품이 실리게 하는 용도 */
-  initialBanners: Banner[];
-  initialMenuItems: MenuItem[];
-  initialGiftSets: GiftSet[];
+  initialBanners?: Banner[];
+  initialMenuItems?: MenuItem[];
+  initialGiftSets?: GiftSet[];
 }
 
 export default function HomeClient({

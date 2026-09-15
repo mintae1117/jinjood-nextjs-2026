@@ -273,7 +273,7 @@ const categoryLabels: Record<string, string> = {
 
 interface ReciprocateListClientProps {
   /** 서버가 미리 조회한 전체 목록. 첫 렌더에 상품이 실리게 하는 용도 */
-  initialItems: ReciprocateItem[];
+  initialItems?: ReciprocateItem[];
 }
 
 export default function ReciprocateListClient({ initialItems }: ReciprocateListClientProps) {

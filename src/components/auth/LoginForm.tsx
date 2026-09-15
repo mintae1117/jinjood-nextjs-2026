@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import styled, { keyframes } from "styled-components";
@@ -120,7 +120,9 @@ const ButtonSpinner = styled.span`
   animation: ${spin} 0.7s linear infinite;
 
   @media (prefers-reduced-motion: reduce) {
-    animation-duration: 2s;
+    animation: none;
+    border-top-color: #ffffff;
+    opacity: 0.6;
   }
 `;
 
@@ -286,6 +288,16 @@ function LoginFormInner() {
   // 화면이 멈춘 것처럼 보인다. 이동이 시작되면 컴포넌트가 사라질 때까지 켜 둔다.
   const [isRedirecting, setIsRedirecting] = useState(false);
   const busy = isLoading || isRedirecting;
+
+  // OAuth 동의 화면에서 뒤로가기로 돌아오면 bfcache가 JS 상태까지 복원한다.
+  // isRedirecting이 true인 채로 남으면 폼 전체가 잠긴 상태로 보인다.
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setIsRedirecting(false);
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",

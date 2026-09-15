@@ -68,10 +68,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // 메뉴 아이템
-    const { data: menuItems } = await supabase
+    const { data: menuItems, error: menuError } = await supabase
       .from("menu_items")
       .select("id, updated_at")
       .eq("is_active", true);
+
+    // 실패를 삼키면 상품 URL이 조용히 전부 빠진 사이트맵이 최대 1시간 캐시된다
+    if (menuError) console.error("Sitemap: 메뉴 조회 실패", menuError);
 
     if (menuItems) {
       menuItems.forEach((item) => {
@@ -86,10 +89,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     // 선물세트
-    const { data: giftSets } = await supabase
+    const { data: giftSets, error: giftError } = await supabase
       .from("gift_sets")
       .select("id, updated_at")
       .eq("is_active", true);
+
+    // 실패를 삼키면 상품 URL이 조용히 전부 빠진 사이트맵이 최대 1시간 캐시된다
+    if (giftError) console.error("Sitemap: 선물세트 조회 실패", giftError);
 
     if (giftSets) {
       giftSets.forEach((item) => {
@@ -104,10 +110,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     // 이바지/답례
-    const { data: reciprocateItems } = await supabase
+    const { data: reciprocateItems, error: recipError } = await supabase
       .from("reciprocate_items")
       .select("id, updated_at")
       .eq("is_active", true);
+
+    // 실패를 삼키면 상품 URL이 조용히 전부 빠진 사이트맵이 최대 1시간 캐시된다
+    if (recipError) console.error("Sitemap: 이바지/답례 조회 실패", recipError);
 
     if (reciprocateItems) {
       reciprocateItems.forEach((item) => {

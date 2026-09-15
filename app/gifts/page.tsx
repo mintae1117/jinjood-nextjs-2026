@@ -14,7 +14,8 @@ export default async function GiftsListPage() {
   return (
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: "선물 & 세트" }])} />
-      <GiftsListClient initialItems={items} />
+      {/* 조회 실패(null)면 prop을 비워 클라이언트가 평소대로 조회하고 에러 화면까지 가게 한다 */}
+      <GiftsListClient initialItems={items ?? undefined} />
     </>
   );
 }

@@ -15,7 +15,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: "이바지·답례 상세 | 진주떡집",
       // 없는(또는 숨긴) 상품 URL이 색인되지 않게 한다 — 페이지는 200을 반환하므로 soft 404가 된다
-      robots: { index: false, follow: false },
+      // follow는 남긴다 — nofollow까지 걸면 이 페이지의 '목록으로 돌아가기' 링크도 막힌다
+      robots: { index: false, follow: true },
     };
   }
 

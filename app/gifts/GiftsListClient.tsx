@@ -216,7 +216,7 @@ const categoryLabels: Record<string, string> = {
 
 interface GiftsListClientProps {
   /** 서버가 미리 조회한 전체 목록. 첫 렌더에 상품이 실리게 하는 용도 */
-  initialItems: GiftSet[];
+  initialItems?: GiftSet[];
 }
 
 export default function GiftsListClient({ initialItems }: GiftsListClientProps) {

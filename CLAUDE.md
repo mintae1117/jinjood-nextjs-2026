@@ -210,9 +210,10 @@ export const productService = {
 
 ### SEO — 크롤러가 읽는 HTML
 - **함정**: 데이터를 `useEffect`로 받는 페이지는 서버 렌더 HTML이 비어 있다. 예전엔 홈이 `isLoading`일 때 페이지 전체를 `<Loading />`으로 감싸 크롤러가 받는 본문이 헤더·푸터뿐(618자)이었다. 구글은 JS를 실행해주지만 네이버 Yeti는 거의 안 한다.
-- **원칙**: 데이터 의존 섹션만 로딩 게이트 안에 두고, 정적 섹션(`VideoSection`·`SNSSection`·`LocationSection`)은 항상 렌더한다. 보이는 UI는 로딩이 끝난 뒤와 동일하다 — SEO를 위해 화면에 새 섹션을 만들지 않는다.
+- **원칙**: 홈과 목록은 서버 컴포넌트가 데이터를 조회해 `initial*` prop으로 내려준다(`src/services/products.server.ts`). 훅은 그 값으로 시작하고 하이드레이션 직후 재조회는 `{ silent: true }`로 조용히 돈다 — 이미 그려진 화면을 스피너로 되돌리면 관리자에게 번쩍인다. SEO를 위해 화면에 새 섹션을 만들지 않는다.
+- 서버 조회가 실패하면 `null`을 돌려 prop을 비운다. 빈 배열을 넘기면 훅이 "데이터 있음"으로 보고 재조회를 건너뛰어 화면이 '상품이 하나도 없는 가게'가 된다.
 - **상세 페이지**: `[id]/page.tsx`는 서버 컴포넌트다. `src/services/products.server.ts`의 `cache()`된 조회로 상품을 받아 `initialItem`으로 클라이언트에 넘긴다(같은 요청의 `generateMetadata`와 DB 왕복이 합쳐진다). 훅은 `useMenuItem(id, initialItem)`처럼 초기값을 받는다.
-- **h1은 페이지당 하나**: 목록은 `PageHeader`, 상세는 `ProductDetail`의 `ProductName`. ⚠️ **홈은 서버 HTML에 h1이 없다** — `HeroBanner`의 h1은 배너 데이터에 의존해 로딩 게이트 안에 있다. 홈/목록의 배너·상품을 서버 렌더하려면 상세에 쓴 `initial*` 패턴을 확장해야 한다(미완).
+- **h1은 페이지당 하나**: 홈은 `HeroBanner`의 **첫 슬라이드만** h1(나머지 슬라이드는 h2), 목록은 `PageHeader`, 상세는 `ProductDetail`의 `ProductName`.
 - **구조화 데이터**: 전역(`Bakery`·`SiteNavigationElement`)은 `app/layout.tsx`, 페이지별(`BreadcrumbList`·`Product`)은 `src/lib/seo.ts` + `src/components/common/JsonLd.tsx`.
 - ⚠️ 서버에서도 렌더되므로 컴포넌트 **렌더 경로에서 `window`·`document`를 읽지 말 것**. 경로가 필요하면 `usePathname()`.
 - ⚠️ **persist된 상태로 화면을 가르지 말 것**: `authStore.user`·`cartStore`는 sessionStorage/localStorage에 저장돼 클라이언트 첫 렌더엔 있지만 서버엔 없다. 그대로 쓰면 하이드레이션이 어긋난다. `selectIsAuthReady`(= `isInitialized`, persist 대상 아님)로 함께 막는다 — `Header.tsx`와 `AdminEditButton.tsx` 참고.

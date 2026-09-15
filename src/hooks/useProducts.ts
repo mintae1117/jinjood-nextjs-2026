@@ -21,10 +21,15 @@ export function useMenuItems(category?: string, initialItems?: MenuItem[]) {
   // 서버가 전체 목록을 넘겨줬으면 하이드레이션 직후의 첫 조회는 건너뛴다.
   // 카테고리를 바꾸거나 관리자로 includeInactive가 필요해지면 그때 다시 조회한다.
   const skipFirstFetch = useRef(!!initialItems && !includeInactive);
+  // 서버 값으로 이미 그려 둔 화면을 스피너로 되돌리지 않기 위한 표시.
+  // 관리자는 includeInactive가 true라 위 건너뛰기에 걸리지 않고 곧바로 재조회가 나가는데,
+  // 그때 로딩을 켜면 "내용 → 100vh 스피너 → 내용"으로 번쩍인다.
+  const hasInitial = useRef(!!initialItems);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setIsLoading(true);
+      // silent: 하이드레이션 직후 자동 재조회. 화면에 이미 내용이 있으므로 로딩으로 덮지 않는다.
+      if (!opts?.silent) setIsLoading(true);
       setError(null);
       const data = await productService.getMenuItems(category, { includeInactive });
       setItems(data);
@@ -38,9 +43,12 @@ export function useMenuItems(category?: string, initialItems?: MenuItem[]) {
   useEffect(() => {
     if (skipFirstFetch.current) {
       skipFirstFetch.current = false;
+      hasInitial.current = false;
       return;
     }
-    fetchItems();
+    // 첫 자동 조회만 조용히. 이후 필터 변경이나 관리자 저장 후 refetch는 평소대로 로딩을 보여준다.
+    fetchItems({ silent: hasInitial.current });
+    hasInitial.current = false;
   }, [fetchItems]);
 
   return { items, isLoading, error, refetch: fetchItems };
@@ -143,10 +151,15 @@ export function useGiftSets(category?: string, initialItems?: GiftSet[]) {
   // 서버가 전체 목록을 넘겨줬으면 하이드레이션 직후의 첫 조회는 건너뛴다.
   // 카테고리를 바꾸거나 관리자로 includeInactive가 필요해지면 그때 다시 조회한다.
   const skipFirstFetch = useRef(!!initialItems && !includeInactive);
+  // 서버 값으로 이미 그려 둔 화면을 스피너로 되돌리지 않기 위한 표시.
+  // 관리자는 includeInactive가 true라 위 건너뛰기에 걸리지 않고 곧바로 재조회가 나가는데,
+  // 그때 로딩을 켜면 "내용 → 100vh 스피너 → 내용"으로 번쩍인다.
+  const hasInitial = useRef(!!initialItems);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setIsLoading(true);
+      // silent: 하이드레이션 직후 자동 재조회. 화면에 이미 내용이 있으므로 로딩으로 덮지 않는다.
+      if (!opts?.silent) setIsLoading(true);
       setError(null);
       const data = await productService.getGiftSets(category, { includeInactive });
       setItems(data);
@@ -160,9 +173,12 @@ export function useGiftSets(category?: string, initialItems?: GiftSet[]) {
   useEffect(() => {
     if (skipFirstFetch.current) {
       skipFirstFetch.current = false;
+      hasInitial.current = false;
       return;
     }
-    fetchItems();
+    // 첫 자동 조회만 조용히. 이후 필터 변경이나 관리자 저장 후 refetch는 평소대로 로딩을 보여준다.
+    fetchItems({ silent: hasInitial.current });
+    hasInitial.current = false;
   }, [fetchItems]);
 
   return { items, isLoading, error, refetch: fetchItems };
@@ -222,10 +238,15 @@ export function useReciprocateItems(category?: string, initialItems?: Reciprocat
   // 서버가 전체 목록을 넘겨줬으면 하이드레이션 직후의 첫 조회는 건너뛴다.
   // 카테고리를 바꾸거나 관리자로 includeInactive가 필요해지면 그때 다시 조회한다.
   const skipFirstFetch = useRef(!!initialItems && !includeInactive);
+  // 서버 값으로 이미 그려 둔 화면을 스피너로 되돌리지 않기 위한 표시.
+  // 관리자는 includeInactive가 true라 위 건너뛰기에 걸리지 않고 곧바로 재조회가 나가는데,
+  // 그때 로딩을 켜면 "내용 → 100vh 스피너 → 내용"으로 번쩍인다.
+  const hasInitial = useRef(!!initialItems);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setIsLoading(true);
+      // silent: 하이드레이션 직후 자동 재조회. 화면에 이미 내용이 있으므로 로딩으로 덮지 않는다.
+      if (!opts?.silent) setIsLoading(true);
       setError(null);
       const data = await productService.getReciprocateItems(category, { includeInactive });
       setItems(data);
@@ -239,9 +260,12 @@ export function useReciprocateItems(category?: string, initialItems?: Reciprocat
   useEffect(() => {
     if (skipFirstFetch.current) {
       skipFirstFetch.current = false;
+      hasInitial.current = false;
       return;
     }
-    fetchItems();
+    // 첫 자동 조회만 조용히. 이후 필터 변경이나 관리자 저장 후 refetch는 평소대로 로딩을 보여준다.
+    fetchItems({ silent: hasInitial.current });
+    hasInitial.current = false;
   }, [fetchItems]);
 
   return { items, isLoading, error, refetch: fetchItems };
@@ -256,10 +280,15 @@ export function usePopularItems(limit: number = 9, initialItems?: MenuItem[]) {
   const [isLoading, setIsLoading] = useState(!initialItems);
   const [error, setError] = useState<Error | null>(null);
   const skipFirstFetch = useRef(!!initialItems && !includeInactive);
+  // 서버 값으로 이미 그려 둔 화면을 스피너로 되돌리지 않기 위한 표시.
+  // 관리자는 includeInactive가 true라 위 건너뛰기에 걸리지 않고 곧바로 재조회가 나가는데,
+  // 그때 로딩을 켜면 "내용 → 100vh 스피너 → 내용"으로 번쩍인다.
+  const hasInitial = useRef(!!initialItems);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setIsLoading(true);
+      // silent: 하이드레이션 직후 자동 재조회. 화면에 이미 내용이 있으므로 로딩으로 덮지 않는다.
+      if (!opts?.silent) setIsLoading(true);
       setError(null);
       const data = await productService.getPopularItems(limit, { includeInactive });
       setItems(data);
@@ -273,9 +302,12 @@ export function usePopularItems(limit: number = 9, initialItems?: MenuItem[]) {
   useEffect(() => {
     if (skipFirstFetch.current) {
       skipFirstFetch.current = false;
+      hasInitial.current = false;
       return;
     }
-    fetchItems();
+    // 첫 자동 조회만 조용히. 이후 필터 변경이나 관리자 저장 후 refetch는 평소대로 로딩을 보여준다.
+    fetchItems({ silent: hasInitial.current });
+    hasInitial.current = false;
   }, [fetchItems]);
 
   return { items, isLoading, error, refetch: fetchItems };

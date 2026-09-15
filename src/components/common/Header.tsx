@@ -9,7 +9,7 @@ import { FiPhone, FiMail, FiMenu, FiX, FiSearch, FiShoppingCart, FiUser } from "
 import { FaInstagram } from "react-icons/fa";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { SiNaver } from "react-icons/si";
-import { useAuth, useCart } from "@/hooks";
+import { useAuth, useCart, useHasMounted } from "@/hooks";
 import UserDropdown from "@/components/auth/UserDropdown";
 import SearchBar from "@/components/common/SearchBar";
 
@@ -332,6 +332,8 @@ export default function Header() {
   const pathname = usePathname();
   const { isAuthenticated, isInitialized } = useAuth();
   const { totalItems } = useCart();
+  // 하이드레이션 이후에만 로컬 스토리지 기반 UI를 그린다
+  const mounted = useHasMounted();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -432,8 +434,9 @@ export default function Header() {
               <CartButton href="/cart" aria-label="장바구니">
                 <FiShoppingCart />
                 {/* cartStore.items는 localStorage에 persist되어 클라이언트 첫 렌더엔 있지만
-                    서버엔 없다. isInitialized(persist 대상 아님)로 함께 막아야 불일치가 없다. */}
-                {isInitialized && totalItems > 0 && (
+                    서버엔 없다. 마운트 후에만 그려 불일치를 막는다. 장바구니는 auth와 무관하므로
+                    isInitialized(인증 왕복 2회를 기다림)를 쓰면 배지가 늦게 뜬다. */}
+                {mounted && totalItems > 0 && (
                   <CartBadge>{totalItems > 99 ? "99+" : totalItems}</CartBadge>
                 )}
               </CartButton>

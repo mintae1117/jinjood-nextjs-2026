@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
 import { motion } from "framer-motion";
@@ -89,7 +89,9 @@ const Subtitle = styled(motion.span)`
   }
 `;
 
-const Title = styled(motion.h1)`
+// 슬라이드마다 제목을 찍으므로 첫 슬라이드만 h1, 나머지는 h2로 둔다.
+// (배너가 3개면 h1도 3개가 되어 페이지당 하나 규칙을 어긴다 — 스타일은 동일)
+const titleStyles = css`
   font-size: 4rem;
   font-weight: 700;
   line-height: 1.2;
@@ -108,6 +110,14 @@ const Title = styled(motion.h1)`
   @media (max-width: 480px) {
     font-size: 1.875rem;
   }
+`;
+
+const Title = styled(motion.h1)`
+  ${titleStyles}
+`;
+
+const SubTitleHeading = styled(motion.h2)`
+  ${titleStyles}
 `;
 
 const Description = styled(motion.p)`
@@ -261,14 +271,25 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                 >
                   {banner.subtitle}
                 </Subtitle>
-                <Title
-                  variants={textVariants}
-                  initial="hidden"
-                  animate={activeIndex === index ? "visible" : "hidden"}
-                  custom={1}
-                >
-                  {banner.title}
-                </Title>
+                {index === 0 ? (
+                  <Title
+                    variants={textVariants}
+                    initial="hidden"
+                    animate={activeIndex === index ? "visible" : "hidden"}
+                    custom={1}
+                  >
+                    {banner.title}
+                  </Title>
+                ) : (
+                  <SubTitleHeading
+                    variants={textVariants}
+                    initial="hidden"
+                    animate={activeIndex === index ? "visible" : "hidden"}
+                    custom={1}
+                  >
+                    {banner.title}
+                  </SubTitleHeading>
+                )}
                 <Description
                   variants={textVariants}
                   initial="hidden"

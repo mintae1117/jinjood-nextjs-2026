@@ -38,6 +38,8 @@ npm run dev     # 개발 서버 (포트 3001)
 npm run build   # 프로덕션 빌드
 npm run lint    # 린트
 npm test        # 순수 로직 단위 테스트 (node:test, 의존성 없음)
+# dev 서버가 이미 3001에 떠 있을 수 있다(사용자 터미널). lsof -nP -iTCP:3001 -sTCP:LISTEN 로 확인해 그대로 쓰고,
+# 직접 띄웠다면 그 PID만 종료할 것(pkill -f 패턴은 사용자 서버까지 잡는다 — 2026-09-17 실제 사고)
 ```
 
 ---
@@ -214,6 +216,25 @@ export const productService = {
 - 조회: 관리자는 `productService.get*(…, { includeInactive: true })`로 노출 off 상품도 본다.
 - 이력: `product_revisions`는 DB 트리거가 적재. 되돌리기는 `before`의 4컬럼을 폼에 얹어 `updateProduct`를 다시 타는 것(별도 API 없음).
 - 리포의 `seed_data.sql`/`cleanup_and_reseed.sql`은 초기 스냅샷 — 실 데이터와 동기화하지 않는다.
+- **검증 SQL 형식**: `supabase/storage_policies_verify.sql` 처럼 자리표시자 없이 **전체를 한 번에 실행하면 ✓/✗ 결과 표**가 나오게 쓴다(관리자·일반 유저는 `auth.users`에서 자동 선택, 각 검사는 `pg_temp` 함수 안에서 `SET LOCAL ROLE authenticated` + `request.jwt.claims`로 실행 뒤 서브트랜잭션 강제 롤백). `<uuid>`를 손으로 채우는 옛 방식(`admin_edit_verify.sql`)은 SQL Editor에서 전체 실행 시 22P02·첫 기대 에러에서 끊긴다 — 새 검증 파일은 새 형식으로, 기회가 되면 `admin_edit_verify.sql`도 옮긴다.
+
+### 다음 작업 메모 — 상품 추가·삭제·카테고리 (2026-09-18 조사·구현 기준)
+
+이미지 교체 작업이 미리 마련해 둔 것과, 아직 막혀 있는 것.
+
+- **지금 막혀 있는 지점(의도적)**: `admin_edit.sql` §3b가 상품 3테이블의 INSERT/DELETE 권한을 `anon, authenticated`에서 REVOKE 했고 INSERT/DELETE RLS 정책이 없다. 여는 방법은 정책(`FOR INSERT … WITH CHECK (public.is_admin())`, `FOR DELETE … USING (public.is_admin())`) + `GRANT INSERT (허용 컬럼…)`/`GRANT DELETE`. INSERT도 **컬럼 GRANT로 화이트리스트**를 걸 수 있다(UPDATE와 같은 원리). 새 SQL 파일로 만들고 `admin_edit.sql`은 주석만 잇는다(이미 실행된 마이그레이션은 고치지 않는 관례).
+- **재사용할 것**: `storageService.uploadProductImage(table, blob, ext)` → INSERT → 실패 시 `removeProductImage(path)`(상품 추가), `removeProductImage`(삭제 시 파일 정리), `ProductImageField`(생성 모달에 그대로), `optimizeImage`. Storage 정책은 이미 `products/` 아래 관리자 INSERT·DELETE를 허용하므로 **Storage 쪽 변경 없음**.
+- **편집 컬럼을 늘릴 때 같이 움직이는 4곳**: `EditableProductPatch`(types) · `editableFieldsFor`/`pickEditablePatch`/`validatePatch`/`FIELD_LABELS`/`formatFieldValue`(`adminProduct.ts`) · `GRANT UPDATE (…)`(SQL) · 모달 폼. 하나라도 빠지면 클라이언트는 통과하고 DB가 42501을 낸다. 상품 추가에는 `name`·`category`·`display_order`·`tags`/`is_popular`… 가 새로 들어온다 — `display_order`는 "맨 뒤에 추가"(MAX+1) 기본값이 필요하다.
+- **삭제 정책은 먼저 결정할 것**: 권장은 기존 `is_active=false`(숨김)를 기본 삭제로. 실제 DELETE를 열려면 ① `cart_items.product_id`는 FK가 없어(`product_type`+`product_id` 쌍) 고아 행이 남고 `cartService.getProductByTypeAndId`가 null을 돌려준다 — `CartItem` 표시 처리 확인, ② `product_revisions`는 AFTER UPDATE 트리거만 있어 삭제가 기록되지 않는다(AFTER DELETE 트리거 추가 시 `after JSONB NOT NULL` 제약 — `'{}'::jsonb`로 넣거나 NULL 허용으로 바꿀지 결정), ③ 결제 도입 후 `order_items`는 가격·옵션 스냅샷이라 상품 삭제와 무관하게 설계돼 있다(README §4).
+- **카테고리는 세 겹으로 하드코딩**: DB CHECK(`menu_items.category IN (...)` 등 테이블별) · TS 유니온(`MenuItem.category`, `MenuCategory`…) · 한글 라벨/필터 옵션 **6곳**(`app/represent/RepresentListClient.tsx`, `app/gifts/GiftsListClient.tsx`, `app/reciprocate/ReciprocateListClient.tsx`, `src/components/menu/MenuCard.tsx`, `src/components/common/SearchBar.tsx`, `src/components/product/ProductDetail.tsx`). **기존 카테고리 안에서 추가**는 셀렉트 하나로 끝난다. **새 카테고리**를 만들 가능성이 있으면 라벨·옵션을 한 파일(예: `src/data/categories.ts`)로 모으는 정리를 먼저 한다.
+- **화면 반영**: 목록·홈은 요청마다 서버가 조회(`products.server.ts`의 `cache()`는 요청 단위, ISR 없음)하고 `sitemap.ts`도 요청 시 DB를 읽는다 → 추가·삭제 후 revalidate 없이 바로 반영된다. 클라이언트는 저장 후 각 훅의 `refetch()`.
+- **이전 이미지 파일은 지우지 않는 정책**: 정리하려면 `product_revisions`의 `before/after ->> 'image_url'`와 현재 `image_url` 어디에도 없는 `products/` 파일만 대상으로.
+
+### 테스트 (`npm test`)
+
+- Node 22 내장 `node:test` + `--experimental-strip-types`. 의존성 없음. 대상은 **순수 로직만**(`src/utils/*.test.ts`): 브라우저 API·Supabase 호출이 있는 모듈은 여기서 못 돈다.
+- 테스트 파일은 `./x.ts` 처럼 **확장자를 붙여 import**(`tsconfig` `allowImportingTsExtensions`). 테스트 대상 모듈은 **런타임 `@/…` import가 없어야** 한다 — Node는 `@/` 별칭을 못 푼다. `import type … from "@/types"` 처럼 타입만 가져오는 것은 지워지므로 괜찠다(`adminProduct.ts`가 그 예). 런타임 의존이 필요하면 순수 부분을 분리한다(`imageOptimizer.ts`의 순수 함수/브라우저 파이프라인 분리가 그 예).
+- 컴포넌트·Supabase 흐름은 `npm run build` + 브라우저 확인으로 본다. 관리자 계정이 필요한 시나리오는 스펙 §10 체크리스트를 사용자가 실행.
 
 ### SEO — 크롤러가 읽는 HTML
 - **함정**: 데이터를 `useEffect`로 받는 페이지는 서버 렌더 HTML이 비어 있다. 예전엔 홈이 `isLoading`일 때 페이지 전체를 `<Loading />`으로 감싸 크롤러가 받는 본문이 헤더·푸터뿐(618자)이었다. 구글은 JS를 실행해주지만 네이버 Yeti는 거의 안 한다.

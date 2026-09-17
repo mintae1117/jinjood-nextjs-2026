@@ -14,8 +14,10 @@ function toFriendlyError(error: { code?: string; message: string }): Error {
     case 'PGRST116': // .single()인데 0행 → RLS가 막았거나 상품이 없음
     case '42501':    // insufficient_privilege
       return new Error('수정 권한이 없습니다. 관리자 계정으로 로그인했는지 확인해주세요.');
-    case '23514':    // check_violation (price_range)
-      return new Error('가격은 1원 이상 1,000,000원 이하여야 합니다.');
+    case '23514':    // check_violation — 제약 이름으로 가른다 (price_range / image_url_path)
+      return error.message.includes('image_url_path')
+        ? new Error('이미지 경로 형식이 잘못되었습니다.')
+        : new Error('가격은 1원 이상 1,000,000원 이하여야 합니다.');
     default:
       return new Error(`상품 수정에 실패했습니다: ${error.message}`);
   }

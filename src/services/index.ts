@@ -7,5 +7,6 @@ export { settingsService } from './settings';
 export { authService } from './auth';
 export { cartService } from './cart';
 export { adminService } from './admin';
+export { storageService } from './storage';
 
 export type { SiteSettings, ContactInfo, BusinessInfo } from './settings';

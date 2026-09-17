@@ -93,7 +93,7 @@ ALTER TABLE menu_items        ADD  CONSTRAINT menu_items_image_url_path
 
 ### 4-3. `supabase/storage_policies_verify.sql` (신규, 전부 BEGIN … ROLLBACK)
 
-`admin_edit_verify.sql`과 같은 방식(`SET LOCAL ROLE authenticated` + `request.jwt.claims`). `storage.objects`에 직접 INSERT/DELETE를 시도해 정책을 확인한다.
+파일 전체를 한 번에 실행하면 결과 표(✓/✗)가 나온다. 관리자(`user_profiles.role='admin'`)·일반 유저는 `auth.users`에서 자동으로 고르고, 각 검사는 `pg_temp` 함수 안에서 `SET LOCAL ROLE authenticated` + `request.jwt.claims` 로 실행한 뒤 서브트랜잭션을 강제로 되돌려 데이터가 남지 않는다(2026-09-18: 자리표시자를 손으로 채우다 22P02 로 멈춘 뒤 이 형식으로 바꿈). `storage.objects`에 직접 INSERT를 시도해 정책을 확인한다.
 
 - (A) 일반 유저: `products/menu_items/x.webp` INSERT → **ERROR 42501**. `avatars/<타인 uid>.png` INSERT → **42501**. `avatars/<본인 uid>.png` INSERT → 성공. `menu_items.image_url` UPDATE → **UPDATE 0**(RLS).
 - (B) 관리자: `products/menu_items/x.webp` INSERT·DELETE → 성공. `menu/x.webp` INSERT → **42501**(기존 폴더는 닫힘). `menu_items.image_url = 'products/menu_items/x.webp'` UPDATE → **UPDATE 1** + `product_revisions` 1건. `image_url = 'https://evil/x'` → **ERROR 23514**. `image_url = '../x'` → **23514**. `name` UPDATE → **42501**(컬럼 GRANT 밖, 회귀 확인).

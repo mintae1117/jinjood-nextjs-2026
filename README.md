@@ -617,7 +617,7 @@ PG 수수료는 "카드 한 종류"가 아니라 **결제수단마다 다릅니�
 1. Supabase 대시보드 → SQL Editor → `supabase/admin_edit.sql` 전체를 붙여 실행. 재실행 안전(idempotent)하게 작성돼 있어 두 번 돌려도 무해.
 2. `supabase/admin_edit_verify.sql`로 검증 — `<일반 유저 uuid>`, `<관리자 uuid>`를 `SELECT id, email FROM auth.users;`로 채운 뒤 (A)(B)(C) 블록을 각각 실행. 각 줄 주석의 기대값과 비교. 전부 `BEGIN … ROLLBACK`이라 실 데이터는 바뀌지 않는다.
 3. **(2026-09-17 이미지 교체)** `supabase/storage_policies.sql` → `supabase/admin_image.sql` 순서로 실행. 둘 다 재실행 안전. `admin_image.sql` 의 2번 사전 확인 쿼리가 0이 아니면 그 행의 `image_url`을 먼저 고친다.
-4. `supabase/storage_policies_verify.sql`로 검증 — (A) 일반 유저는 상품 폴더·타인 아바타에 쓰지 못하고, (B) 관리자는 `products/`에만 쓸 수 있고, (C) 외부 URL은 DB가 거부한다. 기존 정책 `Authenticated users can manage images`(로그인 사용자 전체에게 버킷 전체 쓰기)는 이때 사라진다 — 기존 `menu/`·`banners/` 파일은 대시보드에서만 관리한다.
+4. `supabase/storage_policies_verify.sql` **전체를 한 번에 실행**하면 결과 표가 나온다(채울 값 없음 — 관리자·일반 유저를 자동으로 고르고, 각 검사는 실행 뒤 되돌려 데이터가 남지 않는다). `result` 열이 전부 ✓ 이면 끝. (A) 일반 유저는 상품 폴더·타인 아바타에 쓰지 못하고, (B) 관리자는 `products/`에만 쓸 수 있고, (C) 외부 URL은 DB가 거부한다. 기존 정책 `Authenticated users can manage images`(로그인 사용자 전체에게 버킷 전체 쓰기)는 이때 사라진다 — 기존 `menu/`·`banners/` 파일은 대시보드에서만 관리한다.
 
 > ⚠️ **배포 순서: 마이그레이션이 코드보다 먼저.** 이 브랜치의 `auth.ts`는 `user_profiles.role` 컬럼을 조회한다. 컬럼이 없는 DB에 코드가 먼저 배포되면 프로필 조회 전체가 실패해 로그인 사용자의 커스텀 아바타가 OAuth 기본 이미지로 되돌아간다(role은 안전하게 'user'로 접힘). Vercel은 머지 시 자동 배포되므로 **머지 전에** 1번을 끝낼 것.
 

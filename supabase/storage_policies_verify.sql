@@ -1,73 +1,114 @@
 -- =====================================================
--- storage_policies.sql 검증 — Supabase SQL Editor에서 실행. 전부 BEGIN … ROLLBACK 이라 실 데이터는 바뀌지 않는다.
--- <일반 유저 uuid>, <관리자 uuid>는 SELECT id, email FROM auth.users; 로 확인해 채운다.
--- storage.objects 에 직접 행을 넣어 정책만 확인한다(실제 파일은 만들지 않는다). 기대값은 각 줄 주석.
--- 에러가 나는 검사는 각각 독립 트랜잭션이다 — 한 트랜잭션 안에서 에러가 나면 이후 명령이 전부
--- "current transaction is aborted" 로만 실패해 에러 코드를 구분할 수 없다.
+-- storage_policies.sql + admin_image.sql 검증 — Supabase SQL Editor에서 **파일 전체를 한 번에 실행**한다.
+-- 결과 표(result 열 ✓/✗)가 마지막에 나온다. 채워 넣을 값 없음: 관리자(user_profiles.role='admin')와
+-- 일반 유저(그 외 계정)를 auth.users 에서 자동으로 고른다.
+--
+-- 실 데이터는 바뀌지 않는다: 각 검사는 서브트랜잭션 안에서 실행한 뒤 강제로 되돌린다(성공했어도 롤백).
+-- 그래서 storage.objects·menu_items·product_revisions 에 아무것도 남지 않는다.
+-- 전제: admin_edit.sql(is_admin, 관리자 지정) → storage_policies.sql → admin_image.sql 을 먼저 실행했을 것.
 -- =====================================================
 
--- (A) 일반 유저: 상품 폴더 업로드 불가
-BEGIN;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claims', '{"sub":"<일반 유저 uuid>","role":"authenticated"}', true);
-INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'products/menu_items/verify.webp');  -- ERROR 42501 (RLS)
-ROLLBACK;
+DROP TABLE IF EXISTS verify_results;
+CREATE TEMP TABLE verify_results (
+  seq        serial,
+  check_name text,
+  expected   text,
+  actual     text,
+  ok         boolean
+);
 
--- (A-2) 일반 유저: 타인 아바타 불가
-BEGIN;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claims', '{"sub":"<일반 유저 uuid>","role":"authenticated"}', true);
-INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'avatars/<관리자 uuid>.png');        -- ERROR 42501
-ROLLBACK;
+-- 검사 실행기: 주어진 uid 의 로그인 세션(authenticated + JWT claims)으로 stmt 를 실행하고
+-- 결과(영향 행 수 또는 에러 코드)를 기록한 뒤 서브트랜잭션을 되돌린다. 세션 전용(pg_temp) 함수라 DB 에 남지 않는다.
+CREATE OR REPLACE FUNCTION pg_temp.verify(check_name text, uid uuid, stmt text, expect text)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  n      int;
+  actual text;
+BEGIN
+  BEGIN
+    PERFORM set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
+    EXECUTE 'SET LOCAL ROLE authenticated';
+    EXECUTE stmt;
+    GET DIAGNOSTICS n = ROW_COUNT;
+    -- 성공했으면 결과만 들고 서브트랜잭션을 되돌린다(SET LOCAL ROLE·claims 도 함께 원복)
+    RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'verify_rollback:' || n;
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM LIKE 'verify_rollback:%' THEN
+      actual := 'rows ' || split_part(SQLERRM, ':', 2);
+    ELSE
+      actual := 'ERROR ' || SQLSTATE;
+    END IF;
+  END;
+  INSERT INTO verify_results (check_name, expected, actual, ok)
+  VALUES (check_name, expect, actual, actual = expect);
+END;
+$$;
 
--- (A-3) 일반 유저: 본인 아바타는 가능, 상품 image_url 은 RLS 로 0행
-BEGIN;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claims', '{"sub":"<일반 유저 uuid>","role":"authenticated"}', true);
-INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'avatars/<일반 유저 uuid>.png');      -- INSERT 0 1
-SELECT count(*) FROM storage.objects WHERE name = 'avatars/<일반 유저 uuid>.png';                    -- 1 (본인 파일은 보임)
-UPDATE menu_items SET image_url = 'products/menu_items/verify.webp' WHERE name = '모찌';           -- UPDATE 0
-ROLLBACK;
+DO $$
+DECLARE
+  admin_id    uuid;
+  admin_email text;
+  user_id     uuid;
+  user_email  text;
+  item        text;
+BEGIN
+  SELECT p.user_id, u.email INTO admin_id, admin_email
+    FROM user_profiles p JOIN auth.users u ON u.id = p.user_id
+    WHERE p.role = 'admin' ORDER BY u.created_at LIMIT 1;
+  SELECT u.id, u.email INTO user_id, user_email
+    FROM auth.users u LEFT JOIN user_profiles p ON p.user_id = u.id
+    WHERE COALESCE(p.role, 'user') <> 'admin' ORDER BY u.created_at LIMIT 1;
+  SELECT name INTO item FROM menu_items ORDER BY display_order LIMIT 1;
 
--- (B) 관리자: products/ 업로드·삭제 가능, 기존 폴더는 불가 — 실행 전 관리자 uuid 에 role='admin' 이 있어야 한다
-BEGIN;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claims', '{"sub":"<관리자 uuid>","role":"authenticated"}', true);
-SELECT public.is_admin();                                                                          -- true
-INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'products/menu_items/verify.webp');  -- INSERT 0 1
-DELETE FROM storage.objects WHERE name = 'products/menu_items/verify.webp';                        -- DELETE 1
-ROLLBACK;
+  INSERT INTO verify_results (check_name, expected, actual, ok) VALUES
+    ('픽스처: 관리자 계정', 'role=admin 1명 이상', COALESCE(admin_email, '(없음 — README "관리자 지정" 먼저)'), admin_id IS NOT NULL),
+    ('픽스처: 일반 유저 계정', '관리자 아닌 계정 1명 이상', COALESCE(user_email, '(없음 — 일반 계정으로 한 번 가입)'), user_id IS NOT NULL),
+    ('픽스처: 상품 행', 'menu_items 1행 이상', COALESCE(item, '(없음)'), item IS NOT NULL);
+  IF admin_id IS NULL OR user_id IS NULL OR item IS NULL THEN
+    RETURN;
+  END IF;
 
-BEGIN;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claims', '{"sub":"<관리자 uuid>","role":"authenticated"}', true);
-INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'menu/verify.webp');                -- ERROR 42501 (기존 폴더는 닫힘)
-ROLLBACK;
+  -- (A) 일반 유저 — Storage 정책
+  PERFORM pg_temp.verify('(A) 일반 유저: products/ 업로드 차단', user_id,
+    $q$INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'products/menu_items/verify.webp')$q$, 'ERROR 42501');
+  PERFORM pg_temp.verify('(A) 일반 유저: 타인 아바타 업로드 차단', user_id,
+    format($q$INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'avatars/%s.png')$q$, admin_id), 'ERROR 42501');
+  PERFORM pg_temp.verify('(A) 일반 유저: 본인 아바타 업로드 허용', user_id,
+    format($q$INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'avatars/%s.png')$q$, user_id), 'rows 1');
+  PERFORM pg_temp.verify('(A) 일반 유저: 기존 폴더(menu/) 업로드 차단', user_id,
+    $q$INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'menu/verify.webp')$q$, 'ERROR 42501');
+  -- (A) 일반 유저 — 상품 테이블
+  PERFORM pg_temp.verify('(A) 일반 유저: 상품 image_url UPDATE 0행(RLS)', user_id,
+    format($q$UPDATE menu_items SET image_url = 'products/menu_items/verify.webp' WHERE name = %L$q$, item), 'rows 0');
 
--- (C) 관리자: image_url UPDATE + CHECK — admin_image.sql 실행 후에만 의미 있음
-BEGIN;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claims', '{"sub":"<관리자 uuid>","role":"authenticated"}', true);
-UPDATE menu_items SET image_url = 'products/menu_items/verify.webp' WHERE name = '모찌';           -- UPDATE 1
-SELECT before->>'image_url', after->>'image_url' FROM product_revisions
-  WHERE table_name = 'menu_items' AND record_id = (SELECT id FROM menu_items WHERE name = '모찌')
-  ORDER BY changed_at DESC LIMIT 1;                                                                -- menu/…, products/menu_items/verify.webp
-ROLLBACK;
+  -- (B) 관리자 — Storage 정책
+  PERFORM pg_temp.verify('(B) 관리자: is_admin() = true', admin_id,
+    $q$SELECT 1 WHERE public.is_admin()$q$, 'rows 1');
+  PERFORM pg_temp.verify('(B) 관리자: products/ 업로드 허용', admin_id,
+    $q$INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'products/menu_items/verify.webp')$q$, 'rows 1');
+  PERFORM pg_temp.verify('(B) 관리자: 기존 폴더(menu/) 업로드 차단', admin_id,
+    $q$INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'menu/verify.webp')$q$, 'ERROR 42501');
+  PERFORM pg_temp.verify('(B) 관리자: 타인 아바타 업로드 차단', admin_id,
+    format($q$INSERT INTO storage.objects (bucket_id, name) VALUES ('images', 'avatars/%s.png')$q$, user_id), 'ERROR 42501');
 
-BEGIN;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claims', '{"sub":"<관리자 uuid>","role":"authenticated"}', true);
-UPDATE menu_items SET image_url = 'https://evil.example/x.png' WHERE name = '모찌';               -- ERROR 23514 (menu_items_image_url_path)
-ROLLBACK;
+  -- (C) 관리자 — image_url 컬럼 GRANT + CHECK (admin_image.sql)
+  PERFORM pg_temp.verify('(C) 관리자: image_url UPDATE 허용', admin_id,
+    format($q$UPDATE menu_items SET image_url = 'products/menu_items/verify.webp' WHERE name = %L$q$, item), 'rows 1');
+  PERFORM pg_temp.verify('(C) 관리자: 외부 URL 거부(CHECK)', admin_id,
+    format($q$UPDATE menu_items SET image_url = 'https://evil.example/x.png' WHERE name = %L$q$, item), 'ERROR 23514');
+  PERFORM pg_temp.verify('(C) 관리자: 경로 탈출(..) 거부(CHECK)', admin_id,
+    format($q$UPDATE menu_items SET image_url = '../x.png' WHERE name = %L$q$, item), 'ERROR 23514');
+  PERFORM pg_temp.verify('(C) 관리자: name 수정 차단(컬럼 GRANT 밖, 회귀)', admin_id,
+    format($q$UPDATE menu_items SET name = '검증' WHERE name = %L$q$, item), 'ERROR 42501');
+  PERFORM pg_temp.verify('(C) 관리자: 상품 INSERT 차단(정책 없음, 회귀)', admin_id,
+    $q$INSERT INTO menu_items (name, price, category) VALUES ('검증용', 1000, 'others')$q$, 'ERROR 42501');
+END;
+$$;
 
-BEGIN;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claims', '{"sub":"<관리자 uuid>","role":"authenticated"}', true);
-UPDATE menu_items SET image_url = '../x.png' WHERE name = '모찌';                                   -- ERROR 23514
-ROLLBACK;
-
-BEGIN;
-SET LOCAL ROLE authenticated;
-SELECT set_config('request.jwt.claims', '{"sub":"<관리자 uuid>","role":"authenticated"}', true);
-UPDATE menu_items SET name = '검증' WHERE name = '모찌';                                            -- ERROR 42501 (컬럼 GRANT 밖, 회귀 확인)
-ROLLBACK;
+-- 결과 표. ✗ 가 있으면 actual 을 보고 해당 SQL(storage_policies / admin_image / admin_edit)을 다시 확인한다.
+-- 'ERROR 42501' = 권한 없음(RLS/GRANT), 'ERROR 23514' = CHECK 위반, 'rows N' = 정상 실행 후 되돌림.
+SELECT seq, check_name, expected, actual, CASE WHEN ok THEN '✓' ELSE '✗' END AS result
+FROM verify_results
+ORDER BY seq;

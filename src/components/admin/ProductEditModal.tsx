@@ -400,6 +400,34 @@ const Thumb = styled.img`
   border-radius: 6px;
 `;
 
+// 이력 항목의 이미지 변경: 파일명(uuid)만으로는 어떤 이미지였는지 알 수 없어 직전 → 바뀐 이미지를 썸네일로
+const HistoryThumbs = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0.25rem 0 0.375rem;
+
+  img {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border: 1px solid #eeeeee;
+    border-radius: 4px;
+  }
+
+  span {
+    color: #999999;
+  }
+`;
+
+// 확인 단계 안내(이미지를 바꿀 때): 반영 범위와 되돌리는 길을 알려 준다
+const ConfirmNote = styled.p`
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: #666666;
+  word-break: keep-all;
+`;
+
 const ItemsDiff = styled.ul`
   margin-top: 0.375rem;
   padding-left: 1rem;
@@ -729,9 +757,11 @@ export default function ProductEditModal({
                   {revisionsOpen && (
                     <RevisionList>
                       {revisions.map((revision) => {
-                        const summary = diffEditable(productType, revision.before, revision.after)
+                        const fieldChanges = diffEditable(productType, revision.before, revision.after);
+                        const summary = fieldChanges
                           .map((c) => `${c.label} ${formatFieldValue(c.field, c.before)} → ${formatFieldValue(c.field, c.after)}`)
                           .join(" · ");
+                        const imageChange = fieldChanges.find((c) => c.field === "image_url");
                         return (
                           <RevisionItem key={revision.id}>
                             <div>
@@ -739,13 +769,22 @@ export default function ProductEditModal({
                                 {formatDate(revision.changed_at)}
                                 {revision.changed_by === null && " (콘솔 수정)"}
                               </time>
+                              {imageChange && (
+                                <HistoryThumbs>
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={getStorageUrl(imageChange.before as string | null)} alt="직전 이미지" />
+                                  <span>→</span>
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={getStorageUrl(imageChange.after as string | null)} alt="바뀐 이미지" />
+                                </HistoryThumbs>
+                              )}
                               <p>{summary || "(편집 항목 외 변경)"}</p>
                             </div>
                             <RevertButton
                               type="button"
                               onClick={() => handleRevert(revision)}
-                              aria-label="이 값으로 되돌리기"
-                              title="이 값으로 되돌리기"
+                              aria-label={imageChange ? "이 이미지(직전 값)로 되돌리기" : "이 값으로 되돌리기"}
+                              title={imageChange ? "이 이미지(직전 값)로 되돌리기" : "이 값으로 되돌리기"}
                             >
                               <FiRotateCcw size={16} />
                             </RevertButton>
@@ -824,6 +863,13 @@ export default function ProductEditModal({
                   ))}
                 </tbody>
               </DiffTable>
+
+              {pendingImage && (
+                <ConfirmNote>
+                  이미지를 바꾸면 카드·상세·홈 화면에 바로 반영됩니다. 이전 이미지는 지워지지 않으며, 수정 후 모달 하단
+                  &quot;최근 수정 이력&quot;에서 직전 이미지로 되돌릴 수 있습니다.
+                </ConfirmNote>
+              )}
 
               {error && <ErrorText>{error}</ErrorText>}
             </Body>

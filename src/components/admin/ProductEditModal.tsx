@@ -5,10 +5,12 @@ import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { FiX, FiPlus, FiTrash2, FiRotateCcw, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import type { EditableProductPatch, ProductRevision, ProductType } from "@/types";
-import { adminService } from "@/services";
+import { adminService, storageService } from "@/services";
+import { getStorageUrl } from "@/lib/supabase";
 import {
   type EditableProduct,
   type FieldChange,
+  PRODUCT_TABLES,
   diffEditable,
   formatFieldValue,
   pickEditablePatch,
@@ -16,6 +18,8 @@ import {
   PRICE_MAX,
   PRICE_MIN,
 } from "@/utils/adminProduct";
+import { describeResult, optimizeImage } from "@/utils/imageOptimizer";
+import ProductImageField, { type PendingImage } from "./ProductImageField";
 
 /**
  * 관리자 상품 편집 모달
@@ -35,6 +39,7 @@ type Step = "edit" | "confirm";
 
 // 입력 폼 상태. price는 input 편의상 문자열
 type FormState = {
+  image_url: string;
   price: string;
   description: string;
   is_active: boolean;
@@ -44,6 +49,7 @@ type FormState = {
 // 상품 행(또는 이력의 before) → 폼
 function toForm(source: Record<string, unknown>): FormState {
   return {
+    image_url: typeof source.image_url === "string" ? source.image_url : "",
     price: source.price == null ? "" : String(source.price),
     description: typeof source.description === "string" ? source.description : "",
     is_active: source.is_active !== false,
@@ -54,6 +60,7 @@ function toForm(source: Record<string, unknown>): FormState {
 // 폼 → 패치 원료 (pickEditablePatch가 타입별로 걸러낸다)
 function fromForm(form: FormState): Record<string, unknown> {
   return {
+    image_url: form.image_url,
     price: form.price.trim() === "" ? NaN : Number(form.price),
     description: form.description,
     is_active: form.is_active,
@@ -382,6 +389,17 @@ const DiffTable = styled.table`
   }
 `;
 
+// 대조표의 이미지 행: 경로 문자열 대신 썸네일로 보여준다
+const Thumb = styled.img`
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 0.25rem;
+  object-fit: cover;
+  border: 1px solid #eeeeee;
+  border-radius: 6px;
+`;
+
 const ItemsDiff = styled.ul`
   margin-top: 0.375rem;
   padding-left: 1rem;
@@ -473,6 +491,35 @@ export default function ProductEditModal({
   const [revisions, setRevisions] = useState<ProductRevision[]>([]);
   const [revisionsOpen, setRevisionsOpen] = useState(false);
 
+  // 고른 새 이미지(최적화 결과). 업로드는 확인 단계의 저장 시점에만 — 편집 단계에서 올리면 취소한 파일이 고아로 남는다
+  const [pendingImage, setPendingImage] = useState<PendingImage | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+
+  // object URL 정리 — 새 파일로 바뀌거나 모달이 닫힐 때
+  useEffect(() => {
+    if (!pendingImage) return;
+    const url = pendingImage.previewUrl;
+    return () => URL.revokeObjectURL(url);
+  }, [pendingImage]);
+
+  const handlePickImage = async (file: File) => {
+    setError(null);
+    setIsOptimizing(true);
+    try {
+      const optimized = await optimizeImage(file);
+      setPendingImage({ optimized, previewUrl: URL.createObjectURL(optimized.blob) });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "이미지를 처리하지 못했습니다.");
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  const handleClearImage = () => {
+    setPendingImage(null);
+    setError(null);
+  };
+
   // 최근 수정 이력 로드 (실패해도 모달은 동작해야 하므로 조용히 빈 배열)
   useEffect(() => {
     adminService
@@ -495,9 +542,10 @@ export default function ProductEditModal({
     };
   }, [isSaving, onClose]);
 
-  // 편집 → 확인 단계. 검증하고 바뀐 필드만 골라 대조표를 만든다
+  // 편집 → 확인 단계. 검증하고 바뀐 필드만 골라 대조표를 만든다.
+  // hasPendingImage: 새 이미지는 아직 경로가 없어 patch 에 없다 — 그것만으로도 변경이다
   const prepareConfirm = useCallback(
-    (nextForm: FormState) => {
+    (nextForm: FormState, hasPendingImage: boolean = pendingImage !== null) => {
       setError(null);
 
       const patch = pickEditablePatch(productType, fromForm(nextForm));
@@ -505,7 +553,7 @@ export default function ProductEditModal({
       // 바뀐 필드만 골라낸다 — 검증도 바뀐 필드에만 건다.
       // (전체 패치를 검증하면 구성품이 비어 있는 선물세트는 가격만 고쳐도 "구성품 1개 이상"에 막힌다)
       const fieldChanges = diffEditable(productType, productRecord, { ...productRecord, ...patch });
-      if (fieldChanges.length === 0) {
+      if (fieldChanges.length === 0 && !hasPendingImage) {
         setError("변경된 내용이 없습니다.");
         return;
       }
@@ -525,29 +573,44 @@ export default function ProductEditModal({
       setChanges(fieldChanges);
       setStep("confirm");
     },
-    [productType, productRecord],
+    [productType, productRecord, pendingImage],
   );
 
   const handleConfirm = async () => {
-    if (!pendingPatch) return;
+    if (!pendingPatch && !pendingImage) return;
     setIsSaving(true);
     setError(null);
+    let uploadedPath: string | null = null;
     try {
-      await adminService.updateProduct(productType, product.id, pendingPatch);
+      const patch: EditableProductPatch = { ...(pendingPatch ?? {}) };
+      if (pendingImage) {
+        uploadedPath = await storageService.uploadProductImage(
+          PRODUCT_TABLES[productType],
+          pendingImage.optimized.blob,
+          pendingImage.optimized.ext,
+        );
+        patch.image_url = uploadedPath;
+      }
+      await adminService.updateProduct(productType, product.id, patch);
       onSaved();
       onClose();
     } catch (err) {
+      // 업로드는 됐는데 UPDATE 가 실패하면 방금 올린 파일을 회수한다(best-effort)
+      if (uploadedPath) void storageService.removeProductImage(uploadedPath);
       setError(err instanceof Error ? err.message : "수정에 실패했습니다.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // 이력의 before 값을 폼에 얹고 바로 확인 단계로 (되돌리기도 updateProduct를 그대로 탄다)
+  // 이력의 before 값을 폼에 얹고 바로 확인 단계로 (되돌리기도 updateProduct를 그대로 탄다).
+  // 고른 새 이미지는 버린다 — 되돌리기는 "그 시점 값으로 완전히 돌아가기"다. 이전 파일은 지우지 않았으므로
+  // 옛 경로가 살아 있다. setPendingImage(null) 은 다음 렌더에 반영되므로 hasPendingImage=false 를 직접 넘긴다.
   const handleRevert = (revision: ProductRevision) => {
+    setPendingImage(null);
     const restored = toForm({ ...productRecord, ...revision.before });
     setForm(restored);
-    prepareConfirm(restored);
+    prepareConfirm(restored, false);
   };
 
   const updateItem = (index: number, value: string) => {
@@ -583,6 +646,15 @@ export default function ProductEditModal({
         {step === "edit" ? (
           <>
             <Body>
+              <ProductImageField
+                currentPath={form.image_url || product.image_url}
+                pending={pendingImage}
+                isOptimizing={isOptimizing}
+                disabled={isSaving}
+                onPick={handlePickImage}
+                onClear={handleClearImage}
+              />
+
               <Field>
                 <span>가격 (원)</span>
                 <Input
@@ -690,7 +762,7 @@ export default function ProductEditModal({
               <SecondaryButton type="button" onClick={onClose}>
                 취소
               </SecondaryButton>
-              <PrimaryButton type="button" onClick={() => prepareConfirm(form)}>
+              <PrimaryButton type="button" onClick={() => prepareConfirm(form)} disabled={isOptimizing}>
                 저장
               </PrimaryButton>
             </Footer>
@@ -700,10 +772,28 @@ export default function ProductEditModal({
             <Body>
               <DiffTable>
                 <tbody>
+                  {pendingImage && (
+                    <tr key="pending-image">
+                      <th>이미지</th>
+                      <td className="before">
+                        <Thumb src={getStorageUrl(product.image_url)} alt="현재 이미지" />
+                        {formatFieldValue("image_url", product.image_url)}
+                      </td>
+                      <td className="arrow">→</td>
+                      <td className="after">
+                        <Thumb src={pendingImage.previewUrl} alt="새 이미지" />
+                        새 이미지
+                        <DiffNote>{describeResult(pendingImage.optimized)}</DiffNote>
+                      </td>
+                    </tr>
+                  )}
                   {changes.map((change) => (
                     <tr key={change.field}>
                       <th>{change.label}</th>
                       <td className="before">
+                        {change.field === "image_url" && typeof change.before === "string" && change.before !== "" && (
+                          <Thumb src={getStorageUrl(change.before)} alt="이전 이미지" />
+                        )}
                         {formatFieldValue(change.field, change.before)}
                         {change.field === "items" && Array.isArray(change.before) && (
                           <ItemsDiff>
@@ -715,6 +805,9 @@ export default function ProductEditModal({
                       </td>
                       <td className="arrow">→</td>
                       <td className="after">
+                        {change.field === "image_url" && typeof change.after === "string" && change.after !== "" && (
+                          <Thumb src={getStorageUrl(change.after)} alt="되돌릴 이미지" />
+                        )}
                         {formatFieldValue(change.field, change.after)}
                         {change.field === "items" && Array.isArray(change.after) && (
                           <ItemsDiff>

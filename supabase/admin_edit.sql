@@ -104,6 +104,7 @@ CREATE POLICY "Admins can update reciprocate_items"
 --  Postgres 컬럼 GRANT로 편집 가능 4컬럼 밖을 DB가 직접 거부하게 만든다.
 --  (브라우저에서 바로 UPDATE 하는 구조라 클라이언트 화이트리스트만으로는 부족)
 --  참고: 상품 추가/삭제는 정책 부재로 이미 막히지만, 권한도 함께 회수해 의도를 명시한다.
+--  참고: image_url 은 admin_image.sql(2026-09-17)에서 GRANT UPDATE 를 추가했다 — 편집 가능 컬럼은 총 5개.
 -- -----------------------------------------------------
 REVOKE INSERT, UPDATE, DELETE ON menu_items         FROM anon, authenticated;
 REVOKE INSERT, UPDATE, DELETE ON gift_sets          FROM anon, authenticated;

@@ -27,17 +27,18 @@ export const PRICE_MIN = 1;
 export const PRICE_MAX = 1_000_000;
 
 export const FIELD_LABELS: Record<EditableField, string> = {
+  image_url: "이미지",
   price: "가격",
   description: "설명",
   is_active: "노출",
   items: "구성품",
 };
 
-/** 상품 타입별 편집 가능 필드. items는 선물세트만 */
+/** 상품 타입별 편집 가능 필드. items는 선물세트만. 순서 = 대조표·이력 요약 순서 */
 export function editableFieldsFor(productType: ProductType): EditableField[] {
   return productType === "gift_set"
-    ? ["price", "description", "is_active", "items"]
-    : ["price", "description", "is_active"];
+    ? ["image_url", "price", "description", "is_active", "items"]
+    : ["image_url", "price", "description", "is_active"];
 }
 
 /**
@@ -55,6 +56,9 @@ export function pickEditablePatch(
     const value = raw[field];
 
     switch (field) {
+      case "image_url":
+        if (typeof value === "string") patch.image_url = value.trim();
+        break;
       case "price":
         if (typeof value === "number") patch.price = value;
         break;
@@ -75,8 +79,22 @@ export function pickEditablePatch(
   return patch;
 }
 
+/**
+ * 이미지 경로 검증 — DB CHECK(admin_image.sql)와 같은 규칙: 외부 URL(`://`)·경로 탈출(`..`) 거부.
+ * 접두사는 강제하지 않는다. 이력 되돌리기가 레거시 `menu/…` 경로를 다시 써야 한다.
+ */
+export function validateImagePath(path: unknown): string | null {
+  if (typeof path !== "string" || path.length === 0) return "이미지 경로가 없습니다.";
+  if (path.includes("://") || path.includes("..")) return "이미지 경로 형식이 잘못되었습니다.";
+  return null;
+}
+
 /** 클라이언트 검증. 통과하면 null, 아니면 사용자에게 보여줄 에러 메시지 */
 export function validatePatch(patch: EditableProductPatch): string | null {
+  if ("image_url" in patch) {
+    const imageError = validateImagePath(patch.image_url);
+    if (imageError) return imageError;
+  }
   if ("price" in patch) {
     const price = patch.price;
     if (price === undefined || !Number.isInteger(price)) {
@@ -138,6 +156,10 @@ export function diffEditable(
 /** 대조표/이력에 보여줄 값 포맷 */
 export function formatFieldValue(field: EditableField, value: unknown): string {
   switch (field) {
+    case "image_url": {
+      if (typeof value !== "string" || value.length === 0) return "(없음)";
+      return value.split("/").pop() ?? value;
+    }
     case "price":
       return typeof value === "number" ? `${value.toLocaleString("ko-KR")}원` : "-";
     case "is_active":
@@ -152,4 +174,15 @@ export function formatFieldValue(field: EditableField, value: unknown): string {
     default:
       return String(value ?? "");
   }
+}
+
+/** Storage 안에서 관리자가 올리는 상품 이미지의 접두사. Storage 정책(storage_policies.sql)이 이 접두사에만 쓰기를 허용한다 */
+export const PRODUCT_IMAGE_PREFIX = "products";
+
+/**
+ * 업로드 경로 `products/<테이블명>/<uuid>.<ext>`. 매번 새 이름 — 같은 이름을 덮어쓰면 CDN·브라우저 캐시가
+ * 옛 그림을 보여준다. 고유 이름이라 cacheControl 을 길게 줄 수 있다.
+ */
+export function buildProductImagePath(table: ProductTable, ext: string, id: string = crypto.randomUUID()): string {
+  return `${PRODUCT_IMAGE_PREFIX}/${table}/${id}.${ext}`;
 }

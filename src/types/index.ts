@@ -193,8 +193,10 @@ export interface AddToCartData {
 
 // ==================== Admin Types ====================
 
-// 관리자가 수정할 수 있는 상품 컬럼 (이 네 개가 전부. items는 gift_sets만)
+// 관리자가 수정할 수 있는 상품 컬럼 (이 다섯 개가 전부. items는 gift_sets만).
+// image_url 은 Storage 상대 경로(products/<table>/<uuid>.<ext>) — 외부 URL 은 DB CHECK 가 거부한다.
 export type EditableProductPatch = {
+  image_url?: string;
   price?: number;
   description?: string;
   is_active?: boolean;

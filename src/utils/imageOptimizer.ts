@@ -145,3 +145,134 @@ export function describeResult(result: OptimizedImage): string {
   }
   return `${formatBytes(result.originalBytes)} → ${formatBytes(result.bytes)} · ${size} · ${formatLabel(result.blob.type)}`;
 }
+
+// ---------- 브라우저 파이프라인 (아래는 canvas·createImageBitmap 을 쓴다) ----------
+
+type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
+
+function isOffscreen(canvas: AnyCanvas): canvas is OffscreenCanvas {
+  return typeof OffscreenCanvas !== "undefined" && canvas instanceof OffscreenCanvas;
+}
+
+function makeCanvas(size: Size): AnyCanvas {
+  if (typeof OffscreenCanvas !== "undefined") return new OffscreenCanvas(size.width, size.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = size.width;
+  canvas.height = size.height;
+  return canvas;
+}
+
+function drawInto(target: AnyCanvas, source: ImageBitmap | AnyCanvas, size: Size): void {
+  // 유니언 타입에 바로 getContext 를 부르면 오버로드가 달라 TS 가 거부한다 — 갈라서 부른다
+  const ctx = isOffscreen(target) ? target.getContext("2d") : target.getContext("2d");
+  if (!ctx) throw new ImageOptimizeError("decode-failed", "이미지를 그릴 수 없습니다.");
+  // 투명 영역은 흰색으로 — JPEG 폴백에서 검게 변하는 것을 막고, 상품 사진은 투명이 필요 없다
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, size.width, size.height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(source, 0, 0, size.width, size.height);
+}
+
+/** 단계 축소. 절반 이하로 줄일 때 한 번에 그리면 계단 현상이 생기므로 downscaleSteps 를 따른다 */
+function drawScaled(bitmap: ImageBitmap, target: Size): AnyCanvas {
+  const from: Size = { width: bitmap.width, height: bitmap.height };
+  const steps = downscaleSteps(from, target);
+  if (steps.length === 0) {
+    const canvas = makeCanvas(from);
+    drawInto(canvas, bitmap, from);
+    return canvas;
+  }
+  let source: ImageBitmap | AnyCanvas = bitmap;
+  for (const step of steps) {
+    const canvas = makeCanvas(step);
+    drawInto(canvas, source, step);
+    source = canvas;
+  }
+  // steps 가 비어 있지 않으므로 마지막 source 는 canvas 다
+  return source as AnyCanvas;
+}
+
+function toBlob(canvas: AnyCanvas, type: string, quality: number): Promise<Blob> {
+  if (isOffscreen(canvas)) return canvas.convertToBlob({ type, quality });
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new ImageOptimizeError("decode-failed", "이미지를 인코딩할 수 없습니다."))),
+      type,
+      quality,
+    );
+  });
+}
+
+/**
+ * 품질 사다리를 내려가며 목표 크기 이하가 나오면 멈춘다. 끝까지 넘어도 마지막 결과를 쓴다(화질 우선).
+ * WebP 인코더가 없는 브라우저(Safari 등)는 toBlob 이 PNG 를 돌려주므로 그때는 JPEG 로 같은 사다리를 탄다.
+ */
+async function encode(canvas: AnyCanvas, limits: ImageLimits): Promise<Blob> {
+  const ladder = async (type: string): Promise<Blob | null> => {
+    let last: Blob | null = null;
+    for (const quality of limits.qualities) {
+      const blob = await toBlob(canvas, type, quality);
+      if (blob.type !== type) return null; // 인코더 없음
+      last = blob;
+      if (blob.size <= limits.targetBytes) return blob;
+    }
+    return last;
+  };
+  return (await ladder("image/webp")) ?? (await ladder("image/jpeg")) ?? toBlob(canvas, "image/png", 1);
+}
+
+/**
+ * 파일 → 최적화된 Blob. 스펙 §5 절차.
+ * 1) 타입·크기 검사 2) 디코드(EXIF 회전 반영) 3) 이미 작으면 그대로 4) 단계 축소 5) 품질 사다리 인코딩
+ * 6) 결과가 원본보다 크고 원본이 상한 안이면 원본 유지
+ */
+export async function optimizeImage(file: File, limits: ImageLimits = IMAGE_LIMITS): Promise<OptimizedImage> {
+  const inputError = checkInput(file.type, file.size, limits);
+  if (inputError) throw inputError;
+
+  let bitmap: ImageBitmap;
+  try {
+    // 모던 브라우저는 EXIF 방향을 여기서 반영한다(imageOrientation 기본값 from-image)
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new ImageOptimizeError(
+      "decode-failed",
+      "이 브라우저에서 읽을 수 없는 이미지입니다. JPG·PNG·WebP로 저장해 다시 올려주세요.",
+    );
+  }
+
+  try {
+    const meta = { type: file.type, bytes: file.size, width: bitmap.width, height: bitmap.height };
+    const keep = (): OptimizedImage => ({
+      blob: file,
+      ext: extFromMime(file.type, file.name),
+      width: bitmap.width,
+      height: bitmap.height,
+      originalBytes: file.size,
+      bytes: file.size,
+      action: "kept",
+    });
+    if (shouldKeepOriginal(meta, limits)) return keep();
+
+    const target = fitWithin(bitmap.width, bitmap.height, limits.maxEdge);
+    const resized = target.width !== bitmap.width || target.height !== bitmap.height;
+    const canvas = drawScaled(bitmap, target);
+    const blob = await encode(canvas, limits);
+
+    // 재인코딩이 오히려 커졌고 원본이 이미 상한 안(압축 포맷)이면 원본을 쓴다
+    if (!resized && blob.size >= file.size && KEEPABLE_TYPES.has(file.type)) return keep();
+
+    return {
+      blob,
+      ext: extFromMime(blob.type),
+      width: target.width,
+      height: target.height,
+      originalBytes: file.size,
+      bytes: blob.size,
+      action: resized ? "resized+reencoded" : "reencoded",
+    };
+  } finally {
+    bitmap.close();
+  }
+}

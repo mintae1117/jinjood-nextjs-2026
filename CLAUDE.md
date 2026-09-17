@@ -37,6 +37,7 @@
 npm run dev     # 개발 서버 (포트 3001)
 npm run build   # 프로덕션 빌드
 npm run lint    # 린트
+npm test        # 순수 로직 단위 테스트 (node:test, 의존성 없음)
 ```
 
 ---
@@ -100,6 +101,7 @@ CRON_SECRET=<random string>                    # Vercel Cron 엔드포인트 보
 menu_items (id, name, price, description, image_url, category, tags[], is_popular, is_best, is_recommended, display_order, is_active)
 gift_sets (id, name, price, description, image_url, category, items[], display_order, is_active)
 reciprocate_items (id, name, price, description, image_url, category, display_order, is_active)
+  -- image_url: Storage 상대 경로(menu/…, products/<table>/<uuid>.<ext>). CHECK 로 '://'·'..' 거부(admin_image.sql)
 cart_items (id, user_id FK, product_id, product_type, quantity, options JSONB, created_at, updated_at)
   -- product_type: 'menu_item' | 'gift_set' | 'reciprocate_item'
   -- RLS: 본인 장바구니만 접근 가능
@@ -166,6 +168,10 @@ import { getStorageUrl } from "@/lib/supabase";
 //    Supabase 도메인 등록 → Netlify Image CDN 서빙 (Supabase 무료 egress ~5GB/월 초과 방지)
 ```
 
+- **관리자 업로드 경로**: `products/<테이블명>/<uuid>.<ext>`(`buildProductImagePath`). 이름을 매번 새로 만들어 캐시 문제를 피하고 `cacheControl` 1년. 이전 파일은 지우지 않는다(이력 되돌리기).
+- **업로드 전 최적화**: `src/utils/imageOptimizer.ts` 가 규칙의 단일 출처 — 입력 20MB, 긴 변 1600px, WebP 0.85→0.78→0.72(목표 300KB, 그 아래로는 안 내려감), Safari 는 JPEG 폴백, 이미 작은 압축 포맷은 그대로. 상수를 바꾸면 README 사용법도 함께.
+- **Storage 정책**(`supabase/storage_policies.sql`): `avatars/<본인 uid>.*` 는 본인만, `products/` 는 `is_admin()` 만. 그 외 폴더(`menu/`·`banners/`…)는 브라우저에서 쓸 수 없다(대시보드 전용). 새 업로드 기능은 `products/` 아래에 두거나 정책을 함께 늘려야 한다.
+
 ### 상품 타입별 동작
 | 상품 타입 | 장바구니 | 바로 구매 | 문의하기 |
 |----------|---------|----------|---------|
@@ -203,7 +209,8 @@ export const productService = {
 - DB: `supabase/admin_edit.sql` (1회 실행, idempotent, **코드 배포보다 먼저**). 검증은 `supabase/admin_edit_verify.sql`. 관리자 지정은 `INSERT … ON CONFLICT`(README 참고 — 로그인만으로는 `user_profiles` 행이 안 생김).
 - 판별: `useAuthStore(selectIsAdmin)` (`user.role === 'admin'`). 데이터 훅 안에서는 `useAuth()`를 부르지 않는다(초기화 부수효과).
 - 버튼: `src/components/admin/AdminEditButton.tsx` — 관리자가 아니면 `null` 반환. 목록 카드 3곳 + 홈 카드 2곳(`FeaturedMenu`·`GiftSets`) + `ProductDetail` 1곳.
-- 쓰기: `adminService.updateProduct(productType, id, patch)` — 브라우저에서 바로 UPDATE, **RLS가 유일한 보안 경계**. 화이트리스트 4컬럼(`price`, `description`, `is_active`, `items`)만 통과.
+- 쓰기: `adminService.updateProduct(productType, id, patch)` — 브라우저에서 바로 UPDATE, **RLS가 유일한 보안 경계**. 화이트리스트 5컬럼(`image_url`, `price`, `description`, `is_active`, `items`)만 통과. 컬럼을 늘리면 `admin_image.sql` 처럼 `GRANT UPDATE (…)` 도 같이(안 그러면 42501).
+- 이미지: `ProductImageField`(선택·미리보기) → `optimizeImage` → 확인 단계 저장 시 `storageService.uploadProductImage` → 같은 `updateProduct`. UPDATE 실패 시 `removeProductImage` 로 방금 올린 파일 회수. 되돌리기는 고른 이미지를 버리고 이력 값으로.
 - 조회: 관리자는 `productService.get*(…, { includeInactive: true })`로 노출 off 상품도 본다.
 - 이력: `product_revisions`는 DB 트리거가 적재. 되돌리기는 `before`의 4컬럼을 폼에 얹어 `updateProduct`를 다시 타는 것(별도 API 없음).
 - 리포의 `seed_data.sql`/`cleanup_and_reseed.sql`은 초기 스냅샷 — 실 데이터와 동기화하지 않는다.

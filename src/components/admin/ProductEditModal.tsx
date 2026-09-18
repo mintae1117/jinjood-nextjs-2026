@@ -11,8 +11,10 @@ import {
   type EditableProduct,
   type FieldChange,
   PRODUCT_TABLES,
+  REVISION_RETENTION,
   diffEditable,
   formatFieldValue,
+  imagePathsInRevisions,
   pickEditablePatch,
   validatePatch,
   PRICE_MAX,
@@ -548,10 +550,10 @@ export default function ProductEditModal({
     setError(null);
   };
 
-  // 최근 수정 이력 로드 (실패해도 모달은 동작해야 하므로 조용히 빈 배열)
+  // 최근 수정 이력 로드 (실패해도 모달은 동작해야 하므로 조용히 빈 배열). DB 가 상품별 30건만 남기므로 전부 보인다
   useEffect(() => {
     adminService
-      .getRevisions(productType, product.id, 10)
+      .getRevisions(productType, product.id, REVISION_RETENTION)
       .then(setRevisions)
       .catch(() => setRevisions([]));
   }, [productType, product.id]);
@@ -614,12 +616,15 @@ export default function ProductEditModal({
       if (pendingImage) {
         uploadedPath = await storageService.uploadProductImage(
           PRODUCT_TABLES[productType],
+          product.id,
           pendingImage.optimized.blob,
           pendingImage.optimized.ext,
         );
         patch.image_url = uploadedPath;
       }
       await adminService.updateProduct(productType, product.id, patch);
+      // 이력 상한에서 밀려난 이미지 파일 정리 — 저장 결과와 무관한 뒷정리라 기다리지 않는다
+      if (uploadedPath) void pruneStaleImages(uploadedPath);
       onSaved();
       onClose();
     } catch (err) {
@@ -628,6 +633,20 @@ export default function ProductEditModal({
       setError(err instanceof Error ? err.message : "수정에 실패했습니다.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  /**
+   * 저장 뒤 상품 폴더에서 "현재 이미지 + 남은 이력이 가리키는 파일" 외를 지운다.
+   * 이력은 상한 없이 넉넉히 받는다 — DB 상한 SQL 이 아직 안 걸린 환경에서도 참조 중인 파일을 지우지 않게.
+   */
+  const pruneStaleImages = async (currentPath: string) => {
+    try {
+      const all = await adminService.getRevisions(productType, product.id, REVISION_RETENTION * 10);
+      const keep = new Set<string>([currentPath, ...imagePathsInRevisions(all)]);
+      await storageService.pruneProductImages(PRODUCT_TABLES[productType], product.id, keep);
+    } catch (err) {
+      console.error("Error pruning stale product images:", err);
     }
   };
 

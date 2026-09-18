@@ -2,11 +2,14 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   PRODUCT_IMAGE_PREFIX,
+  REVISION_RETENTION,
   buildProductImagePath,
   diffEditable,
   editableFieldsFor,
   formatFieldValue,
+  imagePathsInRevisions,
   pickEditablePatch,
+  productImageFolder,
   validateImagePath,
   validatePatch,
 } from "./adminProduct.ts";
@@ -69,12 +72,32 @@ describe("formatFieldValue / diffEditable — image_url", () => {
   });
 });
 
-describe("buildProductImagePath", () => {
-  it("products/<table>/<id>.<ext>", () => {
+describe("buildProductImagePath / productImageFolder — 상품 id 폴더 아래 고유 이름", () => {
+  it("products/<table>/<productId>/<id>.<ext>", () => {
     assert.equal(PRODUCT_IMAGE_PREFIX, "products");
-    assert.equal(buildProductImagePath("menu_items", "webp", "fixed-id"), "products/menu_items/fixed-id.webp");
+    assert.equal(productImageFolder("menu_items", "p1"), "products/menu_items/p1");
+    assert.equal(buildProductImagePath("menu_items", "p1", "webp", "fixed-id"), "products/menu_items/p1/fixed-id.webp");
   });
-  it("id 를 안 주면 uuid", () => {
-    assert.match(buildProductImagePath("gift_sets", "jpg"), /^products\/gift_sets\/[0-9a-f-]{36}\.jpg$/);
+  it("id 를 안 주면 uuid, 폴더는 상품 id", () => {
+    assert.match(buildProductImagePath("gift_sets", "p2", "jpg"), /^products\/gift_sets\/p2\/[0-9a-f-]{36}\.jpg$/);
+  });
+});
+
+describe("imagePathsInRevisions — 정리 시 남겨야 할 파일", () => {
+  const rev = (before: unknown, after: unknown) => ({
+    id: "r", table_name: "menu_items" as const, record_id: "p1", changed_by: null, changed_at: "2026-09-18T00:00:00Z",
+    before: { image_url: before }, after: { image_url: after },
+  });
+  it("before·after 의 image_url 을 중복 없이 모은다. 비어 있거나 문자열이 아니면 건너뛴다", () => {
+    const paths = imagePathsInRevisions([
+      rev("menu/a.avif", "products/menu_items/p1/x.webp"),
+      rev("products/menu_items/p1/x.webp", "products/menu_items/p1/y.webp"),
+      rev(null, ""),
+      rev(undefined, 3),
+    ]);
+    assert.deepEqual(paths.sort(), ["menu/a.avif", "products/menu_items/p1/x.webp", "products/menu_items/p1/y.webp"]);
+  });
+  it("유지 건수는 DB 트리거와 같은 30", () => {
+    assert.equal(REVISION_RETENTION, 30);
   });
 });

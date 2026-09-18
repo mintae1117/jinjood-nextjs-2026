@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabase";
-import { PRODUCT_IMAGE_PREFIX, buildProductImagePath, type ProductTable } from "@/utils/adminProduct";
+import {
+  PRODUCT_IMAGE_PREFIX,
+  buildProductImagePath,
+  productImageFolder,
+  type ProductTable,
+} from "@/utils/adminProduct";
 
 /**
  * 관리자 상품 이미지 Storage API.
@@ -19,9 +24,9 @@ function toFriendlyStorageError(error: { message: string; status?: number; statu
 }
 
 export const storageService = {
-  /** products/<table>/<uuid>.<ext> 에 올리고 DB 에 저장할 상대 경로를 돌려준다 */
-  async uploadProductImage(table: ProductTable, blob: Blob, ext: string): Promise<string> {
-    const path = buildProductImagePath(table, ext);
+  /** products/<table>/<상품id>/<uuid>.<ext> 에 올리고 DB 에 저장할 상대 경로를 돌려준다 */
+  async uploadProductImage(table: ProductTable, productId: string, blob: Blob, ext: string): Promise<string> {
+    const path = buildProductImagePath(table, productId, ext);
     const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
       contentType: blob.type || undefined,
       // 이름이 매번 고유하므로 오래 캐시해도 안전하고, 덮어쓰기가 필요 없다
@@ -43,5 +48,24 @@ export const storageService = {
     if (!path.startsWith(`${PRODUCT_IMAGE_PREFIX}/`)) return;
     const { error } = await supabase.storage.from(BUCKET).remove([path]);
     if (error) console.error("Error removing product image:", error);
+  },
+
+  /**
+   * 상품 폴더(products/<table>/<상품id>)에서 keep 에 없는 파일을 지운다 — 수정 이력 상한(30건)에서 밀려난
+   * 이미지 정리. 호출 측이 keep = 현재 image_url + 남은 이력이 가리키는 경로 전부를 넘긴다.
+   * best-effort — 실패해도 던지지 않는다(저장은 이미 끝났다). 다른 상품 폴더·레거시 menu/… 는 보지 않는다.
+   */
+  async pruneProductImages(table: ProductTable, productId: string, keep: ReadonlySet<string>): Promise<void> {
+    const folder = productImageFolder(table, productId);
+    const { data, error } = await supabase.storage.from(BUCKET).list(folder, { limit: 1000 });
+    if (error || !data) {
+      if (error) console.error("Error listing product images:", error);
+      return;
+    }
+    // list 는 하위 폴더도 항목으로 준다(id 가 null) — 파일만
+    const stale = data.filter((f) => f.id).map((f) => `${folder}/${f.name}`).filter((p) => !keep.has(p));
+    if (stale.length === 0) return;
+    const { error: removeError } = await supabase.storage.from(BUCKET).remove(stale);
+    if (removeError) console.error("Error pruning product images:", removeError);
   },
 };

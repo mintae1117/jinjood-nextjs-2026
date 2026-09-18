@@ -2,6 +2,7 @@ import type {
   EditableProductPatch,
   GiftSet,
   MenuItem,
+  ProductRevision,
   ProductType,
   ReciprocateItem,
 } from "@/types";
@@ -180,9 +181,38 @@ export function formatFieldValue(field: EditableField, value: unknown): string {
 export const PRODUCT_IMAGE_PREFIX = "products";
 
 /**
- * 업로드 경로 `products/<테이블명>/<uuid>.<ext>`. 매번 새 이름 — 같은 이름을 덮어쓰면 CDN·브라우저 캐시가
- * 옛 그림을 보여준다. 고유 이름이라 cacheControl 을 길게 줄 수 있다.
+ * 상품별 유지하는 수정 이력 건수. DB 트리거(admin_revision_retention.sql 의 retention)와 같은 값 — 함께 바꿀 것.
+ * 이력 목록 표시 건수이자, 저장 뒤 이미지 파일 정리에서 "남은 이력이 가리키는 파일" 을 셀 때의 기준.
  */
-export function buildProductImagePath(table: ProductTable, ext: string, id: string = crypto.randomUUID()): string {
-  return `${PRODUCT_IMAGE_PREFIX}/${table}/${id}.${ext}`;
+export const REVISION_RETENTION = 30;
+
+/** 상품 하나의 이미지 폴더 `products/<테이블명>/<상품id>`. 정리(prune)가 이 폴더만 본다 */
+export function productImageFolder(table: ProductTable, productId: string): string {
+  return `${PRODUCT_IMAGE_PREFIX}/${table}/${productId}`;
+}
+
+/**
+ * 업로드 경로 `products/<테이블명>/<상품id>/<uuid>.<ext>`. 매번 새 이름 — 같은 이름을 덮어쓰면 CDN·브라우저 캐시가
+ * 옛 그림을 보여준다. 고유 이름이라 cacheControl 을 길게 줄 수 있다. 상품 id 폴더에 두어야 저장 뒤 정리가
+ * 다른 상품 파일을 건드리지 않는다.
+ */
+export function buildProductImagePath(
+  table: ProductTable,
+  productId: string,
+  ext: string,
+  id: string = crypto.randomUUID(),
+): string {
+  return `${productImageFolder(table, productId)}/${id}.${ext}`;
+}
+
+/** 이력들이 가리키는 이미지 경로 전부(before·after). 저장 뒤 파일 정리에서 "지우면 안 되는 것" 의 재료 */
+export function imagePathsInRevisions(revisions: ProductRevision[]): string[] {
+  const paths = new Set<string>();
+  for (const r of revisions) {
+    for (const side of [r.before, r.after]) {
+      const p = side.image_url;
+      if (typeof p === "string" && p.length > 0) paths.add(p);
+    }
+  }
+  return [...paths];
 }

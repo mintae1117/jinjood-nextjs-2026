@@ -217,7 +217,7 @@ export const productService = {
 - 조회: 관리자는 `productService.get*(…, { includeInactive: true })`로 노출 off 상품도 본다.
 - 이력: `product_revisions`는 DB 트리거가 적재. 되돌리기는 `before`의 4컬럼을 폼에 얹어 `updateProduct`를 다시 타는 것(별도 API 없음).
 - 리포의 `seed_data.sql`/`cleanup_and_reseed.sql`은 초기 스냅샷 — 실 데이터와 동기화하지 않는다.
-- **검증 SQL 형식**: `supabase/storage_policies_verify.sql` 처럼 자리표시자 없이 **전체를 한 번에 실행하면 ✓/✗ 결과 표**가 나오게 쓴다(관리자·일반 유저는 `auth.users`에서 자동 선택, 각 검사는 `pg_temp` 함수 안에서 `SET LOCAL ROLE authenticated` + `request.jwt.claims`로 실행 뒤 서브트랜잭션 강제 롤백). `<uuid>`를 손으로 채우는 옛 방식(`admin_edit_verify.sql`)은 SQL Editor에서 전체 실행 시 22P02·첫 기대 에러에서 끊긴다 — 새 검증 파일은 새 형식으로, 기회가 되면 `admin_edit_verify.sql`도 옮긴다.
+- **검증 SQL 형식**: `supabase/storage_policies_verify.sql` 처럼 자리표시자 없이 **전체를 한 번에 실행하면 ✓/✗ 결과 표**가 나오게 쓴다(관리자·일반 유저는 `auth.users`에서 자동 선택, 각 검사는 실행기 함수 안에서 `SET LOCAL ROLE authenticated` + `request.jwt.claims`로 실행 뒤 서브트랜잭션 강제 롤백). `<uuid>`를 손으로 채우는 옛 방식(`admin_edit_verify.sql`)은 SQL Editor에서 전체 실행 시 22P02·첫 기대 에러에서 끊긴다 — 새 검증 파일은 새 형식으로, 기회가 되면 `admin_edit_verify.sql`도 옮긴다. **SQL Editor 호환 규칙(2026-09-18 실제 실패에서 나온 것)**: ① 결과 표·함수는 temp 가 아닌 전용 스키마 `verify_tmp`(세션이 갈려도 동작, PostgREST 미노출), ② `DO` 본문 안에 `--` 주석을 두지 않고 주석에는 달러 태그(`$x$`)를 쓰지 않는다(에디터가 주석 안 태그를 문자열 시작으로 읽음), ③ 중첩 달러 인용은 바깥부터 이름 있는 태그, 닫는 태그 두 개를 한 줄에 붙이지 않는다(`$d$$q$` 는 `$$` 로 읽힘), ④ `format()` 템플릿 안의 `RAISE … %` 는 `%%`. 로컬 재현은 `@electric-sql/pglite`(Node 내장 Postgres)로 리포 SQL 을 순서대로 적용하면 된다.
 
 ### 다음 작업 메모 — 상품 추가·삭제·카테고리 (2026-09-18 조사·구현 기준)
 

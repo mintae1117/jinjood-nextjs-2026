@@ -170,7 +170,7 @@ import { getStorageUrl } from "@/lib/supabase";
 //    Supabase 도메인 등록 → Netlify Image CDN 서빙 (Supabase 무료 egress ~5GB/월 초과 방지)
 ```
 
-- **관리자 업로드 경로**: `products/<테이블명>/<uuid>.<ext>`(`buildProductImagePath`). 이름을 매번 새로 만들어 캐시 문제를 피하고 `cacheControl` 1년. 이전 파일은 지우지 않는다(이력 되돌리기).
+- **관리자 업로드 경로**: `products/<테이블명>/<상품id>/<uuid>.<ext>`(`buildProductImagePath`). 이름을 매번 새로 만들어 캐시 문제를 피하고 `cacheControl` 1년. 상품 id 폴더에 두는 이유는 저장 뒤 정리(`storageService.pruneProductImages`)가 그 폴더만 보기 때문 — 다른 상품·레거시 `menu/…` 는 건드리지 않는다.
 - **업로드 전 최적화**: `src/utils/imageOptimizer.ts` 가 규칙의 단일 출처 — 입력 20MB, 긴 변 1600px, WebP 0.85→0.78→0.72(목표 300KB, 그 아래로는 안 내려감), Safari 는 JPEG 폴백, 이미 작은 압축 포맷은 그대로. 상수를 바꾸면 README 사용법도 함께.
 - **Storage 정책**(`supabase/storage_policies.sql`): `avatars/<본인 uid>.*` 는 본인만, `products/` 는 `is_admin()` 만. 그 외 폴더(`menu/`·`banners/`…)는 브라우저에서 쓸 수 없다(대시보드 전용). 새 업로드 기능은 `products/` 아래에 두거나 정책을 함께 늘려야 한다.
 
@@ -213,6 +213,7 @@ export const productService = {
 - 버튼: `src/components/admin/AdminEditButton.tsx` — 관리자가 아니면 `null` 반환. 목록 카드 3곳 + 홈 카드 2곳(`FeaturedMenu`·`GiftSets`) + `ProductDetail` 1곳.
 - 쓰기: `adminService.updateProduct(productType, id, patch)` — 브라우저에서 바로 UPDATE, **RLS가 유일한 보안 경계**. 화이트리스트 5컬럼(`image_url`, `price`, `description`, `is_active`, `items`)만 통과. 컬럼을 늘리면 `admin_image.sql` 처럼 `GRANT UPDATE (…)` 도 같이(안 그러면 42501).
 - 이미지: `ProductImageField`(선택·미리보기) → `optimizeImage` → 확인 단계 저장 시 `storageService.uploadProductImage` → 같은 `updateProduct`. UPDATE 실패 시 `removeProductImage` 로 방금 올린 파일 회수. 되돌리기는 고른 이미지를 버리고 이력 값으로.
+- **이력 상한 = 상품별 최근 30건**(`admin_revision_retention.sql` 의 `retention`, 클라이언트 `REVISION_RETENTION` — 둘을 함께 바꿀 것). DB 트리거가 31번째 이후를 지우고, 브라우저는 이미지 저장 뒤 그 상품 폴더에서 "현재 이미지 + 남은 이력이 가리키는 파일" 외를 지운다(best-effort, `pruneStaleImages`). 즉 **최근 30번의 수정까지는 이미지 포함 되돌릴 수 있고 그 이전은 사라진다**. 이력 순서는 `seq`(단조 증가) — 같은 트랜잭션의 이력은 `changed_at` 이 같다.
 - 조회: 관리자는 `productService.get*(…, { includeInactive: true })`로 노출 off 상품도 본다.
 - 이력: `product_revisions`는 DB 트리거가 적재. 되돌리기는 `before`의 4컬럼을 폼에 얹어 `updateProduct`를 다시 타는 것(별도 API 없음).
 - 리포의 `seed_data.sql`/`cleanup_and_reseed.sql`은 초기 스냅샷 — 실 데이터와 동기화하지 않는다.
@@ -228,7 +229,7 @@ export const productService = {
 - **삭제 정책은 먼저 결정할 것**: 권장은 기존 `is_active=false`(숨김)를 기본 삭제로. 실제 DELETE를 열려면 ① `cart_items.product_id`는 FK가 없어(`product_type`+`product_id` 쌍) 고아 행이 남고 `cartService.getProductByTypeAndId`가 null을 돌려준다 — `CartItem` 표시 처리 확인, ② `product_revisions`는 AFTER UPDATE 트리거만 있어 삭제가 기록되지 않는다(AFTER DELETE 트리거 추가 시 `after JSONB NOT NULL` 제약 — `'{}'::jsonb`로 넣거나 NULL 허용으로 바꿀지 결정), ③ 결제 도입 후 `order_items`는 가격·옵션 스냅샷이라 상품 삭제와 무관하게 설계돼 있다(README §4).
 - **카테고리는 세 겹으로 하드코딩**: DB CHECK(`menu_items.category IN (...)` 등 테이블별) · TS 유니온(`MenuItem.category`, `MenuCategory`…) · 한글 라벨/필터 옵션 **6곳**(`app/represent/RepresentListClient.tsx`, `app/gifts/GiftsListClient.tsx`, `app/reciprocate/ReciprocateListClient.tsx`, `src/components/menu/MenuCard.tsx`, `src/components/common/SearchBar.tsx`, `src/components/product/ProductDetail.tsx`). **기존 카테고리 안에서 추가**는 셀렉트 하나로 끝난다. **새 카테고리**를 만들 가능성이 있으면 라벨·옵션을 한 파일(예: `src/data/categories.ts`)로 모으는 정리를 먼저 한다.
 - **화면 반영**: 목록·홈은 요청마다 서버가 조회(`products.server.ts`의 `cache()`는 요청 단위, ISR 없음)하고 `sitemap.ts`도 요청 시 DB를 읽는다 → 추가·삭제 후 revalidate 없이 바로 반영된다. 클라이언트는 저장 후 각 훅의 `refetch()`.
-- **이전 이미지 파일은 지우지 않는 정책**: 정리하려면 `product_revisions`의 `before/after ->> 'image_url'`와 현재 `image_url` 어디에도 없는 `products/` 파일만 대상으로.
+- **이미지 파일 정리는 저장 시점에 자동**(위 이력 상한 항목). 2026-09-18 이전에 올라간 `products/<테이블>/<uuid>.webp`(상품 id 폴더 없음)는 정리 대상 밖이라 남아 있으면 대시보드에서 지운다. 상품 삭제를 열 때는 그 상품 폴더 전체를 `removeProductImage`/`pruneProductImages(빈 keep)` 로 비운다.
 
 ### 테스트 (`npm test`)
 

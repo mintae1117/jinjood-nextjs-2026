@@ -5,7 +5,7 @@
 --
 -- 실 데이터는 바뀌지 않는다: 각 검사는 서브트랜잭션 안에서 실행한 뒤 강제로 되돌린다(성공했어도 롤백).
 -- 그래서 storage.objects·menu_items·product_revisions 에 아무것도 남지 않는다.
--- 전제: admin_edit.sql(is_admin, 관리자 지정) → storage_policies.sql → admin_image.sql 을 먼저 실행했을 것.
+-- 전제: admin_edit.sql(is_admin, 관리자 지정) → storage_policies.sql → admin_image.sql → admin_revision_retention.sql 을 먼저 실행했을 것.
 -- =====================================================
 
 DROP TABLE IF EXISTS verify_results;
@@ -104,6 +104,20 @@ BEGIN
     format($q$UPDATE menu_items SET name = '검증' WHERE name = %L$q$, item), 'ERROR 42501');
   PERFORM pg_temp.verify('(C) 관리자: 상품 INSERT 차단(정책 없음, 회귀)', admin_id,
     $q$INSERT INTO menu_items (name, price, category) VALUES ('검증용', 1000, 'others')$q$, 'ERROR 42501');
+
+  -- (D) 이력 상한 (admin_revision_retention.sql) — 31번 고친 뒤 이 상품의 이력이 정확히 30건인지. 에러 없음(rows 0)이 통과.
+  --     실패하면 'ERROR P0002'(건수 불일치) 또는 'ERROR 42703'(seq 컬럼 없음 = SQL 미실행).
+  PERFORM pg_temp.verify('(D) 이력 상한: 31번 수정 뒤 상품별 30건만 남는다', admin_id,
+    format($q$DO $d$
+      DECLARE rid uuid; c int; i int;
+      BEGIN
+        SELECT id INTO rid FROM menu_items WHERE name = %L;
+        FOR i IN 1..31 LOOP
+          UPDATE menu_items SET description = 'verify ' || i WHERE id = rid;
+        END LOOP;
+        SELECT count(*) INTO c FROM product_revisions WHERE table_name = 'menu_items' AND record_id = rid;
+        IF c <> 30 THEN RAISE EXCEPTION 'retention: % rows' , c USING ERRCODE = 'P0002'; END IF;
+      END $d$$q$, item), 'rows 0');
 END;
 $$;
 

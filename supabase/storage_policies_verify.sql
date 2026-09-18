@@ -22,7 +22,7 @@ CREATE TEMP TABLE verify_results (
 CREATE OR REPLACE FUNCTION pg_temp.verify(check_name text, uid uuid, stmt text, expect text)
 RETURNS void
 LANGUAGE plpgsql
-AS $$
+AS $fn$
 DECLARE
   n      int;
   actual text;
@@ -44,9 +44,11 @@ BEGIN
   INSERT INTO verify_results (check_name, expected, actual, ok)
   VALUES (check_name, expect, actual, actual = expect);
 END;
-$$;
+$fn$;
 
-DO $$
+-- 바깥 블록은 이름 있는 태그($verify$)로 감싼다 — 안쪽 문장의 $q$·$d$ 태그가 붙어 이어지면 무명 달러 인용
+-- 두 개가 만들어져 바깥 블록이 거기서 끊긴다(2026-09-18 실제 42601).
+DO $verify$
 DECLARE
   admin_id    uuid;
   admin_email text;
@@ -106,7 +108,7 @@ BEGIN
     $q$INSERT INTO menu_items (name, price, category) VALUES ('검증용', 1000, 'others')$q$, 'ERROR 42501');
 
   -- (D) 이력 상한 (admin_revision_retention.sql) — 31번 고친 뒤 이 상품의 이력이 정확히 30건인지. 에러 없음(rows 0)이 통과.
-  --     실패하면 'ERROR P0002'(건수 불일치) 또는 'ERROR 42703'(seq 컬럼 없음 = SQL 미실행).
+  --     실패하면 'ERROR P0002'(건수가 30이 아님 — admin_revision_retention.sql 을 아직 안 돌린 경우 그렇다).
   PERFORM pg_temp.verify('(D) 이력 상한: 31번 수정 뒤 상품별 30건만 남는다', admin_id,
     format($q$DO $d$
       DECLARE rid uuid; c int; i int;
@@ -116,10 +118,11 @@ BEGIN
           UPDATE menu_items SET description = 'verify ' || i WHERE id = rid;
         END LOOP;
         SELECT count(*) INTO c FROM product_revisions WHERE table_name = 'menu_items' AND record_id = rid;
-        IF c <> 30 THEN RAISE EXCEPTION 'retention: % rows' , c USING ERRCODE = 'P0002'; END IF;
-      END $d$$q$, item), 'rows 0');
+        IF c <> 30 THEN RAISE EXCEPTION 'retention: %% rows', c USING ERRCODE = 'P0002'; END IF;
+      END $d$
+    $q$, item), 'rows 0');
 END;
-$$;
+$verify$;
 
 -- 결과 표. ✗ 가 있으면 actual 을 보고 해당 SQL(storage_policies / admin_image / admin_edit)을 다시 확인한다.
 -- 'ERROR 42501' = 권한 없음(RLS/GRANT), 'ERROR 23514' = CHECK 위반, 'rows N' = 정상 실행 후 되돌림.

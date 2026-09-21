@@ -63,22 +63,38 @@ middleware.ts                   # Supabase 세션 관리
 
 src/
 ├── components/
-│   ├── common/     # Header, Footer, SearchBar, PageHeader, Loading
-│   ├── home/       # HeroBanner, FeaturedMenu, GiftSets, VideoSection, SNSSection, LocationSection
+│   ├── common/     # Header, Footer, SearchBar, PageHeader, Loading, JsonLd, KakaoMap
+│   ├── home/       # HomeClient, HeroBanner, FeaturedMenu, GiftSets, VideoSection, SNSSection, LocationSection
 │   ├── menu/       # MenuCard, MenuFilter
-│   ├── product/    # ProductDetail (통합 상품 상세 - 모든 상품 타입 지원)
+│   ├── product/    # ProductDetail (통합 상품 상세 - 모든 상품 타입 지원), ProductDetailShell
 │   ├── cart/       # CartContent, CartItem, CartSummary, CartEmpty
 │   ├── auth/       # LoginForm, RegisterForm, ForgotPasswordForm, UserDropdown
+│   ├── admin/      # AdminEditButton(관리자 전용 수정 버튼), ProductEditModal(편집→확인 2단계 + 이력·되돌리기), ProductImageField(이미지 선택·미리보기)
 │   └── legal/      # TermsContent, PrivacyContent
-├── hooks/          # useAuth, useCart, useProducts, useBanners
-├── stores/         # authStore (sessionStorage), cartStore (localStorage)
-├── services/       # auth, cart, products, banners, settings
+├── hooks/          # useAuth, useCart, useProducts(initial* 초기값 + refetch), useBanners, useHasMounted
+├── stores/         # authStore (sessionStorage, selectIsAdmin·selectIsAuthReady), cartStore (localStorage)
+├── services/       # auth, cart, products(+ products.server: 서버 컴포넌트용 cache() 조회), banners, settings,
+│                   # admin(updateProduct·getRevisions), storage(상품 이미지 업로드·회수·정리)
+├── utils/          # adminProduct(편집 화이트리스트·검증·diff·경로 빌더), imageOptimizer(업로드 전 최적화) — 순수 함수, *.test.ts 가 npm test 대상
 ├── types/          # 모든 타입 정의
 ├── styles/         # GlobalStyles, theme
 ├── data/           # sampleData (연락처, 사업자 정보)
 └── lib/
-    ├── supabase/   # client.ts (브라우저), server.ts (서버), middleware.ts, index.ts (getStorageUrl)
+    ├── supabase/   # client.ts (브라우저), server.ts (서버), middleware.ts, index.ts (supabase 싱글톤, getStorageUrl)
+    ├── seo.ts      # BreadcrumbList·Product JSON-LD 빌더
     └── registry.tsx # Styled Components SSR 레지스트리
+
+supabase/                        # SQL Editor 에서 손으로 실행하는 마이그레이션(CLI·migrations 폴더 없음). 실행 순서·검증은 README "관리자 상품 편집 (운영 절차)"
+├── schema.sql, cart_items.sql, user_profiles.sql      # 기본 스키마
+├── admin_edit.sql               # role·is_admin()·상품 RLS·컬럼 GRANT·price CHECK·product_revisions (2026-09-14)
+├── storage_policies.sql         # Storage: avatars/ 본인만, products/ 관리자만 (2026-09-17)
+├── admin_image.sql              # image_url GRANT + 외부 URL·'..' CHECK (2026-09-17)
+├── admin_revision_retention.sql # 이력 상품별 30건 상한 + seq 컬럼 (2026-09-18)
+├── admin_edit_verify.sql        # 옛 형식(자리표시자) 검증 — admin_edit.sql 대상
+├── storage_policies_verify.sql  # 새 형식(전체 실행 → ✓/✗ 표) 검증 — 위 3개 SQL 대상
+└── seed_data.sql, cleanup_and_reseed.sql, price_update_2026_07.sql   # 초기 스냅샷·1회성 데이터 변경. 실 데이터와 동기화 안 됨
+
+docs/superpowers/{specs,plans}/  # 설계 스펙·구현 계획(2026-09-14 상품 편집, 2026-09-17 이미지 교체). 스펙 §10 이 수동 검증 체크리스트
 ```
 
 ---
@@ -103,7 +119,8 @@ CRON_SECRET=<random string>                    # Vercel Cron 엔드포인트 보
 menu_items (id, name, price, description, image_url, category, tags[], is_popular, is_best, is_recommended, display_order, is_active)
 gift_sets (id, name, price, description, image_url, category, items[], display_order, is_active)
 reciprocate_items (id, name, price, description, image_url, category, display_order, is_active)
-  -- image_url: Storage 상대 경로(menu/…, products/<table>/<uuid>.<ext>). CHECK 로 '://'·'..' 거부(admin_image.sql)
+  -- image_url: Storage 상대 경로(레거시 menu/…, 관리자 업로드는 products/<table>/<상품id>/<uuid>.<ext>). CHECK 로 '://'·'..' 거부(admin_image.sql)
+  -- 쓰기 권한: authenticated 는 UPDATE (price, description, is_active[, items], image_url) 컬럼만. INSERT/DELETE 는 REVOKE 상태(RLS 정책도 없음)
 cart_items (id, user_id FK, product_id, product_type, quantity, options JSONB, created_at, updated_at)
   -- product_type: 'menu_item' | 'gift_set' | 'reciprocate_item'
   -- RLS: 본인 장바구니만 접근 가능
@@ -111,8 +128,9 @@ banners (id, title, subtitle, image_url, link, display_order, is_active)
 site_settings (key, value JSONB)
 user_profiles (id, user_id FK→auth.users UNIQUE, avatar_url, role 'user'|'admin', created_at, updated_at)
   -- role은 SQL Editor에서만 변경 가능(protect_user_profiles_role 트리거). 브라우저 세션은 변경 불가
-product_revisions (id, table_name, record_id, changed_by FK→auth.users SET NULL, changed_at, before JSONB, after JSONB)
-  -- 상품 3테이블 AFTER UPDATE 트리거가 자동 적재. 관리자만 SELECT, 사람이 INSERT/DELETE 불가
+product_revisions (id, table_name, record_id, changed_by FK→auth.users SET NULL, changed_at, before JSONB, after JSONB, seq BIGSERIAL)
+  -- 상품 3테이블 AFTER UPDATE 트리거(log_product_revision)가 자동 적재 + 같은 상품의 31번째 이후를 삭제(admin_revision_retention.sql). 관리자만 SELECT, 사람이 INSERT/DELETE 불가
+  -- 상한 판정은 seq(단조 증가) 기준 — 같은 트랜잭션의 이력은 changed_at 이 같아 가를 수 없다
 ```
 
 > **미생성(결제 도입 시 필요)**: `orders`(fulfillment_method·desired_date·운송장 컬럼·waiting_for_deposit 상태 포함), `order_items`(가격+options 스냅샷), `payments`(raw_response·가상계좌 정보) — README.md 결제 가이드 §4 참고. 작성 시 `supabase/schema.sql`의 기존 패턴(uuid_generate_v4, updated_at 트리거)과 `cart_items.sql`의 RLS 패턴 준용, 주문번호는 DB에서 생성(§4-4 레이스 컨디션)
@@ -126,8 +144,10 @@ product_revisions (id, table_name, record_id, changed_by FK→auth.users SET NUL
 - `GiftSet` - 선물세트 (category: gift_set | songpyeon_set | baekil_dol_set, items: string[])
 - `ReciprocateItem` - 이바지/답례 (category: ibaji | daprye)
 - `ProductType` - 'menu_item' | 'gift_set' | 'reciprocate_item'
-- `User` - id, email, name?, phone?, avatar_url?
+- `User` - id, email, name?, phone?, avatar_url?, role? (`UserRole` = 'user' | 'admin', user_profiles.role — UI 힌트일 뿐, 권한은 RLS)
 - `CartItem` - id, user_id, product_id, product_type, quantity, product? (조인된 상품 정보)
+- `EditableProductPatch` - 관리자 편집 가능 5컬럼(image_url, price, description, is_active, items) — 늘릴 때 같이 움직이는 4곳은 아래 "다음 작업 메모"
+- `ProductRevision` - product_revisions 행(before/after JSONB, changed_by null = 콘솔 수정)
 
 ---
 
@@ -202,20 +222,23 @@ export const productService = {
 
 ### 훅 사용
 ```typescript
-// 상품: useMenuItems(), useGiftSets(), useReciprocateItems(), useMenuItem(id), useGiftSet(id)
-// 인증: useAuth() → { user, isAuthenticated, signIn, signUp, signInWithKakao, signInWithGoogle, signOut }
+// 상품: useMenuItems(category?, initialItems?), useGiftSets(…), useReciprocateItems(…), usePopularItems(limit, initial?),
+//       useMenuItem(id, initialItem?), useGiftSet(…), useReciprocateItem(…) → { items|item, isLoading, error, refetch }
+//       (initial* 은 서버 렌더 초기값, refetch 는 관리자 저장 후 갱신용 — AdminEditButton 의 onSaved 에 넘긴다)
+// 인증: useAuth() → { user, isAuthenticated, isAdmin, isInitialized, signIn, signUp, signInWithKakao, signInWithGoogle, signOut, resetPassword, updateProfile, … }
 // 장바구니: useCart() → { items, totalItems, totalPrice, addToCart, updateQuantity, removeFromCart }
 ```
 
 ### 관리자 상품 편집
-- DB: `supabase/admin_edit.sql` (1회 실행, idempotent, **코드 배포보다 먼저**). 검증은 `supabase/admin_edit_verify.sql`. 관리자 지정은 `INSERT … ON CONFLICT`(README 참고 — 로그인만으로는 `user_profiles` 행이 안 생김).
-- 판별: `useAuthStore(selectIsAdmin)` (`user.role === 'admin'`). 데이터 훅 안에서는 `useAuth()`를 부르지 않는다(초기화 부수효과).
-- 버튼: `src/components/admin/AdminEditButton.tsx` — 관리자가 아니면 `null` 반환. 목록 카드 3곳 + 홈 카드 2곳(`FeaturedMenu`·`GiftSets`) + `ProductDetail` 1곳.
-- 쓰기: `adminService.updateProduct(productType, id, patch)` — 브라우저에서 바로 UPDATE, **RLS가 유일한 보안 경계**. 화이트리스트 5컬럼(`image_url`, `price`, `description`, `is_active`, `items`)만 통과. 컬럼을 늘리면 `admin_image.sql` 처럼 `GRANT UPDATE (…)` 도 같이(안 그러면 42501).
-- 이미지: `ProductImageField`(선택·미리보기) → `optimizeImage` → 확인 단계 저장 시 `storageService.uploadProductImage` → 같은 `updateProduct`. UPDATE 실패 시 `removeProductImage` 로 방금 올린 파일 회수. 되돌리기는 고른 이미지를 버리고 이력 값으로.
-- **이력 상한 = 상품별 최근 30건**(`admin_revision_retention.sql` 의 `retention`, 클라이언트 `REVISION_RETENTION` — 둘을 함께 바꿀 것). DB 트리거가 31번째 이후를 지우고, 브라우저는 이미지 저장 뒤 그 상품 폴더에서 "현재 이미지 + 남은 이력이 가리키는 파일" 외를 지운다(best-effort, `pruneStaleImages`). 즉 **최근 30번의 수정까지는 이미지 포함 되돌릴 수 있고 그 이전은 사라진다**. 이력 순서는 `seq`(단조 증가) — 같은 트랜잭션의 이력은 `changed_at` 이 같다.
-- 조회: 관리자는 `productService.get*(…, { includeInactive: true })`로 노출 off 상품도 본다.
-- 이력: `product_revisions`는 DB 트리거가 적재. 되돌리기는 `before`의 4컬럼을 폼에 얹어 `updateProduct`를 다시 타는 것(별도 API 없음).
+- DB(SQL Editor, 1회, 전부 idempotent, **코드 배포보다 먼저**): `admin_edit.sql` → `storage_policies.sql` → `admin_image.sql` → `admin_revision_retention.sql` 순서. 검증은 `admin_edit_verify.sql`(옛 형식, 첫 파일 대상) + `storage_policies_verify.sql`(뒤 3개를 한 번에). 새 변경은 **새 SQL 파일**로 만들고 이미 실행된 파일은 주석만 잇는다. 절차 상세는 README "관리자 상품 편집 (운영 절차)". 관리자 지정은 `INSERT … ON CONFLICT`(로그인만으로는 `user_profiles` 행이 안 생김), 지정·해제 뒤엔 **재로그인**해야 role 이 세션에 실린다.
+- 판별: `useAuthStore(selectIsAdmin)` (`user.role === 'admin'`). 데이터 훅 안에서는 `useAuth()`를 부르지 않는다(초기화 부수효과). role 은 `src/services/auth.ts` 의 `buildUser`(user_profiles 조회, 행 없음·실패면 'user')가 싣는다 — **`User` 객체를 만드는 새 경로는 반드시 이 함수를 탄다**(아바타 업로드 경로에서 빠져 관리자 버튼이 사라진 전례). 화면 분기는 `selectIsAuthReady` 와 함께(하이드레이션, SEO 절 참고).
+- 버튼: `src/components/admin/AdminEditButton.tsx` — 관리자가 아니면(또는 auth 초기화 전) `null` 반환. 목록 카드 3곳(`MenuCard`·`GiftsListClient`·`ReciprocateListClient`) + 홈 카드 2곳(`FeaturedMenu`·`GiftSets`) + `ProductDetail` 1곳(`variant="detail"`). `card` 변형은 `position: relative` 인 이미지 래퍼 안에 absolute 로 놓고, 카드가 `Link` 라 클릭에서 `preventDefault`+`stopPropagation`. `onSaved` 에는 그 화면 훅의 `refetch` 를 넘긴다(props 로 한 단계씩 내려온다). 모달은 `createPortal(document.body)` — 카드의 transform/overflow 영향을 피한다. 7번째 자리를 만들면 이 규칙을 그대로.
+- 쓰기: `adminService.updateProduct(productType, id, patch)` — 브라우저에서 바로 UPDATE, **RLS가 유일한 보안 경계**. 화이트리스트 5컬럼(`image_url`, `price`, `description`, `is_active`, `items`)만 통과. 컬럼을 늘리면 `admin_image.sql` 처럼 `GRANT UPDATE (…)` 도 같이(안 그러면 42501). UPDATE 뒤 **`.select('id').single()` 을 붙여야** RLS 에 막힌 0행 갱신이 에러(PGRST116)로 잡힌다. 에러 → 사용자 메시지는 `toFriendlyError`: PGRST116/42501 = 권한, 23514 = CHECK 위반(제약 이름에 `image_url_path` 가 있으면 이미지, 아니면 가격) — **새 CHECK 를 추가하면 이 분기도 같이**.
+- 폼·diff 규칙(`adminProduct.ts`): 검증은 **바뀐 필드에만**(`diffEditable` → `validatePatch`) — 전체를 검증하면 구성품이 빈 선물세트는 가격만 고쳐도 막힌다. 비교는 문자열 trim, null ≡ "", 배열은 JSON 비교, `is_active` 는 "false 가 아니면 켜짐"(DB NULL ≡ true — `toForm`·`formatFieldValue` 도 같은 규칙, 어기면 안 건드린 필드가 변경으로 잡힌다).
+- 이미지: `ProductImageField`(선택·미리보기) → `optimizeImage` → 확인 단계 저장 시 `storageService.uploadProductImage` → 같은 `updateProduct`. **업로드는 확인 단계의 저장 시점에만**(편집 단계에서 올리면 취소한 파일이 고아로 남는다). UPDATE 실패 시 `removeProductImage` 로 방금 올린 파일 회수. 되돌리기는 고른 이미지를 버리고 이력 값으로. 버킷 `images` 는 public 이라 **표시 URL 은 정책과 무관하게 읽히고**, 정책은 list/upload/remove API 에만 걸린다. `removeProductImage`·`pruneProductImages` 는 `products/` 밖(레거시 `menu/…`)은 건드리지 않는다.
+- **이력 상한 = 상품별 최근 30건**(`admin_revision_retention.sql` 의 `retention`, 클라이언트 `REVISION_RETENTION` — 둘을 함께 바꿀 것). DB 트리거가 31번째 이후를 지우고, 브라우저는 이미지 저장 뒤 그 상품 폴더에서 "현재 이미지 + 남은 이력이 가리키는 파일" 외를 지운다(best-effort, `pruneStaleImages`). 즉 **최근 30번의 수정까지는 이미지 포함 되돌릴 수 있고 그 이전은 사라진다**. 이력 순서는 `seq`(단조 증가) — 같은 트랜잭션의 이력은 `changed_at` 이 같다. `pruneStaleImages` 는 DB 상한 SQL 이 아직 안 걸린 환경도 대비해 이력을 `REVISION_RETENTION * 10` 건 받아 keep 집합을 만든다(참조 중인 파일을 지우지 않기 위해).
+- 조회: 관리자는 `productService.get*(…, { includeInactive: true })`로 노출 off 상품도 본다(훅이 `selectIsAdmin` 으로 자동 결정). 서버 렌더 초기값은 anon 조회라 숨김 상품이 없다 → 관리자 훅은 초기값이 있어도 하이드레이션 직후 `{ silent: true }` 로 재조회한다.
+- 이력: `product_revisions`는 DB 트리거가 적재, 조회는 `adminService.getRevisions(productType, id, limit)`(비관리자는 RLS 로 빈 배열). 되돌리기는 `before`의 5컬럼(image_url 포함)을 폼에 얹어 `updateProduct`를 다시 타는 것(별도 API 없음) — 되돌린 것도 이력에 남는다.
 - 리포의 `seed_data.sql`/`cleanup_and_reseed.sql`은 초기 스냅샷 — 실 데이터와 동기화하지 않는다.
 - **검증 SQL 형식**: `supabase/storage_policies_verify.sql` 처럼 자리표시자 없이 **전체를 한 번에 실행하면 ✓/✗ 결과 표**가 나오게 쓴다(관리자·일반 유저는 `auth.users`에서 자동 선택, 각 검사는 실행기 함수 안에서 `SET LOCAL ROLE authenticated` + `request.jwt.claims`로 실행 뒤 서브트랜잭션 강제 롤백). `<uuid>`를 손으로 채우는 옛 방식(`admin_edit_verify.sql`)은 SQL Editor에서 전체 실행 시 22P02·첫 기대 에러에서 끊긴다 — 새 검증 파일은 새 형식으로, 기회가 되면 `admin_edit_verify.sql`도 옮긴다. **SQL Editor 호환 규칙(2026-09-18 실제 실패에서 나온 것)**: ① 결과 표·함수는 temp 가 아닌 전용 스키마 `verify_tmp`(세션이 갈려도 동작, PostgREST 미노출), ② `DO` 본문 안에 `--` 주석을 두지 않고 주석에는 달러 태그(`$x$`)를 쓰지 않는다(에디터가 주석 안 태그를 문자열 시작으로 읽음), ③ 중첩 달러 인용은 바깥부터 이름 있는 태그, 닫는 태그 두 개를 한 줄에 붙이지 않는다(`$d$$q$` 는 `$$` 로 읽힘), ④ `format()` 템플릿 안의 `RAISE … %` 는 `%%`. 로컬 재현은 `@electric-sql/pglite`(Node 내장 Postgres)로 리포 SQL 을 순서대로 적용하면 된다.
 
@@ -272,6 +295,8 @@ export const productService = {
   - 세부: A 사전준비(정책 확정·PG 심사·과세/면세 확인, 개발과 병렬) → **B-0 호스팅 이전(Vercel → Netlify 무료, 결제 개발 전 필수 선행)** → B 기반(DB/타입/서비스/admin 클라이언트/관리자 권한) → C 결제 플로우(토스 테스트 키, 바로 구매 포함) → D 주문 관리 + **사장님 알림·최소 관리자 화면(운송장 입력 포함, 오픈 필수)** → E 안정화(웹훅·대사 배치·리허설) 후 오픈 전환(웹훅 URL 등록·백업 체계·라이브 키·Netlify 한도 확인)
   - 주문서에 **수령 방식(픽업/배송) + 희망 수령일** 포함 (떡 = 주문제작, README §5.5-5) / 발송 시 운송장 입력 → 고객 배송조회 (§5.5-11)
 - [ ] **Phase 5**: 관리자 대시보드 (단, 주문 목록·상태 변경 최소 기능은 Phase 4-D로 앞당김)
+  - [x] 관리자 상품 편집(인라인, 대시보드 없음): 가격·설명·구성품·노출·이미지 + 되돌리기(이력 30건) — 2026-09-14~18 완료, 규칙은 위 "관리자 상품 편집" 절
+  - [ ] 상품 추가·삭제·카테고리 — 착수 메모는 위 "다음 작업 메모"
 - [ ] **Phase 6**: 커뮤니티 (리뷰, 공지, Q&A)
 
 ---

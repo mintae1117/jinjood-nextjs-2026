@@ -3,7 +3,7 @@
 import styled from "styled-components";
 import Link from "next/link";
 import { useCart } from "@/hooks";
-
+import { DELIVERY_FEE } from "@/utils/merchantPolicy";
 
 const SummaryWrapper = styled.div`
   background-color: #ffffff;
@@ -111,8 +111,6 @@ const Notice = styled.p`
   color: #999999;
   line-height: 1.5;
 `;
-
-const DELIVERY_FEE = 3000;
 
 export default function CartSummary() {
   const { totalPrice, totalItems } = useCart();

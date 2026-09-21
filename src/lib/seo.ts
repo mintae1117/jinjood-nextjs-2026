@@ -6,6 +6,8 @@
  * 여기서 만든다.
  */
 
+import { offerPolicyJsonLd } from "@/utils/merchantPolicy";
+
 export const SITE_URL = "https://www.jinjood.com";
 
 export interface BreadcrumbEntry {
@@ -50,6 +52,10 @@ export interface ProductJsonLdInput {
 /**
  * Product + Offer 스키마.
  * 검색 결과에 가격이 노출될 수 있고, 상품 페이지라는 것을 명시적으로 알린다.
+ *
+ * offers 에는 배송(shippingDetails)·환불(hasMerchantReturnPolicy) 정책을 항상 싣는다 — 구글 "판매자 목록"이
+ * 요구하는 필드(2026-09 Search Console 경고). 값은 merchantPolicy.ts 가 약관 제10·11조와 맞춰 관리한다.
+ * review·aggregateRating 은 실제 리뷰가 생기기 전까지 넣지 않는다(허위 평점은 구글 정책 위반, 경고는 '권장' 수준).
  */
 export function productJsonLd({
   name,
@@ -59,6 +65,8 @@ export function productJsonLd({
   price,
   priceFrom = false,
 }: ProductJsonLdInput) {
+  const policy = offerPolicyJsonLd(SITE_URL);
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -81,6 +89,7 @@ export function productJsonLd({
           offerCount: 1,
           availability: "https://schema.org/InStock",
           seller: { "@type": "Bakery", name: "진주떡집" },
+          ...policy,
         }
       : {
           "@type": "Offer",
@@ -89,6 +98,7 @@ export function productJsonLd({
           price: String(price),
           availability: "https://schema.org/InStock",
           seller: { "@type": "Bakery", name: "진주떡집" },
+          ...policy,
         },
   };
 }

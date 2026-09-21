@@ -75,7 +75,7 @@ src/
 ├── stores/         # authStore (sessionStorage, selectIsAdmin·selectIsAuthReady), cartStore (localStorage)
 ├── services/       # auth, cart, products(+ products.server: 서버 컴포넌트용 cache() 조회), banners, settings,
 │                   # admin(updateProduct·getRevisions), storage(상품 이미지 업로드·회수·정리)
-├── utils/          # adminProduct(편집 화이트리스트·검증·diff·경로 빌더), imageOptimizer(업로드 전 최적화) — 순수 함수, *.test.ts 가 npm test 대상
+├── utils/          # adminProduct(편집 화이트리스트·검증·diff·경로 빌더), imageOptimizer(업로드 전 최적화), merchantPolicy(배송비·배송일·환불 정책 값 + JSON-LD) — 순수 함수, *.test.ts 가 npm test 대상
 ├── types/          # 모든 타입 정의
 ├── styles/         # GlobalStyles, theme
 ├── data/           # sampleData (연락처, 사업자 정보)
@@ -202,7 +202,7 @@ import { getStorageUrl } from "@/lib/supabase";
 | reciprocate_item | - | - | ✅ (전화 문의) |
 
 > **결제 기능 현재 상태**: "바로 구매하기"/"주문하기" 버튼은 실제 `disabled`가 아니라 **회색 스타일 + alert 핸들러** 방식.
-> 클릭 시 "결제 기능은 아직 준비중입니다" alert 표시. 무료배송 없음 (배송비 3,000원 — `CartSummary.tsx`에 하드코딩, 결제 도입 시 서버 값으로 단일화).
+> 클릭 시 "결제 기능은 아직 준비중입니다" alert 표시. 무료배송 없음 (배송비 3,000원 — `src/utils/merchantPolicy.ts` 의 `DELIVERY_FEE` 가 장바구니·상품 JSON-LD 의 공통 출처, 결제 도입 시 서버 값으로 단일화).
 > 📌 구현 현황 표·결제 도입 단계는 **README.md "결제 기능 도입 종합 가이드" §0(현재 구현 상태) / §5.5(실서비스 운영 리스크) / §10(구현 우선순위 로드맵)** 이 단일 출처. 결제 관련 변경 시 README를 먼저 갱신할 것.
 > ⚠️ 결제 코드 작성 시 필수 준수: 서버 가격 재계산(§5.5-6), 승인/취소/웹훅 멱등성(§5.5-2/3), 상태 전이 순방향 강제, 날짜 판정은 Asia/Seoul 기준(§5.5-5), `orders.user_id`는 ON DELETE SET NULL(§5.5-12), 주문 상태 변경·운송장 입력은 서버 admin 검증 + Service Role로만(§5.5-13), 면세 상품은 `taxFreeAmount` 반영(§5.5-14).
 
@@ -267,6 +267,8 @@ export const productService = {
 - **상세 페이지**: `[id]/page.tsx`는 서버 컴포넌트다. `src/services/products.server.ts`의 `cache()`된 조회로 상품을 받아 `initialItem`으로 클라이언트에 넘긴다(같은 요청의 `generateMetadata`와 DB 왕복이 합쳐진다). 훅은 `useMenuItem(id, initialItem)`처럼 초기값을 받는다.
 - **h1은 페이지당 하나**: 홈은 `HeroBanner`의 **첫 슬라이드만** h1(나머지 슬라이드는 h2), 목록은 `PageHeader`, 상세는 `ProductDetail`의 `ProductName`.
 - **구조화 데이터**: 전역(`Bakery`·`SiteNavigationElement`)은 `app/layout.tsx`, 페이지별(`BreadcrumbList`·`Product`)은 `src/lib/seo.ts` + `src/components/common/JsonLd.tsx`.
+  - `Product.offers`(Offer·AggregateOffer 둘 다)에는 `shippingDetails`·`hasMerchantReturnPolicy` 를 항상 싣는다 — 구글 "판매자 목록"이 요구하는 필드(2026-09-21 Search Console 경고 대응). 값은 `src/utils/merchantPolicy.ts` 가 **이용약관 제10조(당일·익일 배송)·제11조(신선식품 단순변심 환불 불가 → `MerchantReturnNotPermitted`)** 와 맞춰 관리한다. 약관 문구나 배송비를 바꾸면 이 파일도 같이(검색 결과에 노출되는 값).
+  - `review`·`aggregateRating` 경고는 **의도적으로 남겨 둔다** — 실제 리뷰 기능(Phase 6)이 생기기 전에 넣으면 허위 평점으로 구글 구조화 데이터 정책 위반. 구글도 '권장' 수준으로 분류.
 - ⚠️ 서버에서도 렌더되므로 컴포넌트 **렌더 경로에서 `window`·`document`를 읽지 말 것**. 경로가 필요하면 `usePathname()`.
 - ⚠️ **persist된 상태로 화면을 가르지 말 것**: `authStore.user`·`cartStore`는 sessionStorage/localStorage에 저장돼 클라이언트 첫 렌더엔 있지만 서버엔 없다. 그대로 쓰면 하이드레이션이 어긋난다. `selectIsAuthReady`(= `isInitialized`, persist 대상 아님)로 함께 막는다 — `Header.tsx`와 `AdminEditButton.tsx` 참고.
 - framer-motion 등장 애니메이션(`initial={{ opacity: 0 }}`)은 SSR HTML에 그대로 나간다. 의도된 연출이라 유지한다. 대신 **하이드레이션 전까지 그 영역은 투명**하므로, 화면 전체를 덮는 요소에 쓰면 느린 회선에서 백지로 보인다는 점을 감안할 것.

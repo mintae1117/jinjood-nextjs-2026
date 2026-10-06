@@ -81,9 +81,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  alternates: {
-    canonical: "https://www.jinjood.com",
-  },
+  // canonical 은 여기(루트)에 두지 않는다 — 루트 metadata 는 자기 값을 정하지 않은 모든 하위 페이지에
+  // 상속되어, 약관·개인정보·로그인·장바구니 등이 전부 "나는 홈의 중복" 이라고 구글에 알리게 된다.
+  // 그 결과 홈이 구글 색인에서 빠졌다(2026-10 확인). 홈 canonical 은 app/page.tsx, 나머지는 각 페이지가 정한다.
   verification: {
     google: "_1LFsG0f0fXdal6iPcDWCngHlqQhN1HnSlxBfsRppEw",
     other: {

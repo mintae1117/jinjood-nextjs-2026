@@ -4,6 +4,14 @@ import {
   getPopularItemsServer,
 } from "@/services/products.server";
 import HomeClient from "@/components/home/HomeClient";
+import type { Metadata } from "next";
+
+// 홈 canonical 은 홈에만 둔다(루트 layout 에 두면 모든 하위 페이지가 상속한다 — layout.tsx 주석 참고)
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "https://www.jinjood.com",
+  },
+};
 
 /**
  * 서버 컴포넌트. 배너·대표메뉴·선물세트를 서버에서 조회해 넘긴다.

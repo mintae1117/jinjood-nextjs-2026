@@ -14,124 +14,117 @@ const supabase = createClient(
 // 한 시간마다 재생성. 정적으로 굳혀 버리면 상품을 추가해도 다음 배포까지 반영되지 않는다.
 export const revalidate = 3600;
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://www.jinjood.com";
+const baseUrl = "https://www.jinjood.com";
 
-  // 정적 페이지
+type ProductRow = { id: string; updated_at: string | null };
+
+/** 활성 상품의 id·수정 시각. 실패하면 null — 빈 배열과 구분해야 "상품이 없는 가게"로 오해하지 않는다. */
+async function fetchActive(
+  table: "menu_items" | "gift_sets" | "reciprocate_items",
+  label: string
+): Promise<ProductRow[] | null> {
+  const { data, error } = await supabase
+    .from(table)
+    .select("id, updated_at")
+    .eq("is_active", true);
+
+  // 실패를 삼키면 상품 URL이 조용히 전부 빠진 사이트맵이 최대 1시간 캐시된다
+  if (error) console.error(`Sitemap: ${label} 조회 실패`, error);
+  return data ?? null;
+}
+
+/**
+ * 목록 페이지의 lastmod = 그 목록에 보이는 상품 중 가장 최근 수정 시각.
+ * 아는 날짜가 없으면 undefined 를 돌려 <lastmod> 자체를 생략한다.
+ * 매 요청 new Date() 를 넣으면 모든 URL 이 늘 "방금 수정됨"이 되고, 구글은 그런 lastmod 를 사이트 단위로 무시한다.
+ */
+function latestUpdate(...groups: (ProductRow[] | null)[]): Date | undefined {
+  let max: number | undefined;
+  for (const rows of groups) {
+    for (const row of rows ?? []) {
+      if (!row.updated_at) continue;
+      const t = new Date(row.updated_at).getTime();
+      if (!Number.isNaN(t) && (max === undefined || t > max)) max = t;
+    }
+  }
+  return max === undefined ? undefined : new Date(max);
+}
+
+function productPages(
+  rows: ProductRow[] | null,
+  segment: "represent" | "gifts" | "reciprocate"
+): MetadataRoute.Sitemap {
+  return (rows ?? []).map((item) => ({
+    url: `${baseUrl}/${segment}/${item.id}`,
+    // 실제 수정 시각을 쓴다 — 모르면 생략. 현재 시각으로 메우면 위 latestUpdate 주석과 같은 문제
+    lastModified: item.updated_at ? new Date(item.updated_at) : undefined,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  let menuItems: ProductRow[] | null = null;
+  let giftSets: ProductRow[] | null = null;
+  let reciprocateItems: ProductRow[] | null = null;
+
+  try {
+    [menuItems, giftSets, reciprocateItems] = await Promise.all([
+      fetchActive("menu_items", "메뉴"),
+      fetchActive("gift_sets", "선물세트"),
+      fetchActive("reciprocate_items", "이바지/답례"),
+    ]);
+  } catch (error) {
+    console.error("Sitemap: 상품 데이터 조회 실패", error);
+  }
+
+  // 정적 페이지 — 홈은 대표 메뉴·선물세트 카드를 보여주므로 두 테이블 기준. 약관류·오시는 길은 lastmod 를 알 수 없어 생략
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: latestUpdate(menuItems, giftSets),
       changeFrequency: "daily",
       priority: 1,
     },
     {
       url: `${baseUrl}/represent`,
-      lastModified: new Date(),
+      lastModified: latestUpdate(menuItems),
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/gifts`,
-      lastModified: new Date(),
+      lastModified: latestUpdate(giftSets),
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/reciprocate`,
-      lastModified: new Date(),
+      lastModified: latestUpdate(reciprocateItems),
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/contact`,
-      lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,
     },
   ];
 
-  // 동적 상품 페이지
-  const dynamicPages: MetadataRoute.Sitemap = [];
-
-  try {
-    // 메뉴 아이템
-    const { data: menuItems, error: menuError } = await supabase
-      .from("menu_items")
-      .select("id, updated_at")
-      .eq("is_active", true);
-
-    // 실패를 삼키면 상품 URL이 조용히 전부 빠진 사이트맵이 최대 1시간 캐시된다
-    if (menuError) console.error("Sitemap: 메뉴 조회 실패", menuError);
-
-    if (menuItems) {
-      menuItems.forEach((item) => {
-        dynamicPages.push({
-          url: `${baseUrl}/represent/${item.id}`,
-          // 실제 수정 시각을 쓴다 — 매번 현재 시각을 넣으면 모든 URL이 늘 갱신됐다고 주장하게 된다
-          lastModified: item.updated_at ? new Date(item.updated_at) : new Date(),
-          changeFrequency: "weekly",
-          priority: 0.7,
-        });
-      });
-    }
-
-    // 선물세트
-    const { data: giftSets, error: giftError } = await supabase
-      .from("gift_sets")
-      .select("id, updated_at")
-      .eq("is_active", true);
-
-    // 실패를 삼키면 상품 URL이 조용히 전부 빠진 사이트맵이 최대 1시간 캐시된다
-    if (giftError) console.error("Sitemap: 선물세트 조회 실패", giftError);
-
-    if (giftSets) {
-      giftSets.forEach((item) => {
-        dynamicPages.push({
-          url: `${baseUrl}/gifts/${item.id}`,
-          // 실제 수정 시각을 쓴다 — 매번 현재 시각을 넣으면 모든 URL이 늘 갱신됐다고 주장하게 된다
-          lastModified: item.updated_at ? new Date(item.updated_at) : new Date(),
-          changeFrequency: "weekly",
-          priority: 0.7,
-        });
-      });
-    }
-
-    // 이바지/답례
-    const { data: reciprocateItems, error: recipError } = await supabase
-      .from("reciprocate_items")
-      .select("id, updated_at")
-      .eq("is_active", true);
-
-    // 실패를 삼키면 상품 URL이 조용히 전부 빠진 사이트맵이 최대 1시간 캐시된다
-    if (recipError) console.error("Sitemap: 이바지/답례 조회 실패", recipError);
-
-    if (reciprocateItems) {
-      reciprocateItems.forEach((item) => {
-        dynamicPages.push({
-          url: `${baseUrl}/reciprocate/${item.id}`,
-          // 실제 수정 시각을 쓴다 — 매번 현재 시각을 넣으면 모든 URL이 늘 갱신됐다고 주장하게 된다
-          lastModified: item.updated_at ? new Date(item.updated_at) : new Date(),
-          changeFrequency: "weekly",
-          priority: 0.7,
-        });
-      });
-    }
-  } catch (error) {
-    console.error("Sitemap: 상품 데이터 조회 실패", error);
-  }
-
-  return [...staticPages, ...dynamicPages];
+  return [
+    ...staticPages,
+    ...productPages(menuItems, "represent"),
+    ...productPages(giftSets, "gifts"),
+    ...productPages(reciprocateItems, "reciprocate"),
+  ];
 }

@@ -52,7 +52,8 @@ const SectionSubtitle = styled(motion.span)`
   margin-bottom: 0.75rem;
 `;
 
-const SectionTitle = styled(motion.h2)`
+// 홈의 유일한 h1 — 가게 이름이 들어간 제목이라 여기에 둔다(HeroBanner 주석 참고). 스타일은 h2 때와 같다.
+const SectionTitle = styled(motion.h1)`
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1.5rem;

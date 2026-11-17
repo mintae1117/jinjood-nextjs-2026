@@ -89,8 +89,8 @@ const Subtitle = styled(motion.span)`
   }
 `;
 
-// 슬라이드마다 제목을 찍으므로 첫 슬라이드만 h1, 나머지는 h2로 둔다.
-// (배너가 3개면 h1도 3개가 되어 페이지당 하나 규칙을 어긴다 — 스타일은 동일)
+// 배너 제목은 모두 h2 다. 홈의 h1 은 VideoSection 의 "N년 전통의 맛, 진주떡집입니다"가 맡는다 —
+// 배너 문구는 DB 값("품질과 영양" 등)이라 가게 이름이 없어, h1 으로 두면 홈이 브랜드 검색에서 약해진다.
 const titleStyles = css`
   font-size: 4rem;
   font-weight: 700;
@@ -112,11 +112,7 @@ const titleStyles = css`
   }
 `;
 
-const Title = styled(motion.h1)`
-  ${titleStyles}
-`;
-
-const SubTitleHeading = styled(motion.h2)`
+const Title = styled(motion.h2)`
   ${titleStyles}
 `;
 
@@ -271,25 +267,14 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                 >
                   {banner.subtitle}
                 </Subtitle>
-                {index === 0 ? (
-                  <Title
-                    variants={textVariants}
-                    initial="hidden"
-                    animate={activeIndex === index ? "visible" : "hidden"}
-                    custom={1}
-                  >
-                    {banner.title}
-                  </Title>
-                ) : (
-                  <SubTitleHeading
-                    variants={textVariants}
-                    initial="hidden"
-                    animate={activeIndex === index ? "visible" : "hidden"}
-                    custom={1}
-                  >
-                    {banner.title}
-                  </SubTitleHeading>
-                )}
+                <Title
+                  variants={textVariants}
+                  initial="hidden"
+                  animate={activeIndex === index ? "visible" : "hidden"}
+                  custom={1}
+                >
+                  {banner.title}
+                </Title>
                 <Description
                   variants={textVariants}
                   initial="hidden"

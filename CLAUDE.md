@@ -59,7 +59,7 @@ app/
 ├── (auth)/                     # 로그인, 회원가입, 비밀번호 찾기
 ├── (legal)/                    # 이용약관, 개인정보처리방침
 ├── auth/callback/route.ts      # OAuth 콜백
-middleware.ts                   # Supabase 세션 관리
+middleware.ts                   # Supabase 세션 쿠키 갱신 — /mypage·/checkout·/auth 만(공개 페이지는 넣지 않는다)
 
 src/
 ├── components/
@@ -80,7 +80,7 @@ src/
 ├── styles/         # GlobalStyles, theme
 ├── data/           # sampleData (연락처, 사업자 정보)
 └── lib/
-    ├── supabase/   # client.ts (브라우저), server.ts (서버), middleware.ts, index.ts (supabase 싱글톤, getStorageUrl)
+    ├── supabase/   # client.ts (브라우저), server.ts (서버·쿠키), public.ts (서버·익명 키, 공개 데이터 전용), middleware.ts, index.ts (supabase 싱글톤, getStorageUrl)
     ├── seo.ts      # BreadcrumbList·Product JSON-LD 빌더
     └── registry.tsx # Styled Components SSR 레지스트리
 
@@ -176,7 +176,8 @@ error: #ef4444
 
 ### Supabase 클라이언트
 - 브라우저: `src/lib/supabase/client.ts` → `createBrowserClient()`
-- 서버: `src/lib/supabase/server.ts` → `createServerClient()` (cookies 사용)
+- 서버: `src/lib/supabase/server.ts` → `createServerClient()` (cookies 사용 — 이걸 쓰는 페이지는 요청마다 서버 렌더가 된다. 로그인 기준 조회에만)
+- 서버(공개 데이터): `src/lib/supabase/public.ts` → `publicSupabase` (익명 키, 쿠키 안 읽음 — 홈·목록·상세·사이트맵 조회용)
 
 ### 이미지 처리
 ```tsx
@@ -251,7 +252,7 @@ export const productService = {
 - **편집 컬럼을 늘릴 때 같이 움직이는 4곳**: `EditableProductPatch`(types) · `editableFieldsFor`/`pickEditablePatch`/`validatePatch`/`FIELD_LABELS`/`formatFieldValue`(`adminProduct.ts`) · `GRANT UPDATE (…)`(SQL) · 모달 폼. 하나라도 빠지면 클라이언트는 통과하고 DB가 42501을 낸다. 상품 추가에는 `name`·`category`·`display_order`·`tags`/`is_popular`… 가 새로 들어온다 — `display_order`는 "맨 뒤에 추가"(MAX+1) 기본값이 필요하다.
 - **삭제 정책은 먼저 결정할 것**: 권장은 기존 `is_active=false`(숨김)를 기본 삭제로. 실제 DELETE를 열려면 ① `cart_items.product_id`는 FK가 없어(`product_type`+`product_id` 쌍) 고아 행이 남고 `cartService.getProductByTypeAndId`가 null을 돌려준다 — `CartItem` 표시 처리 확인, ② `product_revisions`는 AFTER UPDATE 트리거만 있어 삭제가 기록되지 않는다(AFTER DELETE 트리거 추가 시 `after JSONB NOT NULL` 제약 — `'{}'::jsonb`로 넣거나 NULL 허용으로 바꿀지 결정), ③ 결제 도입 후 `order_items`는 가격·옵션 스냅샷이라 상품 삭제와 무관하게 설계돼 있다(README §4).
 - **카테고리는 세 겹으로 하드코딩**: DB CHECK(`menu_items.category IN (...)` 등 테이블별) · TS 유니온(`MenuItem.category`, `MenuCategory`…) · 한글 라벨/필터 옵션 **6곳**(`app/represent/RepresentListClient.tsx`, `app/gifts/GiftsListClient.tsx`, `app/reciprocate/ReciprocateListClient.tsx`, `src/components/menu/MenuCard.tsx`, `src/components/common/SearchBar.tsx`, `src/components/product/ProductDetail.tsx`). **기존 카테고리 안에서 추가**는 셀렉트 하나로 끝난다. **새 카테고리**를 만들 가능성이 있으면 라벨·옵션을 한 파일(예: `src/data/categories.ts`)로 모으는 정리를 먼저 한다.
-- **화면 반영**: 목록·홈은 요청마다 서버가 조회(`products.server.ts`의 `cache()`는 요청 단위, ISR 없음)하고 `sitemap.ts`도 요청 시 DB를 읽는다 → 추가·삭제 후 revalidate 없이 바로 반영된다. 클라이언트는 저장 후 각 훅의 `refetch()`.
+- **화면 반영**: 홈·목록·상세·사이트맵은 미리 만들어 둔 페이지(정적 + `revalidate = 3600`)다. 관리자 저장(`adminService.updateProduct`)이 끝나면 `POST /api/revalidate`(`is_admin()` 확인 → `revalidatePath`)를 불러 해당 목록·상세·홈·사이트맵을 바로 다시 만든다. 이 호출이 실패하거나 Supabase 대시보드에서 직접 고친 값은 최대 1시간 뒤 반영된다. 상품 추가·삭제 기능을 만들면 같은 호출을 붙일 것(새 상품 id 는 첫 요청 때 페이지가 만들어진다). 관리자 본인 화면은 저장 후 각 훅의 `refetch()`.
 - **이미지 파일 정리는 저장 시점에 자동**(위 이력 상한 항목). 2026-09-18 이전에 올라간 `products/<테이블>/<uuid>.webp`(상품 id 폴더 없음)는 정리 대상 밖이라 남아 있으면 대시보드에서 지운다. 상품 삭제를 열 때는 그 상품 폴더 전체를 `removeProductImage`/`pruneProductImages(빈 keep)` 로 비운다.
 
 ### 테스트 (`npm test`)
@@ -261,6 +262,7 @@ export const productService = {
 - 컴포넌트·Supabase 흐름은 `npm run build` + 브라우저 확인으로 본다. 관리자 계정이 필요한 시나리오는 스펙 §10 체크리스트를 사용자가 실행.
 
 ### SEO — 크롤러가 읽는 HTML
+- **공개 페이지는 정적으로 유지한다(Vercel Hobby Active CPU 한도)**: 2026-11 크롤러 요청마다 서버 함수가 돌아 월 한도 75% 경고가 왔다. 원인은 공개 조회가 `cookies()` 를 읽는 클라이언트를 썼던 것과 모든 경로에 걸린 미들웨어. 지금은 홈·목록 3개가 정적, 상세 3개가 SSG(`generateStaticParams`)이고 전부 `revalidate = 3600`. **공개 페이지·루트 layout 에서 `cookies()`·`headers()`·`searchParams`·`server.ts` 클라이언트를 쓰지 말 것**(한 번 쓰면 그 페이지가 다시 Dynamic). 바꾼 뒤에는 `npm run build` 의 라우트 표에서 공개 페이지가 `○`/`●` 인지 확인한다. `ƒ` 여야 하는 것은 `/auth/callback`·`/api/revalidate` 뿐. 검색엔진 봇은 차단하지 않는다.
 - **함정**: 데이터를 `useEffect`로 받는 페이지는 서버 렌더 HTML이 비어 있다. 예전엔 홈이 `isLoading`일 때 페이지 전체를 `<Loading />`으로 감싸 크롤러가 받는 본문이 헤더·푸터뿐(618자)이었다. 구글은 JS를 실행해주지만 네이버 Yeti는 거의 안 한다.
 - **원칙**: 홈과 목록은 서버 컴포넌트가 데이터를 조회해 `initial*` prop으로 내려준다(`src/services/products.server.ts`). 훅은 그 값으로 시작하고 하이드레이션 직후 재조회는 `{ silent: true }`로 조용히 돈다 — 이미 그려진 화면을 스피너로 되돌리면 관리자에게 번쩍인다. SEO를 위해 화면에 새 섹션을 만들지 않는다.
 - 서버 조회가 실패하면 `null`을 돌려 prop을 비운다. 빈 배열을 넘기면 훅이 "데이터 있음"으로 보고 재조회를 건너뛰어 화면이 '상품이 하나도 없는 가게'가 된다.
@@ -268,7 +270,7 @@ export const productService = {
 - **canonical·robots 는 페이지마다 정한다 — 루트 `app/layout.tsx` 에 `alternates.canonical` 을 두지 말 것**: 루트 metadata 는 자기 값을 안 정한 모든 하위 페이지에 상속된다. 2026-02~10 동안 약관·개인정보·로그인·장바구니 등 8개 URL 이 홈을 canonical 로 선언했고(`/terms`·`/privacy` 는 사이트맵에도 있음), 구글이 홈을 색인에서 뺐다(2026-10 `site:` 확인). 홈은 `app/page.tsx`, 목록·상세는 각 layout, 약관류는 page 가 자기 URL 을 canonical 로 둔다. 로그인·회원가입·비밀번호 찾기·장바구니·결제·마이페이지는 `robots: { index: false, follow: true }`. 새 페이지를 만들면 둘 중 하나를 반드시 정한다.
 - **사이트맵 `lastmod` 는 아는 날짜만**(`app/sitemap.ts`): 목록 페이지(홈=대표 메뉴+선물세트, 각 목록=해당 테이블)는 보이는 활성 상품의 최근 `updated_at`, 상세는 자기 `updated_at`, 약관·오시는 길처럼 모르는 페이지는 생략한다. `new Date()` 로 메우지 말 것 — 2026-10 까지 정적 7개가 매 요청 "방금 수정됨"으로 나갔고, 구글은 늘 부정확한 lastmod 를 사이트 단위로 무시한다(홈 재크롤 유도에 손해).
 - **h1은 페이지당 하나**: 홈은 `VideoSection`의 "N년 전통의 맛, 진주떡집입니다"가 h1(`HeroBanner` 제목은 전부 h2 — 배너 문구는 DB 값이라 가게 이름이 없다. 2026-11 브랜드 검색에서 홈이 `/represent` 아래로 밀려 옮김), 목록은 `PageHeader`, 상세는 `ProductDetail`의 `ProductName`.
-- **"N년 전통"은 계산값**: `VideoSection` 이 `new Date().getFullYear() - 1995` 로 만든다(홈 h1 과 통계 칸 두 곳). 숫자를 문구에 직접 적지 말 것 — 다른 곳(푸터·메타 설명·`Bakery.description`)은 전부 "1995년부터"·`foundingDate: "1995"` 로 써서 해가 바뀌어도 고칠 것이 없다. 홈은 요청마다 서버 렌더(`no-store`)라 재배포 없이 크롤러가 받는 HTML 도 바뀐다(2026-11-18 프로덕션 확인).
+- **"N년 전통"은 계산값**: `VideoSection` 이 `new Date().getFullYear() - 1995` 로 만든다(홈 h1 과 통계 칸 두 곳). 숫자를 문구에 직접 적지 말 것 — 다른 곳(푸터·메타 설명·`Bakery.description`)은 전부 "1995년부터"·`foundingDate: "1995"` 로 써서 해가 바뀌어도 고칠 것이 없다. 홈은 1시간마다 다시 만들어지므로 재배포 없이 해가 바뀐 뒤 1시간 안에 크롤러가 받는 HTML 도 바뀐다.
 - **검색 결과 썸네일은 지정할 수 없다(구글 자동 선택)**: 힌트는 `og:image`·`Bakery.image`(둘 다 `banners/banner003.jpeg`)와 본문의 `<img>` 뿐이다. 2026-11-18 현재 홈 썸네일은 선물세트 사진 — `HeroBanner` 가 CSS `background-image` 라 본문 `<img>` 는 메뉴·선물세트 카드뿐이고, `banner003.jpeg` 는 글자를 올리려고 어둡게 만든 파일이며 실제 크기(1024×576)가 메타 표기(1200×630)와 다르다. **사용자 결정(2026-11-18): 그대로 둔다.** 바꾸려면 밝은 대표 사진을 정해 `og:image`·`Bakery.image` 에 넣고 같은 사진을 홈 본문에 `<img>` 로 노출한다.
 - **사이트링크도 요청 수단이 없다**: 조건은 브랜드 검색에서 홈이 1위 + 내비·제목·`BreadcrumbList` 가 명확한 것. 리포 쪽은 충족돼 있고, 리포 밖 과제는 구글 비즈니스 프로필 소유자 인증과 웹사이트(www.jinjood.com) 등록이다. `app/layout.tsx` 의 `SiteNavigationElement` 는 구글이 사이트링크 판정에 쓰지 않는다(무해해서 둠). `WebSite`+`SearchAction`(사이트링크 검색창)은 2024-11 폐지 — 추가하지 말 것.
 - **대표 주소는 `https://www.jinjood.com`**: apex(`jinjood.com`)는 Vercel 에서 308 로 www 에 보낸다. canonical·사이트맵·JSON-LD 의 URL 은 전부 www 로 쓴다.

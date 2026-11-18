@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { publicSupabase as supabase } from "@/lib/supabase/public";
 import type { Banner, GiftSet, MenuItem, ReciprocateItem } from "@/types";
 
 /**
@@ -15,11 +15,14 @@ import type { Banner, GiftSet, MenuItem, ReciprocateItem } from "@/types";
  * is_active = true로 거르는 것은 의도적이다. 숨긴 상품은 크롤러·일반 손님에게 보이면 안 된다.
  * 관리자가 숨긴 상품의 상세를 열면 여기서는 null이 오고, 클라이언트 훅이
  * includeInactive로 다시 조회해 찾아낸다.
+ *
+ * 쿠키를 읽지 않는 익명 키 클라이언트(`lib/supabase/public.ts`)를 쓴다. cookies() 를 부르는
+ * 클라이언트를 쓰면 이 조회를 쓰는 페이지가 전부 요청마다 서버 렌더가 되어, 크롤러 요청마다
+ * 서버 함수가 돈다(2026-11 Vercel Active CPU 한도 경고의 원인). 여기에 로그인 기준 조회를 넣지 말 것.
  */
 
 export const getMenuItemServer = cache(
   async (id: string): Promise<MenuItem | null> => {
-    const supabase = await createClient();
     const { data } = await supabase
       .from("menu_items")
       .select("*")
@@ -32,7 +35,6 @@ export const getMenuItemServer = cache(
 
 export const getGiftSetServer = cache(
   async (id: string): Promise<GiftSet | null> => {
-    const supabase = await createClient();
     const { data } = await supabase
       .from("gift_sets")
       .select("*")
@@ -45,7 +47,6 @@ export const getGiftSetServer = cache(
 
 export const getReciprocateItemServer = cache(
   async (id: string): Promise<ReciprocateItem | null> => {
-    const supabase = await createClient();
     const { data } = await supabase
       .from("reciprocate_items")
       .select("*")
@@ -64,7 +65,6 @@ export const getReciprocateItemServer = cache(
  */
 
 export const getMenuItemsServer = cache(async (): Promise<MenuItem[] | null> => {
-  const supabase = await createClient();
   const { data, error } = await supabase
     .from("menu_items")
     .select("*")
@@ -80,7 +80,6 @@ export const getMenuItemsServer = cache(async (): Promise<MenuItem[] | null> => 
 });
 
 export const getGiftSetsServer = cache(async (): Promise<GiftSet[] | null> => {
-  const supabase = await createClient();
   const { data, error } = await supabase
     .from("gift_sets")
     .select("*")
@@ -96,7 +95,6 @@ export const getGiftSetsServer = cache(async (): Promise<GiftSet[] | null> => {
 });
 
 export const getReciprocateItemsServer = cache(async (): Promise<ReciprocateItem[] | null> => {
-  const supabase = await createClient();
   const { data, error } = await supabase
     .from("reciprocate_items")
     .select("*")
@@ -114,7 +112,6 @@ export const getReciprocateItemsServer = cache(async (): Promise<ReciprocateItem
 /** 홈 대표 메뉴 — 인기/추천/베스트 중 상위 limit개 */
 export const getPopularItemsServer = cache(
   async (limit: number = 9): Promise<MenuItem[] | null> => {
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("menu_items")
       .select("*")
@@ -131,7 +128,6 @@ export const getPopularItemsServer = cache(
 );
 
 export const getBannersServer = cache(async (): Promise<Banner[] | null> => {
-  const supabase = await createClient();
   const { data, error } = await supabase
     .from("banners")
     .select("*")
@@ -145,3 +141,18 @@ export const getBannersServer = cache(async (): Promise<Banner[] | null> => {
   }
   return (data as Banner[]) ?? [];
 });
+
+/**
+ * 빌드 때 미리 만들 상세 페이지의 id 목록 (generateStaticParams 용).
+ * 실패하면 빈 배열 — 그 경우 상세는 첫 요청 때 만들어져 캐시된다(빌드를 깨뜨리지 않는다).
+ */
+export async function getActiveProductIdsServer(
+  table: "menu_items" | "gift_sets" | "reciprocate_items"
+): Promise<{ id: string }[]> {
+  const { data, error } = await supabase.from(table).select("id").eq("is_active", true);
+  if (error) {
+    console.error(`SSG ${table} id 조회 실패:`, error);
+    return [];
+  }
+  return (data ?? []).map((row) => ({ id: String(row.id) }));
+}

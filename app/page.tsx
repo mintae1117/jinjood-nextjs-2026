@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   },
 };
 
+// 미리 만들어 두고 1시간마다 다시 만든다. 관리자 수정은 /api/revalidate 가 바로 반영한다.
+export const revalidate = 3600;
+
 /**
  * 서버 컴포넌트. 배너·대표메뉴·선물세트를 서버에서 조회해 넘긴다.
  *

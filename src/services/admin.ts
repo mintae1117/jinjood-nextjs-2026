@@ -53,6 +53,19 @@ export const adminService = {
       console.error('Error updating product:', error);
       throw toFriendlyError(error);
     }
+
+    // 공개 페이지는 미리 만들어 둔 것이라 서버에 다시 만들라고 알린다(app/api/revalidate).
+    // 실패해도 저장은 끝난 것이다 — 그 경우 최대 1시간 뒤 자동으로 반영된다.
+    try {
+      const res = await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productType, id }),
+      });
+      if (!res.ok) console.warn('공개 페이지 갱신 요청 실패:', res.status);
+    } catch (err) {
+      console.warn('공개 페이지 갱신 요청 실패:', err);
+    }
   },
 
   /**

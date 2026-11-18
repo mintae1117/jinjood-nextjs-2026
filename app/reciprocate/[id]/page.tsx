@@ -1,8 +1,16 @@
 import JsonLd from "@/components/common/JsonLd";
 import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
-import { getReciprocateItemServer } from "@/services/products.server";
+import { getActiveProductIdsServer, getReciprocateItemServer } from "@/services/products.server";
 import { getStorageUrl } from "@/lib/supabase";
 import ReciprocateItemDetailClient from "./ReciprocateItemDetailClient";
+
+// 미리 만들어 두고 1시간마다 다시 만든다. 관리자 수정은 /api/revalidate 가 바로 반영한다.
+export const revalidate = 3600;
+
+// 활성 상품은 빌드 때 만들어 둔다. 목록에 없는 id(새 상품·없는 주소)는 첫 요청 때 만들어 캐시한다.
+export function generateStaticParams() {
+  return getActiveProductIdsServer("reciprocate_items");
+}
 
 interface Props {
   params: Promise<{ id: string }>;
